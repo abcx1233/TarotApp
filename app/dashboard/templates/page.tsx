@@ -1,0 +1,190 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Textarea } from '@/components/ui/Textarea'
+import { Label } from '@/components/ui/Label'
+import { Save, Plus } from 'lucide-react'
+import type { ReadingTemplate } from '@/types'
+
+function TemplateEditor({
+  template,
+  onSave,
+}: {
+  template: ReadingTemplate
+  onSave: (t: ReadingTemplate) => void
+}) {
+  const [draft, setDraft] = useState(template)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  function set(key: keyof ReadingTemplate, value: string | boolean) {
+    setDraft((prev) => ({ ...prev, [key]: value }))
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('reading_templates')
+      .upsert({ ...draft, updated_at: new Date().toISOString() })
+      .select()
+      .single()
+
+    setSaving(false)
+    if (!error && data) {
+      onSave(data as ReadingTemplate)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <Input
+            value={draft.name}
+            onChange={(e) => set('name', e.target.value)}
+            className="font-semibold text-sm border-0 px-0 focus:ring-0 text-slate-900"
+            placeholder="Template name"
+          />
+        </div>
+        <Button size="sm" onClick={handleSave} loading={saving}>
+          <Save size={13} />
+          {saved ? 'Saved!' : 'Save'}
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <Label htmlFor={`signoff-${draft.id}`}>Sign-off text</Label>
+          <Textarea
+            id={`signoff-${draft.id}`}
+            value={draft.signoff_text ?? ''}
+            onChange={(e) => set('signoff_text', e.target.value)}
+            placeholder="With love and light ✨"
+            rows={3}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor={`booking-cta-${draft.id}`}>Booking CTA</Label>
+          <Textarea
+            id={`booking-cta-${draft.id}`}
+            value={draft.booking_cta ?? ''}
+            onChange={(e) => set('booking_cta', e.target.value)}
+            placeholder="Ready to dive deeper? Book your next reading at…"
+            rows={3}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor={`email-subject-${draft.id}`}>Email subject template</Label>
+          <Input
+            id={`email-subject-${draft.id}`}
+            value={draft.email_subject_template ?? ''}
+            onChange={(e) => set('email_subject_template', e.target.value)}
+            placeholder="Your tarot reading from Deep Blue Divination ✨"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor={`whatsapp-${draft.id}`}>WhatsApp opening line</Label>
+          <Input
+            id={`whatsapp-${draft.id}`}
+            value={draft.whatsapp_opening_line ?? ''}
+            onChange={(e) => set('whatsapp_opening_line', e.target.value)}
+            placeholder="Hi lovely! Your reading is ready 💙"
+          />
+        </div>
+
+        <div className="sm:col-span-2">
+          <Label htmlFor={`disclaimer-${draft.id}`}>Disclaimer text</Label>
+          <Textarea
+            id={`disclaimer-${draft.id}`}
+            value={draft.disclaimer_text ?? ''}
+            onChange={(e) => set('disclaimer_text', e.target.value)}
+            placeholder="This reading is for entertainment and spiritual guidance purposes only…"
+            rows={3}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function TemplatesPage() {
+  const [templates, setTemplates] = useState<ReadingTemplate[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('reading_templates')
+        .select('*')
+        .order('is_default', { ascending: false })
+        .order('name', { ascending: true })
+
+      setTemplates((data ?? []) as ReadingTemplate[])
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  async function handleAdd() {
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('reading_templates')
+      .insert({ name: 'New Template', is_default: false })
+      .select()
+      .single()
+
+    if (data) {
+      setTemplates((prev) => [...prev, data as ReadingTemplate])
+    }
+  }
+
+  function handleSave(updated: ReadingTemplate) {
+    setTemplates((prev) =>
+      prev.map((t) => (t.id === updated.id ? updated : t))
+    )
+  }
+
+  return (
+    <div className="p-6 space-y-5 max-w-3xl mx-auto">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold text-slate-900">Templates</h1>
+        <Button size="sm" variant="outline" onClick={handleAdd}>
+          <Plus size={13} />
+          New template
+        </Button>
+      </div>
+
+      <p className="text-sm text-slate-500">
+        Manage sign-off text, booking CTAs, disclaimers, and message templates.
+        Changes take effect on new readings immediately.
+      </p>
+
+      {loading ? (
+        <div className="flex justify-center py-16">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {templates.map((t) => (
+            <TemplateEditor key={t.id} template={t} onSave={handleSave} />
+          ))}
+          {templates.length === 0 && (
+            <div className="py-12 text-center text-sm text-slate-400">
+              No templates yet. Add one to get started.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}

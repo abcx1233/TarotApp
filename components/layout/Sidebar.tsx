@@ -1,0 +1,109 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { clsx } from 'clsx'
+import type { LucideIcon } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Sparkles,
+  ListOrdered,
+  Users,
+  Clock,
+  FileText,
+  Settings,
+  LogOut,
+} from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
+
+const NAV_ITEMS = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+  { href: '/dashboard/readings/new', label: 'New Reading', icon: Sparkles },
+  { href: '/dashboard/orders', label: 'Orders', icon: ListOrdered },
+  { href: '/dashboard/clients', label: 'Clients', icon: Users },
+  { href: '/dashboard/history', label: 'History', icon: Clock },
+  { href: '/dashboard/templates', label: 'Templates', icon: FileText },
+]
+
+const BOTTOM_ITEMS = [
+  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
+]
+
+interface NavItemProps {
+  href: string
+  label: string
+  icon: LucideIcon
+  exact?: boolean
+  onClick?: () => void
+}
+
+function NavItem({ href, label, icon: Icon, exact, onClick }: NavItemProps) {
+  const pathname = usePathname()
+  const isActive = exact ? pathname === href : pathname.startsWith(href)
+
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={clsx(
+        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors min-h-[44px]',
+        isActive
+          ? 'bg-white/10 text-white'
+          : 'text-slate-400 hover:bg-white/5 hover:text-white'
+      )}
+    >
+      <Icon size={17} className="shrink-0" />
+      {label}
+    </Link>
+  )
+}
+
+interface SidebarProps {
+  onClose?: () => void
+}
+
+export function Sidebar({ onClose }: SidebarProps) {
+  const router = useRouter()
+
+  async function handleLogout() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
+
+  return (
+    <div className="flex h-full flex-col bg-navy px-3 py-4">
+      {/* Brand */}
+      <div className="mb-6 px-3">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+          Deep Blue Divination
+        </p>
+        <h1 className="mt-0.5 text-base font-semibold text-white">Reader Console</h1>
+      </div>
+
+      {/* Main nav */}
+      <nav className="flex flex-col gap-0.5">
+        {NAV_ITEMS.map((item) => (
+          <NavItem key={item.href} {...item} onClick={onClose} />
+        ))}
+      </nav>
+
+      {/* Bottom nav */}
+      <div className="mt-auto flex flex-col gap-0.5">
+        <div className="mb-1 h-px bg-white/10" />
+        {BOTTOM_ITEMS.map((item) => (
+          <NavItem key={item.href} {...item} onClick={onClose} />
+        ))}
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors hover:bg-white/5 hover:text-white min-h-[44px]"
+        >
+          <LogOut size={17} className="shrink-0" />
+          Sign out
+        </button>
+      </div>
+    </div>
+  )
+}
