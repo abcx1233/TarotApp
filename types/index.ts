@@ -49,6 +49,7 @@ export interface Order {
   created_at: string
   updated_at: string
   client?: Client
+  reading?: { id: string } | null
 }
 
 export interface Reading {
@@ -219,6 +220,52 @@ export interface GenerateReadingResponse {
   readingId: string
   orderId: string
   generatedReading: string
+}
+
+// ─── Restore Types ────────────────────────────────────────────────────────────
+
+export interface RestoredReadingCard {
+  card_name: string
+  orientation: string
+  position_label: string | null
+  sort_order: number
+  is_bottom_card: boolean
+}
+
+export interface RestoredReadingData {
+  id: string
+  tone_preset_id: string | null
+  character_target: number | null
+  question_or_focus: string | null
+  specific_question: string | null
+  bottom_of_deck_card: string | null
+  bottom_of_deck_orientation: string
+  oracle_card_name: string | null
+  include_oracle_card: boolean
+  include_energy_cleansing: boolean
+  energy_cleansing_notes: string | null
+  reader_notes: string | null
+  generated_reading: string | null
+  order: {
+    id: string
+    reading_tier: string
+    topic: string
+    delivery_format: string
+    delivery_channel: string
+    price_total: number
+    is_rush: boolean
+    due_at: string | null
+  } | null
+  client: {
+    id: string
+    full_name: string
+    email: string | null
+    phone: string | null
+    star_sign: string | null
+    birthday: string | null
+    is_returning: boolean
+  } | null
+  cards: RestoredReadingCard[]
 }
 
 // ─── Dashboard Types ──────────────────────────────────────────────────────────

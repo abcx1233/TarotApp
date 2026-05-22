@@ -121,7 +121,13 @@ export function OrdersTable({ orders, onUpdateStatus, onDuplicate, onArchive, on
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1">
-                    <Link href={`/dashboard/readings/new?orderId=${order.id}`}>
+                    <Link
+                      href={
+                        order.reading?.id
+                          ? `/dashboard/readings/new?readingId=${order.reading.id}`
+                          : `/dashboard/readings/new?orderId=${order.id}`
+                      }
+                    >
                       <Button variant="ghost" size="sm" className="text-xs">
                         <ExternalLink size={12} />
                         Open

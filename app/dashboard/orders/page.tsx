@@ -25,7 +25,7 @@ export default function OrdersPage() {
     const supabase = createClient()
     let query = supabase
       .from('orders')
-      .select('*, client:clients(full_name, email)')
+      .select('*, client:clients(full_name, email), reading:readings(id)')
       .is('deleted_at', null)
       .order('is_rush', { ascending: false })
       .order('due_at', { ascending: true })

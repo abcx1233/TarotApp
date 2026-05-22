@@ -139,7 +139,7 @@ export default function HistoryPage() {
                     <CopyButton text={reading.generated_reading} />
                   )}
                   <Link
-                    href={`/dashboard/readings/new`}
+                    href={`/dashboard/readings/new?readingId=${reading.id}`}
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Button variant="ghost" size="sm" className="text-xs">
@@ -195,7 +195,7 @@ export default function HistoryPage() {
                   {reading.reader_notes && (
                     <div>
                       <p className="mb-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                        Internal notes
+                        Private Notes
                       </p>
                       <p className="text-sm text-slate-600">{reading.reader_notes}</p>
                     </div>
