@@ -28,7 +28,9 @@ export function CardAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
 
-  const results = searchCards(query, suitFilter).slice(0, query.trim() ? 12 : 30)
+  const results = query.trim()
+    ? searchCards(query, suitFilter).slice(0, 20)
+    : searchCards(query, suitFilter)
 
   // Sync internal query when value changes externally
   useEffect(() => {

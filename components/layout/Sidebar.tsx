@@ -50,16 +50,16 @@ function NavItem({ href, label, icon: Icon, exact, onClick, badge }: NavItemProp
       href={href}
       onClick={onClick}
       className={clsx(
-        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors min-h-[44px]',
+        'flex items-center justify-center lg:justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors min-h-[44px]',
         isActive
           ? 'bg-white/10 text-white'
           : 'text-slate-400 hover:bg-white/5 hover:text-white'
       )}
     >
       <Icon size={17} className="shrink-0" />
-      <span className="flex-1">{label}</span>
+      <span className="hidden lg:flex flex-1">{label}</span>
       {badge != null && badge > 0 && (
-        <span className="rounded-full bg-slate-600 px-1.5 py-0.5 text-[10px] font-semibold text-slate-300">
+        <span className="hidden lg:inline rounded-full bg-slate-600 px-1.5 py-0.5 text-[10px] font-semibold text-slate-300">
           {badge}
         </span>
       )}
@@ -117,11 +117,14 @@ export function Sidebar({ onClose }: SidebarProps) {
   return (
     <div className="flex h-full flex-col bg-navy px-3 py-4">
       {/* Brand */}
-      <div className="mb-6 px-3">
+      <div className="mb-6 px-3 hidden lg:block">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
           Deep Blue Divination
         </p>
         <h1 className="mt-0.5 text-base font-semibold text-white">Reader Console</h1>
+      </div>
+      <div className="mb-6 lg:hidden flex justify-center">
+        <div className="h-7 w-7 rounded-md bg-white/10" />
       </div>
 
       {/* Main nav */}
@@ -146,10 +149,10 @@ export function Sidebar({ onClose }: SidebarProps) {
         ))}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors hover:bg-white/5 hover:text-white min-h-[44px]"
+          className="flex items-center justify-center lg:justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors hover:bg-white/5 hover:text-white min-h-[44px]"
         >
           <LogOut size={17} className="shrink-0" />
-          Sign out
+          <span className="hidden lg:inline">Sign out</span>
         </button>
       </div>
     </div>

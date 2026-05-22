@@ -23,7 +23,7 @@ export function DashboardLayout({ children, title, initialTestMode }: DashboardL
         {/* Mobile sidebar overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+            className="fixed inset-0 z-30 bg-black/50 md:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-hidden="true"
           />
@@ -32,7 +32,7 @@ export function DashboardLayout({ children, title, initialTestMode }: DashboardL
         {/* Sidebar */}
         <div
           className={clsx(
-            'fixed inset-y-0 left-0 z-40 w-56 transform transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 lg:z-auto',
+            'fixed inset-y-0 left-0 z-40 w-14 lg:w-56 transform transition-transform duration-200 ease-in-out md:static md:translate-x-0 md:z-auto shrink-0',
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >

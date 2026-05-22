@@ -11,7 +11,6 @@ export interface OrderFiltersState {
   tier: string
   topic: string
   dueToday: boolean
-  rushOnly: boolean
 }
 
 interface OrderFiltersProps {
@@ -76,12 +75,6 @@ export function OrderFilters({ filters, onChange }: OrderFiltersProps) {
         checked={filters.dueToday}
         onChange={(v) => set('dueToday', v)}
         label="Due today"
-      />
-
-      <Toggle
-        checked={filters.rushOnly}
-        onChange={(v) => set('rushOnly', v)}
-        label="Rush only"
       />
     </div>
   )

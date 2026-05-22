@@ -12,7 +12,7 @@ export function TopBar({ onMenuClick, title }: TopBarProps) {
     <header className="flex h-14 items-center gap-4 border-b border-slate-200 bg-white px-4 lg:px-6 shrink-0">
       <button
         onClick={onMenuClick}
-        className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+        className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         aria-label="Open menu"
       >
         <Menu size={18} />

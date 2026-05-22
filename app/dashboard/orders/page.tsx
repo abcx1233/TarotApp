@@ -13,7 +13,6 @@ const INITIAL_FILTERS: OrderFiltersState = {
   tier: '',
   topic: '',
   dueToday: false,
-  rushOnly: false,
 }
 
 export default function OrdersPage() {
@@ -35,7 +34,6 @@ export default function OrdersPage() {
     if (filters.status) query = query.eq('status', filters.status)
     if (filters.tier) query = query.eq('reading_tier', filters.tier)
     if (filters.topic) query = query.eq('topic', filters.topic)
-    if (filters.rushOnly) query = query.eq('is_rush', true)
 
     const { data } = await query
     let results = (data ?? []) as Order[]

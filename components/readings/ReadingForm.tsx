@@ -2,7 +2,7 @@
 
 import { useReducer, useCallback, useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ScrollText, Loader2 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { CardEntry } from './CardEntry'
 import { TonePresetSelect } from './TonePresetSelect'
@@ -220,6 +220,8 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
   const [isPriceAutoSet, setIsPriceAutoSet] = useState(false)
   const { isTestMode } = useTestMode()
   const router = useRouter()
+
+  const hasOutput = !!(state.generatedReading || state.isGenerating || state.generationError)
 
   const isDirtyRef = useRef(false)
   const lastUserSelectedTierRef = useRef<string>('')
@@ -511,9 +513,12 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
         </div>
       )}
 
-      <div className="flex flex-col xl:flex-row flex-1 min-h-0">
+      <div className={clsx('flex flex-1 min-h-0', hasOutput ? 'flex-col lg:flex-row' : 'flex-col')}>
         {/* ── Left: Input panel ─────────────────────────────────────────── */}
-        <div className="flex-1 min-w-0 overflow-y-auto p-6 space-y-8 xl:max-w-2xl border-r border-slate-200">
+        <div className={clsx(
+          'flex-1 min-w-0 overflow-y-auto p-6 space-y-8',
+          hasOutput && 'lg:max-w-2xl lg:border-r lg:border-slate-200'
+        )}>
 
           {/* Order Info */}
           <Section title="Order Info">
@@ -774,29 +779,60 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               onEnergyCleansingNotesChange={(v) => set('energyCleansingNotes', v)}
             />
           </Section>
+
+          {/* Generate button — only shown before any output exists */}
+          {!hasOutput && (
+            <div className="pb-2">
+              {state.generationError && (
+                <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {state.generationError}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={state.isGenerating}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
+              >
+                {state.isGenerating ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Generating…
+                  </>
+                ) : (
+                  <>
+                    <ScrollText size={16} />
+                    Generate Reading
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* ── Right: Output panel ───────────────────────────────────────── */}
-        <div className="xl:w-[520px] shrink-0 flex flex-col p-6 min-h-[500px] xl:min-h-0">
-          <OutputPanel
-            generatedReading={state.generatedReading}
-            isGenerating={state.isGenerating}
-            generationError={state.generationError}
-            onGenerate={handleGenerate}
-            onRegenerate={handleGenerate}
-            onSaveDraft={handleSaveDraft}
-            onMarkReady={handleMarkReady}
-            onMarkSent={handleMarkSent}
-            readingId={state.savedReadingId}
-            clientName={state.clientName}
-            clientEmail={state.clientEmail}
-            clientPhone={state.clientPhone}
-            readingTier={state.readingTier}
-            topic={state.topic}
-            deliveryFormat={state.deliveryFormat}
-            businessName={businessName}
-          />
-        </div>
+        {/* ── Right: Output panel (only after generation) ───────────────── */}
+        {hasOutput && (
+          <div className="lg:w-[520px] shrink-0 flex flex-col border-t border-slate-200 lg:border-t-0 lg:overflow-y-auto">
+            <OutputPanel
+              generatedReading={state.generatedReading}
+              isGenerating={state.isGenerating}
+              generationError={state.generationError}
+              onGenerate={handleGenerate}
+              onRegenerate={handleGenerate}
+              onSaveDraft={handleSaveDraft}
+              onMarkReady={handleMarkReady}
+              onMarkSent={handleMarkSent}
+              readingId={state.savedReadingId}
+              clientName={state.clientName}
+              clientEmail={state.clientEmail}
+              clientPhone={state.clientPhone}
+              readingTier={state.readingTier}
+              topic={state.topic}
+              deliveryFormat={state.deliveryFormat}
+              businessName={businessName}
+            />
+          </div>
+        )}
       </div>
     </div>
   )
