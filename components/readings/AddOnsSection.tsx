@@ -1,9 +1,9 @@
 'use client'
 
 import { Toggle } from '@/components/ui/Toggle'
-import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Label } from '@/components/ui/Label'
+import { CardAutocomplete } from './CardAutocomplete'
 
 interface AddOnsSectionProps {
   includeOracleCard: boolean
@@ -46,10 +46,11 @@ export function AddOnsSection({
         {includeOracleCard && (
           <div className="animate-fade-in">
             <Label htmlFor="oracle-card-name">Oracle Card Name</Label>
-            <Input
+            <CardAutocomplete
               id="oracle-card-name"
               value={oracleCardName}
-              onChange={(e) => onOracleCardNameChange(e.target.value)}
+              onChange={(v) => onOracleCardNameChange(v)}
+              suitFilter="all"
               placeholder="e.g. The River, Inner Child…"
             />
           </div>

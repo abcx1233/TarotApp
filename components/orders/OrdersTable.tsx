@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { format, isToday } from 'date-fns'
-import { ExternalLink, Zap, Trash2 } from 'lucide-react'
+import { format, isToday, differenceInDays } from 'date-fns'
+import { ExternalLink, Zap, Trash2, RotateCcw } from 'lucide-react'
 import { StatusBadge, Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import type { Order } from '@/types'
@@ -14,21 +14,46 @@ const TIER_LABELS: Record<string, string> = {
   celtic_cross: 'Celtic Cross',
 }
 
+function ExpiryIndicator({ expiresAt }: { expiresAt: string | null | undefined }) {
+  if (!expiresAt) return null
+  const days = differenceInDays(new Date(expiresAt), new Date())
+  const label = days < 0 ? 'Expired' : `${days}d`
+  const colour =
+    days < 0 ? 'text-slate-400' :
+    days < 7 ? 'text-red-500' :
+    days < 15 ? 'text-amber-500' : 'text-green-600'
+  return (
+    <span className={`text-xs font-medium ${colour}`} title={`Link expires ${format(new Date(expiresAt), 'd MMM yyyy')}`}>
+      {label}
+    </span>
+  )
+}
+
 interface OrdersTableProps {
   orders: Order[]
   onUpdateStatus: (orderId: string, status: string) => void
   onDuplicate: (orderId: string) => void
   onArchive: (orderId: string) => void
   onTrash: (orderId: string) => void
+  onExtendLink?: () => void
 }
 
-export function OrdersTable({ orders, onUpdateStatus, onDuplicate, onArchive, onTrash }: OrdersTableProps) {
+export function OrdersTable({ orders, onUpdateStatus, onDuplicate, onArchive, onTrash, onExtendLink }: OrdersTableProps) {
   if (orders.length === 0) {
     return (
       <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center">
         <p className="text-sm text-slate-400">No orders match your filters.</p>
       </div>
     )
+  }
+
+  async function handleExtendLink(readingId: string) {
+    const res = await fetch('/api/readings/extend-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ readingId }),
+    })
+    if (res.ok) onExtendLink?.()
   }
 
   return (
@@ -63,6 +88,9 @@ export function OrdersTable({ orders, onUpdateStatus, onDuplicate, onArchive, on
           {orders.map((order) => {
             const dueDate = order.due_at ? new Date(order.due_at) : null
             const isDueToday = dueDate ? isToday(dueDate) : false
+            const isMediaDelivery =
+              order.delivery_format === 'voice_note' || order.delivery_format === 'video'
+            const hasMedia = !!order.reading?.media_signed_url
 
             return (
               <tr
@@ -117,6 +145,9 @@ export function OrdersTable({ orders, onUpdateStatus, onDuplicate, onArchive, on
                     {order.is_rush && <Badge variant="rush">RUSH</Badge>}
                     {isDueToday && <Badge variant="warning">DUE TODAY</Badge>}
                     {order.is_test && <Badge variant="warning">TEST</Badge>}
+                    {isMediaDelivery && hasMedia && (
+                      <ExpiryIndicator expiresAt={order.reading?.media_url_expires_at} />
+                    )}
                   </div>
                 </td>
                 <td className="px-4 py-3">
@@ -133,6 +164,18 @@ export function OrdersTable({ orders, onUpdateStatus, onDuplicate, onArchive, on
                         Open
                       </Button>
                     </Link>
+                    {isMediaDelivery && hasMedia && order.reading?.id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-brand-600"
+                        onClick={() => handleExtendLink(order.reading!.id)}
+                        title="Extend the signed URL by 30 days"
+                      >
+                        <RotateCcw size={12} />
+                        Extend link
+                      </Button>
+                    )}
                     {order.status === 'pending' && (
                       <Button
                         variant="ghost"

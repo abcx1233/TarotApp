@@ -49,7 +49,7 @@ export interface Order {
   created_at: string
   updated_at: string
   client?: Client
-  reading?: { id: string } | null
+  reading?: { id: string; delivery_format?: string | null; media_signed_url?: string | null; media_url_expires_at?: string | null } | null
 }
 
 export interface Reading {
@@ -77,6 +77,9 @@ export interface Reading {
   prompt_version: number
   regenerated_count: number
   final_approved: boolean
+  media_file_path: string | null
+  media_signed_url: string | null
+  media_url_expires_at: string | null
   is_test: boolean
   deleted_at: string | null
   created_at: string

@@ -113,7 +113,7 @@ export function CardAutocomplete({
         aria-expanded={open}
       />
 
-      {open && results.length > 0 && (
+      {open && query.trim().length > 0 && results.length > 0 && (
         <ul
           ref={listRef}
           id={`${id}-list`}

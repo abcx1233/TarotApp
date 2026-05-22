@@ -1,9 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Copy, Check, RefreshCw, Loader2, MessageCircle, Mail, ScrollText } from 'lucide-react'
+import { format, differenceInDays } from 'date-fns'
+import {
+  Copy, Check, RefreshCw, Loader2, MessageCircle, Mail, ScrollText,
+  Upload, CheckCircle2, AlertCircle, Clock,
+} from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { createClient } from '@/lib/supabase/client'
 
 const TIER_LABELS: Record<string, string> = {
   mini: 'Mini',
@@ -22,10 +27,12 @@ interface OutputPanelProps {
   onMarkReady: () => Promise<void>
   onMarkSent: () => Promise<void>
   readingId: string | null
+  clientName: string
   clientEmail: string
   clientPhone: string
   readingTier: string
   topic: string
+  deliveryFormat: string
   businessName: string
 }
 
@@ -39,16 +46,26 @@ export function OutputPanel({
   onMarkReady,
   onMarkSent,
   readingId,
+  clientName,
   clientEmail,
   clientPhone,
   readingTier,
   topic,
+  deliveryFormat,
   businessName,
 }: OutputPanelProps) {
   const [copied, setCopied] = useState(false)
   const [saveDraftState, setSaveDraftState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [readyState, setReadyState] = useState<'idle' | 'marking' | 'marked' | 'error'>('idle')
   const [sentState, setSentState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
+  const [mediaSignedUrl, setMediaSignedUrl] = useState<string | null>(null)
+  const [mediaExpiresAt, setMediaExpiresAt] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+
+  const isMediaDelivery = deliveryFormat === 'voice_note' || deliveryFormat === 'video'
+  const mediaLabel = deliveryFormat === 'voice_note' ? 'voice note' : 'video'
 
   async function handleCopy() {
     if (!generatedReading) return
@@ -57,18 +74,29 @@ export function OutputPanel({
     setTimeout(() => setCopied(false), 2000)
   }
 
+  function buildDeliveryMessage(): string {
+    const tierLabel = TIER_LABELS[readingTier] ?? readingTier
+    const name = clientName.split(' ')[0] || clientName
+    if (isMediaDelivery && mediaSignedUrl) {
+      return `Hi ${name}, your ${tierLabel} ${topic} reading is ready as a ${mediaLabel}! 🎙️\n\n${mediaSignedUrl}\n\nThis link is valid for 30 days. Let me know if you have any questions 💙\n\n${businessName}`
+    }
+    return generatedReading ?? ''
+  }
+
   function handleWhatsApp() {
-    if (!clientPhone || !generatedReading) return
+    const message = buildDeliveryMessage()
+    if (!clientPhone || !message) return
     const phone = clientPhone.replace(/\D/g, '')
-    const url = `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(generatedReading)}`
+    const url = `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`
     window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   function handleEmail() {
-    if (!generatedReading) return
+    const message = buildDeliveryMessage()
+    if (!message) return
     const tierLabel = TIER_LABELS[readingTier] ?? readingTier
     const subject = `Your ${tierLabel} ${topic} Reading from ${businessName}`
-    const url = `mailto:${clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(generatedReading)}`
+    const url = `mailto:${clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`
     window.open(url, '_blank')
   }
 
@@ -85,6 +113,18 @@ export function OutputPanel({
     }
   }
 
+  async function handleMarkReadyClick() {
+    if (readyState === 'marking' || readyState === 'marked') return
+    setReadyState('marking')
+    try {
+      await onMarkReady()
+      setReadyState('marked')
+    } catch {
+      setReadyState('error')
+      setTimeout(() => setReadyState('idle'), 3000)
+    }
+  }
+
   async function handleMarkSentClick() {
     setSentState('sending')
     try {
@@ -97,8 +137,46 @@ export function OutputPanel({
     }
   }
 
+  async function handleFileUpload(file: File) {
+    if (!readingId) return
+    setUploadState('uploading')
+    const supabase = createClient()
+    const ext = file.name.split('.').pop() ?? ''
+    const fileName = `${deliveryFormat}-${Date.now()}.${ext}`
+    const path = `readings/${readingId}/${fileName}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('reading-media')
+      .upload(path, file, { upsert: true })
+
+    if (uploadError) {
+      setUploadState('error')
+      return
+    }
+
+    // Generate signed URL server-side to store in DB
+    try {
+      const res = await fetch('/api/readings/upload-media', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ readingId, filePath: path }),
+      })
+      if (!res.ok) throw new Error()
+      const { signedUrl, expiresAt } = await res.json()
+      setMediaSignedUrl(signedUrl)
+      setMediaExpiresAt(expiresAt)
+      setUploadState('success')
+    } catch {
+      setUploadState('error')
+    }
+  }
+
   const hasOutput = !!generatedReading
   const noPhone = !clientPhone.trim()
+
+  const daysLeft = mediaExpiresAt
+    ? differenceInDays(new Date(mediaExpiresAt), new Date())
+    : null
 
   return (
     <div className="flex flex-col h-full gap-4">
@@ -130,6 +208,84 @@ export function OutputPanel({
           </div>
         )}
       </div>
+
+      {/* Media upload section — voice note / video only */}
+      {isMediaDelivery && hasOutput && (
+        <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
+          <div>
+            <p className="text-sm font-medium text-slate-900 capitalize">
+              {deliveryFormat === 'voice_note' ? 'Voice Note' : 'Video'} Upload
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Upload the recorded file to generate a shareable link
+            </p>
+          </div>
+
+          {!readingId ? (
+            <p className="text-xs text-amber-600">Save as draft first to enable file upload</p>
+          ) : uploadState === 'idle' && !mediaSignedUrl ? (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={deliveryFormat === 'voice_note' ? 'audio/*' : 'video/*'}
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) handleFileUpload(file)
+                }}
+              />
+              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                <Upload size={13} />
+                Choose file
+              </Button>
+            </>
+          ) : uploadState === 'uploading' ? (
+            <div className="flex items-center gap-2">
+              <Loader2 size={14} className="animate-spin text-brand-500" />
+              <span className="text-sm text-slate-600">Uploading…</span>
+            </div>
+          ) : uploadState === 'error' ? (
+            <div className="flex items-center gap-2 text-red-500">
+              <AlertCircle size={14} />
+              <span className="text-sm">Upload failed — </span>
+              <button
+                type="button"
+                className="text-sm underline underline-offset-2"
+                onClick={() => setUploadState('idle')}
+              >
+                try again
+              </button>
+            </div>
+          ) : mediaSignedUrl ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 text-green-600 text-sm">
+                <CheckCircle2 size={14} />
+                File uploaded
+              </div>
+              <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2">
+                <p className="text-xs text-slate-500 truncate">{mediaSignedUrl}</p>
+              </div>
+              {daysLeft !== null && (
+                <div className="flex items-center gap-1.5">
+                  <Clock size={12} className={
+                    daysLeft < 0 ? 'text-slate-400' :
+                    daysLeft < 7 ? 'text-red-500' :
+                    daysLeft < 15 ? 'text-amber-500' : 'text-green-600'
+                  } />
+                  <span className={`text-xs ${
+                    daysLeft < 0 ? 'text-slate-400' :
+                    daysLeft < 7 ? 'text-red-500' :
+                    daysLeft < 15 ? 'text-amber-500' : 'text-green-600'
+                  }`}>
+                    {daysLeft < 0 ? 'Link expired' : `Link valid for ${daysLeft} more day${daysLeft === 1 ? '' : 's'}`}
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>
+      )}
 
       {/* Sticky action bar */}
       <div className="border-t border-slate-200 pt-3 space-y-3">
@@ -183,10 +339,18 @@ export function OutputPanel({
               {copied ? 'Copied!' : 'Copy'}
             </button>
 
-            {/* WhatsApp */}
+            {/* WhatsApp — disabled if no phone, or if media delivery with no URL yet */}
             {noPhone ? (
               <span
                 title="Add a phone number to use this"
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-400 cursor-not-allowed select-none"
+              >
+                <MessageCircle size={13} />
+                WhatsApp
+              </span>
+            ) : isMediaDelivery && !mediaSignedUrl ? (
+              <span
+                title="Upload the media file first"
                 className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-400 cursor-not-allowed select-none"
               >
                 <MessageCircle size={13} />
@@ -203,20 +367,41 @@ export function OutputPanel({
               </button>
             )}
 
-            {/* Email */}
-            <button
-              type="button"
-              onClick={handleEmail}
-              className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
-            >
-              <Mail size={13} />
-              Email
-            </button>
+            {/* Email — disabled if media delivery with no URL yet */}
+            {isMediaDelivery && !mediaSignedUrl ? (
+              <span
+                title="Upload the media file first"
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-400 cursor-not-allowed select-none"
+              >
+                <Mail size={13} />
+                Email
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleEmail}
+                className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
+              >
+                <Mail size={13} />
+                Email
+              </button>
+            )}
 
             {/* Status actions */}
             <div className="ml-auto flex gap-2">
-              <Button variant="secondary" size="sm" onClick={onMarkReady}>
-                Mark Ready
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleMarkReadyClick}
+                disabled={readyState === 'marking' || readyState === 'marked'}
+              >
+                {readyState === 'marking'
+                  ? 'Marking…'
+                  : readyState === 'marked'
+                  ? 'Marked ready ✓'
+                  : readyState === 'error'
+                  ? 'Error — retry'
+                  : 'Mark Ready'}
               </Button>
               <Button
                 size="sm"

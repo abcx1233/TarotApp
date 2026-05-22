@@ -1,14 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { format } from 'date-fns'
+import { format, differenceInDays } from 'date-fns'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { StatusBadge } from '@/components/ui/Badge'
-import { Copy, Check, RotateCcw } from 'lucide-react'
+import { Copy, Check, RotateCcw, Clock } from 'lucide-react'
 import type { Reading } from '@/types'
 
 const TIER_LABELS: Record<string, string> = {
@@ -35,6 +35,22 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
+function ExpiryIndicator({ expiresAt }: { expiresAt: string | null | undefined }) {
+  if (!expiresAt) return null
+  const days = differenceInDays(new Date(expiresAt), new Date())
+  const label = days < 0 ? 'Link expired' : `Link valid ${days}d`
+  const colour =
+    days < 0 ? 'text-slate-400' :
+    days < 7 ? 'text-red-500' :
+    days < 15 ? 'text-amber-500' : 'text-green-600'
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs ${colour}`}>
+      <Clock size={11} />
+      {label}
+    </span>
+  )
+}
+
 export default function HistoryPage() {
   const [readings, setReadings] = useState<Reading[]>([])
   const [loading, setLoading] = useState(true)
@@ -46,19 +62,35 @@ export default function HistoryPage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      let query = supabase
+      const { data } = await supabase
         .from('readings')
-        .select('*, order:orders(reading_tier, topic, status, client_id), client:clients(full_name, email)')
+        .select('*, order:orders(reading_tier, topic, status, delivery_format, client_id), client:clients(full_name, email)')
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(100)
-
-      const { data } = await query
       setReadings((data ?? []) as Reading[])
       setLoading(false)
     }
     load()
   }, [])
+
+  async function handleExtendLink(readingId: string) {
+    const res = await fetch('/api/readings/extend-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ readingId }),
+    })
+    if (res.ok) {
+      const { signedUrl, expiresAt } = await res.json()
+      setReadings((prev) =>
+        prev.map((r) =>
+          r.id === readingId
+            ? { ...r, media_signed_url: signedUrl, media_url_expires_at: expiresAt }
+            : r
+        )
+      )
+    }
+  }
 
   const filtered = readings.filter((r) => {
     const name = r.client?.full_name?.toLowerCase() ?? ''
@@ -135,6 +167,21 @@ export default function HistoryPage() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
+                  {reading.media_signed_url && (
+                    <ExpiryIndicator expiresAt={reading.media_url_expires_at} />
+                  )}
+                  {reading.media_file_path && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-brand-600"
+                      onClick={(e) => { e.stopPropagation(); handleExtendLink(reading.id) }}
+                      title="Extend the signed URL by 30 days"
+                    >
+                      <RotateCcw size={11} />
+                      Extend link
+                    </Button>
+                  )}
                   {reading.generated_reading && (
                     <CopyButton text={reading.generated_reading} />
                   )}
@@ -153,6 +200,17 @@ export default function HistoryPage() {
               {/* Expanded content */}
               {expanded === reading.id && (
                 <div className="border-t border-slate-100 px-5 py-4 space-y-4">
+                  {reading.media_signed_url && (
+                    <div>
+                      <p className="mb-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                        Media Link
+                      </p>
+                      <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 flex items-center justify-between gap-3">
+                        <p className="text-xs text-slate-600 truncate">{reading.media_signed_url}</p>
+                        <ExpiryIndicator expiresAt={reading.media_url_expires_at} />
+                      </div>
+                    </div>
+                  )}
                   {reading.generated_reading && (
                     <div>
                       <p className="mb-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">

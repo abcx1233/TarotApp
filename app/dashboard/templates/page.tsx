@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Label } from '@/components/ui/Label'
-import { Save, Plus } from 'lucide-react'
+import { Save } from 'lucide-react'
 import type { ReadingTemplate } from '@/types'
 
 function TemplateEditor({
@@ -65,7 +65,7 @@ function TemplateEditor({
             id={`signoff-${draft.id}`}
             value={draft.signoff_text ?? ''}
             onChange={(e) => set('signoff_text', e.target.value)}
-            placeholder="With love and light ✨"
+            placeholder={"With love and starlight ✨\n\n[Your name]\nDeep Blue Divination"}
             rows={4}
           />
         </div>
@@ -76,7 +76,7 @@ function TemplateEditor({
             id={`disclaimer-${draft.id}`}
             value={draft.disclaimer_text ?? ''}
             onChange={(e) => set('disclaimer_text', e.target.value)}
-            placeholder="This reading is for entertainment and spiritual guidance purposes only…"
+            placeholder="This reading is for spiritual guidance and entertainment purposes only. It is not a substitute for professional advice. Please seek guidance from qualified professionals for matters of health, finance, or law."
             rows={4}
           />
         </div>
@@ -104,19 +104,6 @@ export default function TemplatesPage() {
     load()
   }, [])
 
-  async function handleAdd() {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('reading_templates')
-      .insert({ name: 'New Template', is_default: false })
-      .select()
-      .single()
-
-    if (data) {
-      setTemplates((prev) => [...prev, data as ReadingTemplate])
-    }
-  }
-
   function handleSave(updated: ReadingTemplate) {
     setTemplates((prev) =>
       prev.map((t) => (t.id === updated.id ? updated : t))
@@ -127,15 +114,10 @@ export default function TemplatesPage() {
     <div className="p-6 space-y-5 max-w-3xl mx-auto">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-slate-900">Templates</h1>
-        <Button size="sm" variant="outline" onClick={handleAdd}>
-          <Plus size={13} />
-          New template
-        </Button>
       </div>
 
       <p className="text-sm text-slate-500">
-        Sign-off text and disclaimer are automatically appended to every generated reading.
-        Changes take effect on new readings immediately.
+        Customise the sign-off and disclaimer that are automatically appended to every generated reading.
       </p>
 
       {loading ? (

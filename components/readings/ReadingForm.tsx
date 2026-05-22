@@ -3,6 +3,7 @@
 import { useReducer, useCallback, useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
+import { clsx } from 'clsx'
 import { CardEntry } from './CardEntry'
 import { TonePresetSelect } from './TonePresetSelect'
 import { AddOnsSection } from './AddOnsSection'
@@ -25,6 +26,13 @@ import type {
   DeliveryChannel,
   RestoredReadingData,
 } from '@/types'
+
+const TIER_PRICES: Record<ReadingTier, string> = {
+  mini: '10.00',
+  core: '25.00',
+  premium: '45.00',
+  celtic_cross: '10.00',
+}
 
 // ─── Initial state ─────────────────────────────────────────────────────────────
 
@@ -168,6 +176,36 @@ function FieldRow({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</div>
 }
 
+function PillGroup({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: string; label: string }[]
+  value: string
+  onChange: (v: string) => void
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          className={clsx(
+            'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+            value === opt.value
+              ? 'bg-brand-600 text-white'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          )}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // ─── Main form ────────────────────────────────────────────────────────────────
 
 interface ReadingFormProps {
@@ -182,6 +220,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
   const [businessName, setBusinessName] = useState('Deep Blue Divination')
   const [isReopenMode, setIsReopenMode] = useState(false)
   const [readingLengthOverridden, setReadingLengthOverridden] = useState(false)
+  const [isPriceAutoSet, setIsPriceAutoSet] = useState(false)
   const { isTestMode } = useTestMode()
   const router = useRouter()
 
@@ -537,9 +576,15 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                   min="0"
                   step="0.01"
                   value={state.priceTotal}
-                  onChange={(e) => set('priceTotal', e.target.value)}
+                  onChange={(e) => {
+                    set('priceTotal', e.target.value)
+                    setIsPriceAutoSet(false)
+                  }}
                   placeholder="0.00"
                 />
+                {isPriceAutoSet && (
+                  <p className="mt-1 text-xs text-slate-400">Auto-set from tier — edit to override</p>
+                )}
               </div>
             </FieldRow>
 
@@ -561,12 +606,15 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                 value={state.readingTier}
                 onChange={(e) => {
                   isDirtyRef.current = true
-                  lastUserSelectedTierRef.current = e.target.value
+                  const tier = e.target.value as ReadingTier
+                  lastUserSelectedTierRef.current = tier
                   if (!readingLengthOverridden) {
-                    dispatch({ type: 'SET_TIER', tier: e.target.value as ReadingTier })
+                    dispatch({ type: 'SET_TIER', tier })
                   } else {
-                    dispatch({ type: 'SET', field: 'readingTier', value: e.target.value as ReadingTier })
+                    dispatch({ type: 'SET', field: 'readingTier', value: tier })
                   }
+                  dispatch({ type: 'SET', field: 'priceTotal', value: TIER_PRICES[tier] })
+                  setIsPriceAutoSet(true)
                 }}
               >
                 <option value="mini">Mini Written (~3,000 chars)</option>
@@ -605,32 +653,30 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               </div>
             </FieldRow>
 
-            <FieldRow>
-              <div>
-                <Label htmlFor="delivery-format">Delivery format</Label>
-                <Select
-                  id="delivery-format"
-                  value={state.deliveryFormat}
-                  onChange={(e) => set('deliveryFormat', e.target.value as typeof state.deliveryFormat)}
-                >
-                  <option value="written">Written</option>
-                  <option value="voice_note">Voice Note</option>
-                  <option value="video">Video</option>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="delivery-channel">Delivery channel</Label>
-                <Select
-                  id="delivery-channel"
-                  value={state.deliveryChannel}
-                  onChange={(e) => set('deliveryChannel', e.target.value as typeof state.deliveryChannel)}
-                >
-                  <option value="email">Email</option>
-                  <option value="whatsapp">WhatsApp</option>
-                  <option value="account">Account</option>
-                </Select>
-              </div>
-            </FieldRow>
+            <div>
+              <Label>Delivery format</Label>
+              <PillGroup
+                options={[
+                  { value: 'written', label: 'Written' },
+                  { value: 'voice_note', label: 'Voice Note' },
+                  { value: 'video', label: 'Video' },
+                ]}
+                value={state.deliveryFormat}
+                onChange={(v) => set('deliveryFormat', v as DeliveryFormat)}
+              />
+            </div>
+            <div>
+              <Label>Delivery channel</Label>
+              <PillGroup
+                options={[
+                  { value: 'email', label: 'Email' },
+                  { value: 'whatsapp', label: 'WhatsApp' },
+                  { value: 'account', label: 'Account' },
+                ]}
+                value={state.deliveryChannel}
+                onChange={(v) => set('deliveryChannel', v as DeliveryChannel)}
+              />
+            </div>
 
             <div>
               <Label htmlFor="due-at">Due date & time</Label>
@@ -642,18 +688,11 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               />
             </div>
 
-            <div className="space-y-3">
-              <Toggle
-                checked={state.isRush}
-                onChange={(v) => set('isRush', v)}
-                label="Rush order"
-              />
-              <Toggle
-                checked={state.isReturningClient}
-                onChange={(v) => set('isReturningClient', v)}
-                label="Returning client"
-              />
-            </div>
+            <Toggle
+              checked={state.isReturningClient}
+              onChange={(v) => set('isReturningClient', v)}
+              label="Returning client"
+            />
           </Section>
 
           {/* Reading Setup */}
@@ -765,10 +804,12 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
             onMarkReady={handleMarkReady}
             onMarkSent={handleMarkSent}
             readingId={state.savedReadingId}
+            clientName={state.clientName}
             clientEmail={state.clientEmail}
             clientPhone={state.clientPhone}
             readingTier={state.readingTier}
             topic={state.topic}
+            deliveryFormat={state.deliveryFormat}
             businessName={businessName}
           />
         </div>
