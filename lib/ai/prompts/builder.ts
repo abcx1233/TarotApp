@@ -31,7 +31,11 @@ export function buildPrompt(input: PromptInput): string {
   parts.push(input.tonePresetText.trim())
 
   // 2. Character target
-  parts.push(`Write approximately ${input.characterTarget} characters in total.`)
+  const minChars = Math.round(input.characterTarget * 0.9)
+  const maxChars = Math.round(input.characterTarget * 1.1)
+  parts.push(
+    `This reading must be between ${minChars} and ${maxChars} characters long. This is non-negotiable. Do not end the reading early. Do not pad with repetition to reach the target. Write with genuine depth, emotional detail and spiritual insight to naturally reach this length.\nFor reference:\n3,000 characters is approximately 500 words.\n5,000 characters is approximately 850 words.\n6,000 characters is approximately 1,000 words.\n12,000 characters is approximately 2,000 words.\nYou must write enough to fill this length meaningfully.`
+  )
 
   // 3. Topic
   parts.push(`The topic or area of focus for this reading is: ${input.topic}`)

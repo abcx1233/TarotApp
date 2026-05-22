@@ -9,6 +9,19 @@ import { clsx } from 'clsx'
 import type { CardEntryForm, CardOrientation } from '@/types'
 import type { TarotCard } from '@/types'
 
+export const CELTIC_CROSS_POSITIONS = [
+  'The Present',
+  'The Challenge',
+  'The Past',
+  'The Future',
+  'Above (Conscious)',
+  'Below (Unconscious)',
+  'Advice',
+  'External Influences',
+  'Hopes and Fears',
+  'Outcome',
+]
+
 interface CardEntryProps {
   cards: CardEntryForm[]
   suitFilter: string
@@ -16,6 +29,8 @@ interface CardEntryProps {
   onCardsChange: (cards: CardEntryForm[]) => void
   onSuitFilterChange: (suit: string) => void
   onBottomCardChange: (card: { name: string; orientation: CardOrientation }) => void
+  isCelticCross?: boolean
+  readingTier?: string
 }
 
 interface CardRowProps {
@@ -26,6 +41,7 @@ interface CardRowProps {
   onRemove: (id: string) => void
   onEnter: () => void
   isLast: boolean
+  isCelticCross?: boolean
 }
 
 function OrientationToggle({
@@ -65,12 +81,21 @@ function OrientationToggle({
   )
 }
 
-function CardRow({ card, index, suitFilter, onUpdate, onRemove, onEnter }: CardRowProps) {
+function CardRow({ card, index, suitFilter, onUpdate, onRemove, onEnter, isCelticCross }: CardRowProps) {
   return (
-    <div className="flex items-center gap-2 group animate-fade-in rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 py-2">
-      <span className="w-5 h-5 shrink-0 flex items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-500">
-        {index + 1}
-      </span>
+    <div className={clsx(
+      'flex items-center gap-2 group animate-fade-in rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 py-2',
+      isCelticCross && 'border-indigo-100 bg-indigo-50/30'
+    )}>
+      {isCelticCross ? (
+        <span className="w-36 shrink-0 text-xs font-medium text-indigo-700 truncate">
+          {card.positionLabel}
+        </span>
+      ) : (
+        <span className="w-5 h-5 shrink-0 flex items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-500">
+          {index + 1}
+        </span>
+      )}
 
       <div className="flex-1 min-w-0">
         <CardAutocomplete
@@ -81,7 +106,7 @@ function CardRow({ card, index, suitFilter, onUpdate, onRemove, onEnter }: CardR
           }
           suitFilter={suitFilter}
           placeholder="Card name…"
-          onEnter={onEnter}
+          onEnter={isCelticCross ? undefined : onEnter}
         />
       </div>
 
@@ -90,16 +115,25 @@ function CardRow({ card, index, suitFilter, onUpdate, onRemove, onEnter }: CardR
         onChange={(orientation) => onUpdate(card.id, { orientation })}
       />
 
-      <button
-        type="button"
-        onClick={() => onRemove(card.id)}
-        className="shrink-0 rounded p-1 text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-all focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
-        aria-label="Remove card"
-      >
-        <X size={14} />
-      </button>
+      {!isCelticCross && (
+        <button
+          type="button"
+          onClick={() => onRemove(card.id)}
+          className="shrink-0 rounded p-1 text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-all focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+          aria-label="Remove card"
+        >
+          <X size={14} />
+        </button>
+      )}
     </div>
   )
+}
+
+const TIER_CARD_GUIDANCE: Record<string, string> = {
+  mini: '3-card spread',
+  core: '6–8 cards',
+  premium: '10–12+ cards',
+  celtic_cross: '10 cards (Celtic Cross spread)',
 }
 
 export function CardEntry({
@@ -109,6 +143,8 @@ export function CardEntry({
   onCardsChange,
   onSuitFilterChange,
   onBottomCardChange,
+  isCelticCross = false,
+  readingTier,
 }: CardEntryProps) {
   const addCard = useCallback(() => {
     const newCard: CardEntryForm = {
@@ -135,8 +171,15 @@ export function CardEntry({
     [cards, onCardsChange]
   )
 
+  const guidance = readingTier ? TIER_CARD_GUIDANCE[readingTier] : undefined
+
   return (
     <div className="space-y-4">
+      {/* Card count guidance (FIX 16) */}
+      {guidance && (
+        <p className="text-xs text-slate-500 -mt-1">{guidance}</p>
+      )}
+
       {/* Suit filter */}
       <div>
         <Label>Filter by suit</Label>
@@ -144,11 +187,11 @@ export function CardEntry({
       </div>
 
       {/* Column headers */}
-      <div className="flex items-center gap-2 px-2.5">
-        <span className="w-5" />
+      <div className={clsx('flex items-center gap-2', isCelticCross ? 'px-2.5' : 'px-2.5')}>
+        <span className={isCelticCross ? 'w-36' : 'w-5'} />
         <span className="flex-1 text-xs font-medium text-slate-500">Card name</span>
         <span className="w-[90px] text-xs font-medium text-slate-500">Orientation</span>
-        <span className="w-7" />
+        {!isCelticCross && <span className="w-7" />}
       </div>
 
       {/* Card rows */}
@@ -163,19 +206,22 @@ export function CardEntry({
             onRemove={removeCard}
             onEnter={addCard}
             isLast={i === cards.length - 1}
+            isCelticCross={isCelticCross}
           />
         ))}
       </div>
 
-      {/* Add card — dashed full-width button */}
-      <button
-        type="button"
-        onClick={addCard}
-        className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-500 hover:border-brand-400 hover:text-brand-600 transition-colors"
-      >
-        <Plus size={14} />
-        Add Card
-      </button>
+      {/* Add card — hidden in Celtic Cross mode */}
+      {!isCelticCross && (
+        <button
+          type="button"
+          onClick={addCard}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-500 hover:border-brand-400 hover:text-brand-600 transition-colors"
+        >
+          <Plus size={14} />
+          Add Card
+        </button>
+      )}
 
       {/* Bottom of deck — indigo tint */}
       <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">

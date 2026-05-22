@@ -1,11 +1,21 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateFullReading } from '@/lib/ai/generate'
+import { chatComplete } from '@/lib/ai/client'
 import { formatAiError } from '@/lib/ai/errors'
-import { READING_CHARACTER_TARGETS } from '@/lib/ai/config'
+import { READING_CHARACTER_TARGETS, AI_CONFIG } from '@/lib/ai/config'
 import { getCardBySuit } from '@/data/tarot-cards'
 import type { ReadingFormState, CardEntryForm } from '@/types'
 import type { PromptInput } from '@/lib/ai/prompts/builder'
+
+function trimAtSentence(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text
+  const sub = text.slice(0, maxLength)
+  for (let i = sub.length - 1; i >= 0; i--) {
+    if (['.', '!', '?'].includes(sub[i])) return sub.slice(0, i + 1)
+  }
+  return sub
+}
 
 function mapCardToPromptInput(card: CardEntryForm) {
   return {
@@ -80,8 +90,39 @@ export async function POST(request: Request) {
 
   const { generatedReading: rawReading, generatedPrompt, groqModel } = generationResult
 
+  // Length check and optional continuation
+  const minLength = Math.floor(characterTarget * 0.85)
+  const maxLength = Math.ceil(characterTarget * 1.15)
+  let finalReading = rawReading
+
+  if (finalReading.length > maxLength) {
+    finalReading = trimAtSentence(finalReading, maxLength)
+  }
+
+  let attempts = 0
+  while (finalReading.length < minLength && attempts < 2) {
+    attempts++
+    const tail = finalReading.slice(-2000)
+    try {
+      const continuation = await chatComplete(
+        'You are an expert tarot reader. Continue the reading exactly where it left off.',
+        `The tarot reading so far is ${finalReading.length} characters. It needs at least ${minLength} characters. Continue naturally from where it ended. Do not repeat anything already written. Do not add a sign-off or closing — only continue the body of the reading.\n\n...\n${tail}`,
+        AI_CONFIG.maxTokens
+      )
+      finalReading = finalReading + '\n\n' + continuation
+      if (finalReading.length > maxLength) finalReading = trimAtSentence(finalReading, maxLength)
+    } catch {
+      break
+    }
+  }
+
+  const lengthStatus =
+    finalReading.length < minLength ? 'SHORT' :
+    finalReading.length > maxLength ? 'TRIMMED' : 'PASS'
+  console.log(`Reading length: ${finalReading.length} chars / ${characterTarget} target — ${lengthStatus}`)
+
   // Append sign-off and disclaimer from the default template
-  let generatedReading = rawReading
+  let generatedReading = finalReading
   const { data: defaultTemplate } = await supabase
     .from('reading_templates')
     .select('signoff_text, disclaimer_text')

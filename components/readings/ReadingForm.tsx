@@ -4,7 +4,7 @@ import { useReducer, useCallback, useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, ScrollText, Loader2 } from 'lucide-react'
 import { clsx } from 'clsx'
-import { CardEntry } from './CardEntry'
+import { CardEntry, CELTIC_CROSS_POSITIONS } from './CardEntry'
 import { TonePresetSelect } from './TonePresetSelect'
 import { AddOnsSection } from './AddOnsSection'
 import { OutputPanel } from './OutputPanel'
@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/Label'
 import { Toggle } from '@/components/ui/Toggle'
 import { createClient } from '@/lib/supabase/client'
 import { READING_CHARACTER_TARGETS } from '@/lib/ai/config'
+import { READING_PRICES, ADDON_PRICES } from '@/lib/config/pricing'
 import { useTestMode } from '@/contexts/TestModeContext'
 import type {
   ReadingFormState,
@@ -26,17 +27,19 @@ import type {
   RestoredReadingData,
 } from '@/types'
 
-const TIER_PRICES: Record<ReadingTier, string> = {
-  mini: '10.00',
-  core: '25.00',
-  premium: '45.00',
-  celtic_cross: '10.00',
-}
-
 // ─── Initial state ─────────────────────────────────────────────────────────────
 
 function makeBlankCard(): CardEntryForm {
   return { id: crypto.randomUUID(), name: '', orientation: 'upright', positionLabel: '' }
+}
+
+function makeCelticCrossCards(existing: CardEntryForm[] = []): CardEntryForm[] {
+  return CELTIC_CROSS_POSITIONS.map((pos, i) => ({
+    id: existing[i]?.id ?? crypto.randomUUID(),
+    name: existing[i]?.name ?? '',
+    orientation: existing[i]?.orientation ?? 'upright',
+    positionLabel: pos,
+  }))
 }
 
 function initialState(): ReadingFormState {
@@ -64,6 +67,8 @@ function initialState(): ReadingFormState {
     oracleCardName: '',
     includeEnergyCleansing: false,
     energyCleansingNotes: '',
+    includeExtraQuestion: false,
+    includeFollowUp: false,
     generatedReading: null,
     isGenerating: false,
     generationError: null,
@@ -82,6 +87,8 @@ type Action =
   | { type: 'SET_GENERATING'; value: boolean }
   | { type: 'SET_OUTPUT'; reading: string; readingId: string; orderId: string }
   | { type: 'SET_ERROR'; error: string }
+  | { type: 'SET_CELTIC_CROSS_LAYOUT'; existingCards: CardEntryForm[] }
+  | { type: 'CLEAR_POSITION_LABELS' }
   | { type: 'RESTORE'; data: RestoredReadingData; cards: CardEntryForm[]; bottomCard: { name: string; orientation: CardOrientation } }
   | { type: 'RESET' }
 
@@ -113,6 +120,10 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
       }
     case 'SET_ERROR':
       return { ...state, isGenerating: false, generationError: action.error }
+    case 'SET_CELTIC_CROSS_LAYOUT':
+      return { ...state, cards: makeCelticCrossCards(action.existingCards) }
+    case 'CLEAR_POSITION_LABELS':
+      return { ...state, cards: state.cards.map((c) => ({ ...c, positionLabel: '' })) }
     case 'RESTORE': {
       const { data, cards, bottomCard } = action
       const order = data.order
@@ -138,6 +149,8 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         oracleCardName: data.oracle_card_name ?? '',
         includeEnergyCleansing: data.include_energy_cleansing ?? false,
         energyCleansingNotes: data.energy_cleansing_notes ?? '',
+        includeExtraQuestion: false,
+        includeFollowUp: false,
         generatedReading: data.generated_reading,
         savedReadingId: data.id || null,
         savedOrderId: order?.id ?? null,
@@ -153,7 +166,7 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
   }
 }
 
-// ─── Section component (FIX 10) ───────────────────────────────────────────────
+// ─── Section component ─────────────────────────────────────────────────────────
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -172,13 +185,13 @@ function FieldRow({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</div>
 }
 
-// PillGroup with deeper selected state (FIX 12)
+// PillGroup with disabled support (FIX 15)
 function PillGroup({
   options,
   value,
   onChange,
 }: {
-  options: { value: string; label: string }[]
+  options: { value: string; label: string; disabled?: boolean }[]
   value: string
   onChange: (v: string) => void
 }) {
@@ -188,10 +201,13 @@ function PillGroup({
         <button
           key={opt.value}
           type="button"
-          onClick={() => onChange(opt.value)}
+          disabled={opt.disabled}
+          onClick={() => !opt.disabled && onChange(opt.value)}
           className={clsx(
             'rounded-md px-3 py-1.5 text-xs font-medium transition-all',
-            value === opt.value
+            opt.disabled
+              ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
+              : value === opt.value
               ? 'bg-brand-700 text-white shadow-sm ring-1 ring-brand-800/20'
               : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
           )}
@@ -222,10 +238,11 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
   const router = useRouter()
 
   const hasOutput = !!(state.generatedReading || state.isGenerating || state.generationError)
+  const isCelticCross = state.readingTier === 'celtic_cross'
 
   const isDirtyRef = useRef(false)
   const lastUserSelectedTierRef = useRef<string>('')
-  const outputRef = useRef<HTMLDivElement>(null) // for FIX 5 auto-scroll
+  const outputRef = useRef<HTMLDivElement>(null)
 
   const set = useCallback(
     (field: keyof ReadingFormState, value: ReadingFormState[keyof ReadingFormState]) => {
@@ -235,10 +252,41 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
     []
   )
 
+  // ── Auto-price effect (FIX 14) ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!isPriceAutoSet) return
+    const base = READING_PRICES[state.readingTier]?.[state.deliveryFormat] ?? 0
+    const addons =
+      (state.includeOracleCard ? ADDON_PRICES.oracle_card : 0) +
+      (state.isRush ? ADDON_PRICES.rush_24h : 0) +
+      (state.includeExtraQuestion ? ADDON_PRICES.extra_question : 0) +
+      (state.includeEnergyCleansing ? ADDON_PRICES.energy_cleansing : 0) +
+      (state.includeFollowUp ? ADDON_PRICES.follow_up : 0)
+    dispatch({ type: 'SET', field: 'priceTotal', value: String(base + addons) })
+  }, [
+    isPriceAutoSet,
+    state.readingTier,
+    state.deliveryFormat,
+    state.includeOracleCard,
+    state.isRush,
+    state.includeExtraQuestion,
+    state.includeEnergyCleansing,
+    state.includeFollowUp,
+  ])
+
+  // Computed pricing breakdown for display
+  const basePrice = READING_PRICES[state.readingTier]?.[state.deliveryFormat] ?? null
+  const addonTotal =
+    (state.includeOracleCard ? ADDON_PRICES.oracle_card : 0) +
+    (state.isRush ? ADDON_PRICES.rush_24h : 0) +
+    (state.includeExtraQuestion ? ADDON_PRICES.extra_question : 0) +
+    (state.includeEnergyCleansing ? ADDON_PRICES.energy_cleansing : 0) +
+    (state.includeFollowUp ? ADDON_PRICES.follow_up : 0)
+  const runningTotal = (basePrice ?? 0) + addonTotal
+
   // Restore saved reading on mount
   useEffect(() => {
     if (!initialReading) return
-
     const mainCards = initialReading.cards
       .filter((c) => !c.is_bottom_card)
       .sort((a, b) => a.sort_order - b.sort_order)
@@ -248,7 +296,6 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
         orientation: c.orientation as CardOrientation,
         positionLabel: c.position_label ?? '',
       }))
-
     const bottomCardRow = initialReading.cards.find((c) => c.is_bottom_card)
     const bottomCard = bottomCardRow
       ? { name: bottomCardRow.card_name, orientation: bottomCardRow.orientation as CardOrientation }
@@ -256,7 +303,6 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
           name: initialReading.bottom_of_deck_card ?? '',
           orientation: (initialReading.bottom_of_deck_orientation as CardOrientation) ?? 'upright',
         }
-
     dispatch({
       type: 'RESTORE',
       data: initialReading,
@@ -264,30 +310,18 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
       bottomCard,
     })
     isDirtyRef.current = false
-
-    if (initialReading.id) {
-      setIsReopenMode(true)
-    }
+    if (initialReading.id) setIsReopenMode(true)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Load app settings (skip if restoring)
+  // Load app settings
   useEffect(() => {
     if (initialReading) return
     async function loadSettings() {
       const supabase = createClient()
-      const { data } = await supabase
-        .from('app_settings')
-        .select('default_topic, business_name')
-        .limit(1)
-        .single()
-
-      if (data?.default_topic) {
-        dispatch({ type: 'SET', field: 'topic', value: data.default_topic })
-      }
-      if (data?.business_name) {
-        setBusinessName(data.business_name)
-      }
+      const { data } = await supabase.from('app_settings').select('default_topic, business_name').limit(1).single()
+      if (data?.default_topic) dispatch({ type: 'SET', field: 'topic', value: data.default_topic })
+      if (data?.business_name) setBusinessName(data.business_name)
     }
     loadSettings()
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -298,18 +332,14 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
     if (!initialReading) return
     async function loadBusinessName() {
       const supabase = createClient()
-      const { data } = await supabase
-        .from('app_settings')
-        .select('business_name')
-        .limit(1)
-        .single()
+      const { data } = await supabase.from('app_settings').select('business_name').limit(1).single()
       if (data?.business_name) setBusinessName(data.business_name)
     }
     loadBusinessName()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Set first tone preset as default
+  // Set default tone preset
   useEffect(() => {
     if (tonePresets.length > 0 && !state.tonePresetId) {
       const defaultPreset = tonePresets.find((p) => p.is_default) ?? tonePresets[0]
@@ -320,29 +350,19 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
   // Suggest tone preset on tier change
   useEffect(() => {
     if (state.readingTier !== lastUserSelectedTierRef.current) return
-    const recommended = tonePresets.find((p) =>
-      (p.default_for_tier ?? []).includes(state.readingTier)
-    )
-    if (recommended) {
-      dispatch({ type: 'SET', field: 'tonePresetId', value: recommended.id })
-    }
+    const recommended = tonePresets.find((p) => (p.default_for_tier ?? []).includes(state.readingTier))
+    if (recommended) dispatch({ type: 'SET', field: 'tonePresetId', value: recommended.id })
   }, [state.readingTier, tonePresets])
 
   async function searchClients(query: string) {
     if (query.length < 2) { setClientSuggestions([]); return }
     const supabase = createClient()
-    const { data } = await supabase
-      .from('clients')
-      .select('id, full_name, email, phone')
-      .ilike('full_name', `%${query}%`)
-      .limit(6)
+    const { data } = await supabase.from('clients').select('id, full_name, email, phone').ilike('full_name', `%${query}%`).limit(6)
     setClientSuggestions(data ?? [])
   }
 
   function handleBack() {
-    if (isDirtyRef.current) {
-      if (!window.confirm('You have unsaved changes. Leave this page?')) return
-    }
+    if (isDirtyRef.current && !window.confirm('You have unsaved changes. Leave this page?')) return
     router.push('/dashboard')
   }
 
@@ -352,7 +372,43 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
     isDirtyRef.current = false
     setIsReopenMode(false)
     setReadingLengthOverridden(false)
+    setIsPriceAutoSet(false)
     router.replace('/dashboard/readings/new')
+  }
+
+  // Handle tier change with Celtic Cross logic (FIX 15, 17)
+  function handleTierChange(tier: ReadingTier) {
+    isDirtyRef.current = true
+    lastUserSelectedTierRef.current = tier
+    const prevTier = state.readingTier
+
+    // FIX 15: force format to 'written' for Celtic Cross
+    if (tier === 'celtic_cross' && state.deliveryFormat !== 'written') {
+      dispatch({ type: 'SET', field: 'deliveryFormat', value: 'written' })
+    }
+
+    // FIX 17: Celtic Cross position layout
+    if (tier === 'celtic_cross' && prevTier !== 'celtic_cross') {
+      const hasNamedCards = state.cards.some((c) => c.name.trim())
+      if (hasNamedCards) {
+        const confirmed = window.confirm(
+          'Celtic Cross uses 10 specific positions. Reset card rows to Celtic Cross layout?\n\nYour entered cards will be kept but positions will be relabelled.'
+        )
+        if (confirmed) dispatch({ type: 'SET_CELTIC_CROSS_LAYOUT', existingCards: state.cards })
+      } else {
+        dispatch({ type: 'SET_CELTIC_CROSS_LAYOUT', existingCards: state.cards })
+      }
+    } else if (prevTier === 'celtic_cross' && tier !== 'celtic_cross') {
+      dispatch({ type: 'CLEAR_POSITION_LABELS' })
+    }
+
+    // Update tier and length
+    if (!readingLengthOverridden) {
+      dispatch({ type: 'SET_TIER', tier })
+    } else {
+      dispatch({ type: 'SET', field: 'readingTier', value: tier })
+    }
+    setIsPriceAutoSet(true)
   }
 
   async function handleGenerate() {
@@ -361,7 +417,6 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
       dispatch({ type: 'SET_ERROR', error: 'Please select a tone preset.' })
       return
     }
-
     const validCards = state.cards.filter((c) => c.name.trim())
     if (validCards.length === 0) {
       dispatch({ type: 'SET_ERROR', error: 'Add at least one card before generating.' })
@@ -370,43 +425,27 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
 
     dispatch({ type: 'SET_GENERATING', value: true })
 
-    // FIX 5: scroll to output on small/medium screens after panel becomes visible
+    // FIX 5: scroll to output on small screens
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      setTimeout(() => {
-        outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 150)
+      setTimeout(() => outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
     }
 
     try {
       const response = await fetch('/api/readings/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          formState: state,
-          tonePresetText: selectedPreset.prompt_text,
-          isTestMode,
-        }),
+        body: JSON.stringify({ formState: state, tonePresetText: selectedPreset.prompt_text, isTestMode }),
       })
-
       if (!response.ok) {
         const data = await response.json().catch(() => ({}))
         throw new Error(data.error ?? `Server error ${response.status}`)
       }
-
       const data = await response.json()
-      dispatch({
-        type: 'SET_OUTPUT',
-        reading: data.generatedReading,
-        readingId: data.readingId,
-        orderId: data.orderId,
-      })
+      dispatch({ type: 'SET_OUTPUT', reading: data.generatedReading, readingId: data.readingId, orderId: data.orderId })
       isDirtyRef.current = false
       router.replace(`/dashboard/readings/new?readingId=${data.readingId}`)
     } catch (err) {
-      dispatch({
-        type: 'SET_ERROR',
-        error: err instanceof Error ? err.message : 'Generation failed',
-      })
+      dispatch({ type: 'SET_ERROR', error: err instanceof Error ? err.message : 'Generation failed' })
     }
   }
 
@@ -416,61 +455,37 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ formState: state, isTestMode }),
     })
-
     if (!response.ok) {
       const data = await response.json().catch(() => ({}))
       throw new Error(data.error ?? 'Save failed')
     }
-
     const data = await response.json()
-
-    if (data.readingId && !state.savedReadingId) {
-      dispatch({ type: 'SET', field: 'savedReadingId', value: data.readingId })
-    }
-    if (data.orderId && !state.savedOrderId) {
-      dispatch({ type: 'SET', field: 'savedOrderId', value: data.orderId })
-    }
-
+    if (data.readingId && !state.savedReadingId) dispatch({ type: 'SET', field: 'savedReadingId', value: data.readingId })
+    if (data.orderId && !state.savedOrderId) dispatch({ type: 'SET', field: 'savedOrderId', value: data.orderId })
     isDirtyRef.current = false
-
-    if (data.readingId) {
-      router.replace(`/dashboard/readings/new?readingId=${data.readingId}`)
-    }
+    if (data.readingId) router.replace(`/dashboard/readings/new?readingId=${data.readingId}`)
   }
 
   async function handleMarkReady() {
     if (!state.savedReadingId) return
     const supabase = createClient()
-    await supabase
-      .from('readings')
-      .update({ final_approved: true, updated_at: new Date().toISOString() })
-      .eq('id', state.savedReadingId)
+    await supabase.from('readings').update({ final_approved: true, updated_at: new Date().toISOString() }).eq('id', state.savedReadingId)
     if (state.savedOrderId) {
-      await supabase
-        .from('orders')
-        .update({ status: 'awaiting_review', updated_at: new Date().toISOString() })
-        .eq('id', state.savedOrderId)
+      await supabase.from('orders').update({ status: 'awaiting_review', updated_at: new Date().toISOString() }).eq('id', state.savedOrderId)
     }
   }
 
   async function handleMarkSent() {
     if (!state.savedOrderId) return
     const supabase = createClient()
-
     const { error: orderError } = await supabase
       .from('orders')
       .update({ status: 'sent', sent_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq('id', state.savedOrderId)
-
     if (orderError) throw new Error(orderError.message)
-
     if (state.savedReadingId) {
-      await supabase
-        .from('readings')
-        .update({ final_approved: true, updated_at: new Date().toISOString() })
-        .eq('id', state.savedReadingId)
+      await supabase.from('readings').update({ final_approved: true, updated_at: new Date().toISOString() }).eq('id', state.savedReadingId)
     }
-
     dispatch({ type: 'SET', field: 'status', value: 'sent' })
   }
 
@@ -478,22 +493,14 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
     <div className="flex flex-col h-full">
       {/* Page header */}
       <div className="shrink-0 relative flex items-center border-b border-slate-200 bg-white px-6 py-4">
-        <button
-          type="button"
-          onClick={handleBack}
-          className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
-        >
+        <button type="button" onClick={handleBack} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700">
           <ArrowLeft size={14} />
           Back
         </button>
         <h1 className="absolute left-1/2 -translate-x-1/2 text-base font-semibold text-slate-900 pointer-events-none">
           {isReopenMode ? 'Edit Reading' : 'New Reading'}
         </h1>
-        <button
-          type="button"
-          onClick={handleClearForm}
-          className="ml-auto text-xs text-slate-400 underline underline-offset-2 hover:text-slate-600"
-        >
+        <button type="button" onClick={handleClearForm} className="ml-auto text-xs text-slate-400 underline underline-offset-2 hover:text-slate-600">
           Clear form
         </button>
       </div>
@@ -502,8 +509,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
       {isReopenMode && (
         <div className="shrink-0 flex items-center justify-between border-b border-amber-200 bg-amber-50 px-6 py-3">
           <p className="text-sm font-medium text-amber-900">
-            Editing saved reading —{' '}
-            <span className="font-semibold">{state.clientName || 'Unknown client'}</span>
+            Editing saved reading — <span className="font-semibold">{state.clientName || 'Unknown client'}</span>
           </p>
           <button
             type="button"
@@ -513,6 +519,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               isDirtyRef.current = false
               setIsReopenMode(false)
               setReadingLengthOverridden(false)
+              setIsPriceAutoSet(false)
               router.replace('/dashboard/readings/new')
             }}
           >
@@ -521,25 +528,21 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
         </div>
       )}
 
-      {/* ── Two-column layout (FIX 1) ─────────────────────────────────── */}
+      {/* ── Two-column layout ───────────────────────────────────────────── */}
       <div className="flex flex-1 min-h-0 flex-col lg:flex-row">
 
-        {/* ── Left: Form ─────────────────────────────────────────────── */}
+        {/* ── Left: Form ──────────────────────────────────────────────── */}
         <div className="flex-1 min-w-0 overflow-y-auto p-6 space-y-6 lg:border-r lg:border-slate-200">
 
           {/* Order Info */}
           <Section title="Order Info">
-            {/* Client name with autocomplete */}
             <div>
               <Label htmlFor="client-name">Client name</Label>
               <div className="relative">
                 <Input
                   id="client-name"
                   value={state.clientName}
-                  onChange={(e) => {
-                    set('clientName', e.target.value)
-                    searchClients(e.target.value)
-                  }}
+                  onChange={(e) => { set('clientName', e.target.value); searchClients(e.target.value) }}
                   placeholder="Search or type new client…"
                 />
                 {clientSuggestions.length > 0 && (
@@ -569,50 +572,41 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
             <FieldRow>
               <div>
                 <Label htmlFor="client-email">Email</Label>
-                <Input
-                  id="client-email"
-                  type="email"
-                  value={state.clientEmail}
-                  onChange={(e) => set('clientEmail', e.target.value)}
-                  placeholder="client@example.com"
-                />
+                <Input id="client-email" type="email" value={state.clientEmail} onChange={(e) => set('clientEmail', e.target.value)} placeholder="client@example.com" />
               </div>
               <div>
-                {/* FIX 12: £ prefix inside price input */}
+                {/* £ prefix inside price input (FIX 12) */}
                 <Label htmlFor="price">Price</Label>
                 <div className="relative">
-                  <span className="pointer-events-none select-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">
-                    £
-                  </span>
+                  <span className="pointer-events-none select-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">£</span>
                   <Input
                     id="price"
                     type="number"
                     min="0"
                     step="0.01"
                     value={state.priceTotal}
-                    onChange={(e) => {
-                      set('priceTotal', e.target.value)
-                      setIsPriceAutoSet(false)
-                    }}
+                    onChange={(e) => { set('priceTotal', e.target.value); setIsPriceAutoSet(false) }}
                     placeholder="0.00"
                     className="pl-7"
                   />
                 </div>
-                {isPriceAutoSet && (
-                  <p className="mt-1 text-xs text-slate-400">Auto-set from tier — edit to override</p>
+                {/* Running total (FIX 14) */}
+                {isPriceAutoSet && basePrice !== null && (
+                  <p className="mt-1 text-xs text-slate-500">
+                    {addonTotal > 0
+                      ? `Base: £${basePrice} + Add-ons: £${addonTotal} = Total: £${runningTotal} — `
+                      : 'Auto-set — '}
+                    <button type="button" className="underline hover:text-slate-700" onClick={() => setIsPriceAutoSet(false)}>
+                      edit to override
+                    </button>
+                  </p>
                 )}
               </div>
             </FieldRow>
 
             <div>
               <Label htmlFor="client-phone">Phone</Label>
-              <Input
-                id="client-phone"
-                type="tel"
-                value={state.clientPhone}
-                onChange={(e) => set('clientPhone', e.target.value)}
-                placeholder="+44 7700 000000"
-              />
+              <Input id="client-phone" type="tel" value={state.clientPhone} onChange={(e) => set('clientPhone', e.target.value)} placeholder="+44 7700 000000" />
             </div>
 
             <div>
@@ -620,18 +614,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               <Select
                 id="reading-tier"
                 value={state.readingTier}
-                onChange={(e) => {
-                  isDirtyRef.current = true
-                  const tier = e.target.value as ReadingTier
-                  lastUserSelectedTierRef.current = tier
-                  if (!readingLengthOverridden) {
-                    dispatch({ type: 'SET_TIER', tier })
-                  } else {
-                    dispatch({ type: 'SET', field: 'readingTier', value: tier })
-                  }
-                  dispatch({ type: 'SET', field: 'priceTotal', value: TIER_PRICES[tier] })
-                  setIsPriceAutoSet(true)
-                }}
+                onChange={(e) => handleTierChange(e.target.value as ReadingTier)}
               >
                 <option value="mini">Mini Written (~3,000 chars)</option>
                 <option value="core">Core Written (~6,000 chars)</option>
@@ -643,11 +626,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
             <FieldRow>
               <div>
                 <Label htmlFor="topic">Topic</Label>
-                <Select
-                  id="topic"
-                  value={state.topic}
-                  onChange={(e) => set('topic', e.target.value)}
-                >
+                <Select id="topic" value={state.topic} onChange={(e) => set('topic', e.target.value)}>
                   <option>Love</option>
                   <option>Career</option>
                   <option>General</option>
@@ -656,11 +635,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               </div>
               <div>
                 <Label htmlFor="star-sign">Star sign</Label>
-                <Select
-                  id="star-sign"
-                  value={state.starSign}
-                  onChange={(e) => set('starSign', e.target.value)}
-                >
+                <Select id="star-sign" value={state.starSign} onChange={(e) => set('starSign', e.target.value)}>
                   <option value="">Select…</option>
                   {['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'].map((s) => (
                     <option key={s}>{s}</option>
@@ -674,58 +649,40 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               <PillGroup
                 options={[
                   { value: 'written', label: 'Written' },
-                  { value: 'voice_note', label: 'Voice Note' },
-                  { value: 'video', label: 'Video' },
+                  { value: 'voice_note', label: 'Voice Note', disabled: isCelticCross },
+                  { value: 'video', label: 'Video', disabled: isCelticCross },
                 ]}
                 value={state.deliveryFormat}
-                onChange={(v) => set('deliveryFormat', v as DeliveryFormat)}
+                onChange={(v) => {
+                  set('deliveryFormat', v as DeliveryFormat)
+                  setIsPriceAutoSet(true)
+                }}
               />
+              {isCelticCross && (
+                <p className="mt-1.5 text-xs text-slate-500">Celtic Cross is available as written only</p>
+              )}
             </div>
 
             <div>
               <Label htmlFor="due-at">Due date &amp; time</Label>
-              <Input
-                id="due-at"
-                type="datetime-local"
-                value={state.dueAt}
-                onChange={(e) => set('dueAt', e.target.value)}
-              />
+              <Input id="due-at" type="datetime-local" value={state.dueAt} onChange={(e) => set('dueAt', e.target.value)} />
             </div>
 
-            <Toggle
-              checked={state.isReturningClient}
-              onChange={(v) => set('isReturningClient', v)}
-              label="Returning client"
-            />
+            <Toggle checked={state.isReturningClient} onChange={(v) => set('isReturningClient', v)} label="Returning client" />
           </Section>
 
           {/* Reading Setup */}
           <Section title="Reading Setup">
-            <TonePresetSelect
-              presets={tonePresets}
-              value={state.tonePresetId}
-              onChange={(id) => set('tonePresetId', id)}
-            />
+            <TonePresetSelect presets={tonePresets} value={state.tonePresetId} onChange={(id) => set('tonePresetId', id)} />
             <div>
               <div className="flex items-baseline gap-2">
                 <Label htmlFor="reading-length">Reading length (characters)</Label>
                 {!readingLengthOverridden ? (
-                  <button
-                    type="button"
-                    className="text-xs text-brand-600 underline underline-offset-2 hover:text-brand-800"
-                    onClick={() => setReadingLengthOverridden(true)}
-                  >
+                  <button type="button" className="text-xs text-brand-600 underline underline-offset-2 hover:text-brand-800" onClick={() => setReadingLengthOverridden(true)}>
                     Override
                   </button>
                 ) : (
-                  <button
-                    type="button"
-                    className="text-xs text-slate-400 underline underline-offset-2 hover:text-slate-600"
-                    onClick={() => {
-                      setReadingLengthOverridden(false)
-                      dispatch({ type: 'SET_TIER', tier: state.readingTier })
-                    }}
-                  >
+                  <button type="button" className="text-xs text-slate-400 underline underline-offset-2 hover:text-slate-600" onClick={() => { setReadingLengthOverridden(false); dispatch({ type: 'SET_TIER', tier: state.readingTier }) }}>
                     Reset to default
                   </button>
                 )}
@@ -741,11 +698,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                 readOnly={!readingLengthOverridden}
                 className={!readingLengthOverridden ? 'bg-slate-50 text-slate-500 cursor-default' : ''}
               />
-              {readingLengthOverridden && (
-                <p className="mt-1 text-xs text-amber-600">
-                  Custom length set — tier changes will not apply
-                </p>
-              )}
+              {readingLengthOverridden && <p className="mt-1 text-xs text-amber-600">Custom length set — tier changes will not apply</p>}
             </div>
           </Section>
 
@@ -755,15 +708,11 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               cards={state.cards}
               suitFilter={state.suitFilter}
               bottomCard={state.bottomCard}
-              onCardsChange={(cards) => {
-                isDirtyRef.current = true
-                dispatch({ type: 'SET_CARDS', cards })
-              }}
+              onCardsChange={(cards) => { isDirtyRef.current = true; dispatch({ type: 'SET_CARDS', cards }) }}
               onSuitFilterChange={(suit) => set('suitFilter', suit)}
-              onBottomCardChange={(card) => {
-                isDirtyRef.current = true
-                dispatch({ type: 'SET_BOTTOM_CARD', card })
-              }}
+              onBottomCardChange={(card) => { isDirtyRef.current = true; dispatch({ type: 'SET_BOTTOM_CARD', card }) }}
+              isCelticCross={isCelticCross}
+              readingTier={state.readingTier}
             />
           </Section>
 
@@ -788,10 +737,16 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               oracleCardName={state.oracleCardName}
               includeEnergyCleansing={state.includeEnergyCleansing}
               energyCleansingNotes={state.energyCleansingNotes}
-              onToggleOracleCard={(v) => set('includeOracleCard', v)}
+              includeExtraQuestion={state.includeExtraQuestion}
+              includeFollowUp={state.includeFollowUp}
+              isRush={state.isRush}
+              onToggleOracleCard={(v) => { set('includeOracleCard', v); setIsPriceAutoSet(true) }}
               onOracleCardNameChange={(v) => set('oracleCardName', v)}
-              onToggleEnergyCleansing={(v) => set('includeEnergyCleansing', v)}
+              onToggleEnergyCleansing={(v) => { set('includeEnergyCleansing', v); setIsPriceAutoSet(true) }}
               onEnergyCleansingNotesChange={(v) => set('energyCleansingNotes', v)}
+              onToggleExtraQuestion={(v) => { set('includeExtraQuestion', v); setIsPriceAutoSet(true) }}
+              onToggleFollowUp={(v) => { set('includeFollowUp', v); setIsPriceAutoSet(true) }}
+              onToggleRush={(v) => { set('isRush', v); setIsPriceAutoSet(true) }}
             />
           </Section>
 
@@ -810,23 +765,16 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
               >
                 {state.isGenerating ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Generating…
-                  </>
+                  <><Loader2 size={16} className="animate-spin" />Generating…</>
                 ) : (
-                  <>
-                    <ScrollText size={16} />
-                    Generate Reading
-                  </>
+                  <><ScrollText size={16} />Generate Reading</>
                 )}
               </button>
             </div>
           )}
         </div>
 
-        {/* ── Right: Output panel (FIX 1) ─────────────────────────────── */}
-        {/* Always visible on lg+; only visible when hasOutput on smaller screens */}
+        {/* ── Right: Output panel ─────────────────────────────────────── */}
         <div
           ref={outputRef}
           className={clsx(
