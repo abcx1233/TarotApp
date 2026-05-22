@@ -2,7 +2,7 @@
 
 import { useReducer, useCallback, useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, ScrollText, Loader2 } from 'lucide-react'
+import { ArrowLeft, ScrollText, Loader2, Zap } from 'lucide-react'
 import { clsx } from 'clsx'
 import { CardEntry, CELTIC_CROSS_POSITIONS } from './CardEntry'
 import { TonePresetSelect } from './TonePresetSelect'
@@ -546,6 +546,19 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
         </button>
       </div>
 
+      {/* Rush banner (CHANGE 2) */}
+      <div
+        className={clsx(
+          'shrink-0 overflow-hidden transition-all duration-300',
+          state.isRush ? 'max-h-16' : 'max-h-0'
+        )}
+      >
+        <div className="flex items-center gap-2 border-b border-rose-200 bg-rose-50 px-6 py-2.5">
+          <Zap size={13} className="text-rose-600 shrink-0" />
+          <span className="text-xs font-medium text-rose-700">Rush Order — prioritised delivery within 24 hours</span>
+        </div>
+      </div>
+
       {/* Reopen mode banner */}
       {isReopenMode && (
         <div className="shrink-0 flex items-center justify-between border-b border-amber-200 bg-amber-50 px-6 py-3">
@@ -610,40 +623,10 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               </div>
             </div>
 
-            <FieldRow>
-              <div>
-                <Label htmlFor="client-email">Email</Label>
-                <Input id="client-email" type="email" value={state.clientEmail} onChange={(e) => set('clientEmail', e.target.value)} placeholder="client@example.com" />
-              </div>
-              <div>
-                {/* £ prefix inside price input (FIX 12) */}
-                <Label htmlFor="price">Price</Label>
-                <div className="relative">
-                  <span className="pointer-events-none select-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">£</span>
-                  <Input
-                    id="price"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={state.priceTotal}
-                    onChange={(e) => { set('priceTotal', e.target.value); setIsPriceAutoSet(false) }}
-                    placeholder="0.00"
-                    className="pl-7"
-                  />
-                </div>
-                {/* Running total (FIX 14) */}
-                {isPriceAutoSet && basePrice !== null && (
-                  <p className="mt-1 text-xs text-slate-500">
-                    {addonTotal > 0
-                      ? `Base: £${basePrice} + Add-ons: £${addonTotal} = Total: £${runningTotal} — `
-                      : 'Auto-set — '}
-                    <button type="button" className="underline hover:text-slate-700" onClick={() => setIsPriceAutoSet(false)}>
-                      edit to override
-                    </button>
-                  </p>
-                )}
-              </div>
-            </FieldRow>
+            <div>
+              <Label htmlFor="client-email">Email</Label>
+              <Input id="client-email" type="email" value={state.clientEmail} onChange={(e) => set('clientEmail', e.target.value)} placeholder="client@example.com" />
+            </div>
 
             <div>
               <Label htmlFor="client-phone">Phone</Label>
@@ -706,14 +689,35 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
 
             <Toggle checked={state.isReturningClient} onChange={(v) => set('isReturningClient', v)} label="Returning client" />
 
-            {/* Due date — bottom of Order Info (CHANGE 7) */}
+            {/* 8. Price */}
             <div>
-              <Label htmlFor="due-at">Due date &amp; time</Label>
-              <Input id="due-at" type="datetime-local" value={state.dueAt} onChange={(e) => set('dueAt', e.target.value)} />
-              <p className="mt-1 text-xs text-slate-400">Auto-filled when orders come in via Stripe — override if needed</p>
+              <Label htmlFor="price">Price</Label>
+              <div className="relative">
+                <span className="pointer-events-none select-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">£</span>
+                <Input
+                  id="price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={state.priceTotal}
+                  onChange={(e) => { set('priceTotal', e.target.value); setIsPriceAutoSet(false) }}
+                  placeholder="0.00"
+                  className="pl-7"
+                />
+              </div>
+              {isPriceAutoSet && basePrice !== null && (
+                <p className="mt-1 text-xs text-slate-500">
+                  {addonTotal > 0
+                    ? `Base: £${basePrice} + Add-ons: £${addonTotal} = Total: £${runningTotal} — `
+                    : 'Auto-set — '}
+                  <button type="button" className="underline hover:text-slate-700" onClick={() => setIsPriceAutoSet(false)}>
+                    edit to override
+                  </button>
+                </p>
+              )}
             </div>
 
-            {/* Order Add-Ons (CHANGE 1) */}
+            {/* 9. Order Add-Ons */}
             <div className="space-y-3">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Order Add-Ons</p>
               <OrderAddOnsSection
@@ -726,6 +730,13 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                 onToggleFollowUp={(v) => { set('includeFollowUp', v); setIsPriceAutoSet(true) }}
                 onToggleRush={(v) => { set('isRush', v); setIsPriceAutoSet(true) }}
               />
+            </div>
+
+            {/* 10. Due date */}
+            <div>
+              <Label htmlFor="due-at">Due date &amp; time</Label>
+              <Input id="due-at" type="datetime-local" value={state.dueAt} onChange={(e) => set('dueAt', e.target.value)} />
+              <p className="mt-1 text-xs text-slate-400">Auto-filled when orders come in via Stripe — override if needed</p>
             </div>
           </Section>
 
