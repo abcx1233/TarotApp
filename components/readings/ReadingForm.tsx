@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/Label'
 import { Toggle } from '@/components/ui/Toggle'
 import { createClient } from '@/lib/supabase/client'
 import { READING_CHARACTER_TARGETS } from '@/lib/ai/config'
+import { useTestMode } from '@/contexts/TestModeContext'
 import type { ReadingFormState, TonePreset, ReadingTier, CardEntryForm, CardOrientation } from '@/types'
 
 // ─── Initial state ─────────────────────────────────────────────────────────────
@@ -43,7 +44,6 @@ function initialState(): ReadingFormState {
     bottomCard: { name: '', orientation: 'upright' },
     birthday: '',
     starSign: '',
-    pronouns: '',
     relationshipStatus: '',
     otherPersonName: '',
     isReturningClient: false,
@@ -138,6 +138,7 @@ export function ReadingForm({ initialTonePresets }: ReadingFormProps) {
   const [state, dispatch] = useReducer(reducer, undefined, initialState)
   const [tonePresets, setTonePresets] = useState<TonePreset[]>(initialTonePresets)
   const [clientSuggestions, setClientSuggestions] = useState<{ id: string; full_name: string; email: string }[]>([])
+  const { isTestMode } = useTestMode()
 
   const set = useCallback(
     (field: keyof ReadingFormState, value: ReadingFormState[keyof ReadingFormState]) =>
@@ -198,6 +199,7 @@ export function ReadingForm({ initialTonePresets }: ReadingFormProps) {
         body: JSON.stringify({
           formState: state,
           tonePresetText: selectedPreset.prompt_text,
+          isTestMode,
         }),
       })
 
@@ -482,26 +484,15 @@ export function ReadingForm({ initialTonePresets }: ReadingFormProps) {
             </div>
           </FieldRow>
 
-          <FieldRow>
-            <div>
-              <Label htmlFor="pronouns">Pronouns</Label>
-              <Input
-                id="pronouns"
-                value={state.pronouns}
-                onChange={(e) => set('pronouns', e.target.value)}
-                placeholder="she/her, he/him, they/them…"
-              />
-            </div>
-            <div>
-              <Label htmlFor="relationship-status">Relationship status</Label>
-              <Input
-                id="relationship-status"
-                value={state.relationshipStatus}
-                onChange={(e) => set('relationshipStatus', e.target.value)}
-                placeholder="Single, partnered, complicated…"
-              />
-            </div>
-          </FieldRow>
+          <div>
+            <Label htmlFor="relationship-status">Relationship status</Label>
+            <Input
+              id="relationship-status"
+              value={state.relationshipStatus}
+              onChange={(e) => set('relationshipStatus', e.target.value)}
+              placeholder="Single, partnered, complicated…"
+            />
+          </div>
 
           <div>
             <Label htmlFor="other-person">Other person's name</Label>

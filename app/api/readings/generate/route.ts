@@ -27,14 +27,14 @@ export async function POST(request: Request) {
   }
 
   // Parse body
-  let body: { formState: ReadingFormState; tonePresetText: string }
+  let body: { formState: ReadingFormState; tonePresetText: string; isTestMode?: boolean }
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { formState: f, tonePresetText } = body
+  const { formState: f, tonePresetText, isTestMode = false } = body
 
   // Validate
   if (!tonePresetText?.trim()) {
@@ -66,7 +66,6 @@ export async function POST(request: Request) {
     energyCleansingNotes: f.energyCleansingNotes || undefined,
     birthday: f.birthday || undefined,
     starSign: f.starSign || undefined,
-    pronouns: f.pronouns || undefined,
     relationshipStatus: f.relationshipStatus || undefined,
     otherPersonName: f.otherPersonName || undefined,
     isReturningClient: f.isReturningClient || false,
@@ -107,6 +106,7 @@ export async function POST(request: Request) {
           email: f.clientEmail.trim(),
           star_sign: f.starSign || null,
           is_returning: f.isReturningClient || false,
+          is_test: isTestMode,
         })
         .select('id')
         .single()
@@ -120,6 +120,7 @@ export async function POST(request: Request) {
         email: f.clientEmail?.trim() || null,
         star_sign: f.starSign || null,
         is_returning: f.isReturningClient || false,
+        is_test: isTestMode,
       })
       .select('id')
       .single()
@@ -139,6 +140,7 @@ export async function POST(request: Request) {
     is_rush: f.isRush || false,
     due_at: f.dueAt || null,
     internal_notes: f.readerNotes || null,
+    is_test: isTestMode,
     updated_at: new Date().toISOString(),
   }
 
@@ -179,6 +181,7 @@ export async function POST(request: Request) {
     groq_model: groqModel,
     prompt_version: 1,
     final_approved: false,
+    is_test: isTestMode,
     updated_at: new Date().toISOString(),
   }
 

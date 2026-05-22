@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Star, Instagram, MessageCircle, Plus, Edit2 } from 'lucide-react'
+import { Star, Instagram, Plus, Trash2, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Textarea } from '@/components/ui/Textarea'
 import { Badge } from '@/components/ui/Badge'
@@ -15,12 +15,14 @@ interface ClientProfileProps {
   readings: Reading[]
   notes: ClientNote[]
   onUpdate: (client: Client) => void
+  onTrash?: (clientId: string) => void
 }
 
-export function ClientProfile({ client, readings, notes: initialNotes, onUpdate }: ClientProfileProps) {
+export function ClientProfile({ client, readings, notes: initialNotes, onUpdate, onTrash }: ClientProfileProps) {
   const [notes, setNotes] = useState<ClientNote[]>(initialNotes)
   const [newNote, setNewNote] = useState('')
   const [addingNote, setAddingNote] = useState(false)
+  const [confirmTrash, setConfirmTrash] = useState(false)
 
   async function handleAddNote() {
     if (!newNote.trim()) return
@@ -59,13 +61,47 @@ export function ClientProfile({ client, readings, notes: initialNotes, onUpdate 
             {client.star_sign && <span>{client.star_sign}</span>}
           </div>
         </div>
-        <Link href={`/dashboard/readings/new?clientId=${client.id}&clientName=${encodeURIComponent(client.full_name)}&email=${encodeURIComponent(client.email ?? '')}`}>
-          <Button size="sm">
-            <Plus size={13} />
-            New reading
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href={`/dashboard/readings/new?clientId=${client.id}&clientName=${encodeURIComponent(client.full_name)}&email=${encodeURIComponent(client.email ?? '')}`}>
+            <Button size="sm">
+              <Plus size={13} />
+              New reading
+            </Button>
+          </Link>
+          {onTrash && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-slate-400 hover:text-red-500"
+              onClick={() => setConfirmTrash(true)}
+              title="Move to Trash"
+            >
+              <Trash2 size={14} />
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Trash confirmation */}
+      {confirmTrash && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 space-y-3">
+          <div className="flex items-start gap-2">
+            <AlertTriangle size={15} className="text-red-500 mt-0.5 shrink-0" />
+            <p className="text-sm text-red-700">
+              Move <strong>{client.full_name}</strong> to Trash? They can be restored within 30 days.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="danger" size="sm" onClick={() => onTrash?.(client.id)}>
+              <Trash2 size={13} />
+              Move to Trash
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setConfirmTrash(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">

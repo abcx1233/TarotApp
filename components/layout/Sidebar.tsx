@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { clsx } from 'clsx'
 import type { LucideIcon } from 'lucide-react'
 import {
@@ -13,6 +14,7 @@ import {
   FileText,
   Settings,
   LogOut,
+  Trash2,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -36,9 +38,10 @@ interface NavItemProps {
   icon: LucideIcon
   exact?: boolean
   onClick?: () => void
+  badge?: number
 }
 
-function NavItem({ href, label, icon: Icon, exact, onClick }: NavItemProps) {
+function NavItem({ href, label, icon: Icon, exact, onClick, badge }: NavItemProps) {
   const pathname = usePathname()
   const isActive = exact ? pathname === href : pathname.startsWith(href)
 
@@ -54,7 +57,12 @@ function NavItem({ href, label, icon: Icon, exact, onClick }: NavItemProps) {
       )}
     >
       <Icon size={17} className="shrink-0" />
-      {label}
+      <span className="flex-1">{label}</span>
+      {badge != null && badge > 0 && (
+        <span className="rounded-full bg-slate-600 px-1.5 py-0.5 text-[10px] font-semibold text-slate-300">
+          {badge}
+        </span>
+      )}
     </Link>
   )
 }
@@ -65,6 +73,39 @@ interface SidebarProps {
 
 export function Sidebar({ onClose }: SidebarProps) {
   const router = useRouter()
+  const [trashCount, setTrashCount] = useState(0)
+
+  useEffect(() => {
+    async function fetchTrashCount() {
+      try {
+        const supabase = createClient()
+        const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+        const [{ count: c }, { count: o }, { count: r }] = await Promise.all([
+          supabase
+            .from('clients')
+            .select('*', { count: 'exact', head: true })
+            .not('deleted_at', 'is', null)
+            .gte('deleted_at', cutoff),
+          supabase
+            .from('orders')
+            .select('*', { count: 'exact', head: true })
+            .not('deleted_at', 'is', null)
+            .gte('deleted_at', cutoff),
+          supabase
+            .from('readings')
+            .select('*', { count: 'exact', head: true })
+            .not('deleted_at', 'is', null)
+            .gte('deleted_at', cutoff),
+        ])
+
+        setTrashCount((c ?? 0) + (o ?? 0) + (r ?? 0))
+      } catch {
+        // deleted_at column may not exist yet — fail silently
+      }
+    }
+    fetchTrashCount()
+  }, [])
 
   async function handleLogout() {
     const supabase = createClient()
@@ -88,6 +129,13 @@ export function Sidebar({ onClose }: SidebarProps) {
         {NAV_ITEMS.map((item) => (
           <NavItem key={item.href} {...item} onClick={onClose} />
         ))}
+        <NavItem
+          href="/dashboard/trash"
+          label="Trash"
+          icon={Trash2}
+          onClick={onClose}
+          badge={trashCount}
+        />
       </nav>
 
       {/* Bottom nav */}

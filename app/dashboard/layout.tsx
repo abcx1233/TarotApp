@@ -16,5 +16,13 @@ export default async function DashboardRootLayout({
     redirect('/login')
   }
 
-  return <DashboardLayout>{children}</DashboardLayout>
+  const { data: settings } = await supabase
+    .from('app_settings')
+    .select('test_mode_enabled')
+    .limit(1)
+    .single()
+
+  const initialTestMode = settings?.test_mode_enabled ?? false
+
+  return <DashboardLayout initialTestMode={initialTestMode}>{children}</DashboardLayout>
 }

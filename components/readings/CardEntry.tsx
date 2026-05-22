@@ -5,7 +5,6 @@ import { X, Plus, RotateCcw } from 'lucide-react'
 import { CardAutocomplete } from './CardAutocomplete'
 import { SuitFilter } from './SuitFilter'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { clsx } from 'clsx'
 import type { CardEntryForm, CardOrientation } from '@/types'
@@ -92,15 +91,6 @@ function CardRow({ card, index, suitFilter, onUpdate, onRemove, onEnter }: CardR
         onChange={(orientation) => onUpdate(card.id, { orientation })}
       />
 
-      <div className="w-32 shrink-0">
-        <Input
-          value={card.positionLabel}
-          onChange={(e) => onUpdate(card.id, { positionLabel: e.target.value })}
-          placeholder="Position…"
-          className="text-xs"
-        />
-      </div>
-
       <button
         type="button"
         onClick={() => onRemove(card.id)}
@@ -159,7 +149,6 @@ export function CardEntry({
         <span className="w-5" />
         <span className="flex-1 text-xs font-medium text-slate-500">Card name</span>
         <span className="w-[90px] text-xs font-medium text-slate-500">Orientation</span>
-        <span className="w-32 text-xs font-medium text-slate-500">Position label</span>
         <span className="w-7" />
       </div>
 

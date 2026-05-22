@@ -26,6 +26,7 @@ export default function OrdersPage() {
     let query = supabase
       .from('orders')
       .select('*, client:clients(full_name, email)')
+      .is('deleted_at', null)
       .order('is_rush', { ascending: false })
       .order('due_at', { ascending: true })
       .order('created_at', { ascending: false })
@@ -73,6 +74,15 @@ export default function OrdersPage() {
     handleUpdateStatus(orderId, 'archived')
   }
 
+  async function handleTrash(orderId: string) {
+    const supabase = createClient()
+    await supabase
+      .from('orders')
+      .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq('id', orderId)
+    fetchOrders()
+  }
+
   async function handleDuplicate(orderId: string) {
     const supabase = createClient()
     const { data: order } = await supabase
@@ -107,6 +117,7 @@ export default function OrdersPage() {
           onUpdateStatus={handleUpdateStatus}
           onDuplicate={handleDuplicate}
           onArchive={handleArchive}
+          onTrash={handleTrash}
         />
       )}
     </div>

@@ -23,7 +23,6 @@ export interface PromptInput {
   energyCleansingNotes?: string
   birthday?: string
   starSign?: string
-  pronouns?: string
   relationshipStatus?: string
   otherPersonName?: string
   isReturningClient?: boolean
@@ -52,7 +51,6 @@ export function buildPrompt(input: PromptInput): string {
   const personDetails: string[] = []
   if (input.birthday) personDetails.push(`Birthday: ${input.birthday}`)
   if (input.starSign) personDetails.push(`Star sign: ${input.starSign}`)
-  if (input.pronouns) personDetails.push(`Pronouns: ${input.pronouns}`)
   if (input.relationshipStatus)
     personDetails.push(`Relationship status: ${input.relationshipStatus}`)
   if (input.otherPersonName)

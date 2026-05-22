@@ -21,6 +21,8 @@ export interface Client {
   relationship_context: string | null
   is_returning: boolean
   total_spent: number
+  is_test: boolean
+  deleted_at: string | null
   created_at: string
   updated_at: string
 }
@@ -42,6 +44,8 @@ export interface Order {
   sent_at: string | null
   gmail_send_status: string | null
   website_sync_status: string | null
+  is_test: boolean
+  deleted_at: string | null
   created_at: string
   updated_at: string
   client?: Client
@@ -72,6 +76,8 @@ export interface Reading {
   prompt_version: number
   regenerated_count: number
   final_approved: boolean
+  is_test: boolean
+  deleted_at: string | null
   created_at: string
   updated_at: string
   order?: Order
@@ -126,6 +132,7 @@ export interface AppSettings {
   default_tone_preset_id: string | null
   default_delivery_format: DeliveryFormat | null
   groq_model: string | null
+  test_mode_enabled: boolean
   created_at: string
   updated_at: string
 }
@@ -181,7 +188,6 @@ export interface ReadingFormState {
   bottomCard: { name: string; orientation: CardOrientation }
   birthday: string
   starSign: string
-  pronouns: string
   relationshipStatus: string
   otherPersonName: string
   isReturningClient: boolean

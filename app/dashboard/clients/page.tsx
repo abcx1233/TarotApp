@@ -21,12 +21,25 @@ export default function ClientsPage() {
       const { data } = await supabase
         .from('clients')
         .select('*')
+        .is('deleted_at', null)
         .order('full_name', { ascending: true })
       setClients((data ?? []) as Client[])
       setLoading(false)
     }
     load()
   }, [])
+
+  async function handleTrashClient(clientId: string) {
+    const supabase = createSupabaseClient()
+    await supabase
+      .from('clients')
+      .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq('id', clientId)
+    setClients((prev) => prev.filter((c) => c.id !== clientId))
+    setSelected(null)
+    setReadings([])
+    setNotes([])
+  }
 
   async function handleSelect(client: Client) {
     setSelected(client)
@@ -86,6 +99,7 @@ export default function ClientsPage() {
                 prev.map((c) => (c.id === updated.id ? updated : c))
               )
             }}
+            onTrash={handleTrashClient}
           />
         ) : (
           <div className="flex h-full items-center justify-center">

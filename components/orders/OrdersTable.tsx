@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { format, isToday } from 'date-fns'
-import { ExternalLink, Zap } from 'lucide-react'
+import { ExternalLink, Zap, Trash2 } from 'lucide-react'
 import { StatusBadge, Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import type { Order } from '@/types'
@@ -19,9 +19,10 @@ interface OrdersTableProps {
   onUpdateStatus: (orderId: string, status: string) => void
   onDuplicate: (orderId: string) => void
   onArchive: (orderId: string) => void
+  onTrash: (orderId: string) => void
 }
 
-export function OrdersTable({ orders, onUpdateStatus, onDuplicate, onArchive }: OrdersTableProps) {
+export function OrdersTable({ orders, onUpdateStatus, onDuplicate, onArchive, onTrash }: OrdersTableProps) {
   if (orders.length === 0) {
     return (
       <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center">
@@ -111,9 +112,10 @@ export function OrdersTable({ orders, onUpdateStatus, onDuplicate, onArchive }: 
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <StatusBadge status={order.status} />
                     {order.is_rush && <Badge variant="rush">Rush</Badge>}
+                    {order.is_test && <Badge variant="warning">TEST</Badge>}
                   </div>
                 </td>
                 <td className="px-4 py-3">
@@ -151,6 +153,15 @@ export function OrdersTable({ orders, onUpdateStatus, onDuplicate, onArchive }: 
                       onClick={() => onArchive(order.id)}
                     >
                       Archive
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-red-400 hover:text-red-600"
+                      onClick={() => onTrash(order.id)}
+                      title="Move to Trash"
+                    >
+                      <Trash2 size={12} />
                     </Button>
                   </div>
                 </td>

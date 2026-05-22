@@ -63,6 +63,8 @@ CREATE TABLE clients (
   relationship_context TEXT,
   is_returning    BOOLEAN NOT NULL DEFAULT false,
   total_spent     NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  is_test         BOOLEAN NOT NULL DEFAULT false,
+  deleted_at      TIMESTAMPTZ,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -88,6 +90,8 @@ CREATE TABLE orders (
   sent_at              TIMESTAMPTZ,
   gmail_send_status    TEXT,
   website_sync_status  TEXT,
+  is_test              BOOLEAN NOT NULL DEFAULT false,
+  deleted_at           TIMESTAMPTZ,
   created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at           TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -147,6 +151,8 @@ CREATE TABLE readings (
   prompt_version             INTEGER NOT NULL DEFAULT 1,
   regenerated_count          INTEGER NOT NULL DEFAULT 0,
   final_approved             BOOLEAN NOT NULL DEFAULT false,
+  is_test                    BOOLEAN NOT NULL DEFAULT false,
+  deleted_at                 TIMESTAMPTZ,
   created_at                 TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at                 TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -207,6 +213,7 @@ CREATE TABLE app_settings (
   default_tone_preset_id  UUID REFERENCES tone_presets (id) ON DELETE SET NULL,
   default_delivery_format delivery_format DEFAULT 'written',
   groq_model              TEXT DEFAULT 'llama-3.3-70b-versatile',
+  test_mode_enabled       BOOLEAN NOT NULL DEFAULT false,
   created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -277,6 +284,23 @@ BEGIN
   END LOOP;
 END;
 $$;
+
+-- ─── Migrations (run these if upgrading an existing database) ────────────────
+--
+-- ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT false;
+-- ALTER TABLE clients ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+-- ALTER TABLE orders ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT false;
+-- ALTER TABLE orders ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+-- ALTER TABLE readings ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT false;
+-- ALTER TABLE readings ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+-- ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS test_mode_enabled BOOLEAN NOT NULL DEFAULT false;
+--
+-- CREATE INDEX IF NOT EXISTS idx_clients_deleted_at ON clients (deleted_at) WHERE deleted_at IS NOT NULL;
+-- CREATE INDEX IF NOT EXISTS idx_orders_deleted_at ON orders (deleted_at) WHERE deleted_at IS NOT NULL;
+-- CREATE INDEX IF NOT EXISTS idx_readings_deleted_at ON readings (deleted_at) WHERE deleted_at IS NOT NULL;
+-- CREATE INDEX IF NOT EXISTS idx_clients_is_test ON clients (is_test) WHERE is_test = true;
+-- CREATE INDEX IF NOT EXISTS idx_orders_is_test ON orders (is_test) WHERE is_test = true;
+-- CREATE INDEX IF NOT EXISTS idx_readings_is_test ON readings (is_test) WHERE is_test = true;
 
 -- ─── Seed Data ────────────────────────────────────────────────────────────────
 

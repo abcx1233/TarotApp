@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Label } from '@/components/ui/Label'
 import { Toggle } from '@/components/ui/Toggle'
-import { Save, ExternalLink, CheckCircle2 } from 'lucide-react'
+import { Save, ExternalLink, CheckCircle2, Trash2, AlertTriangle } from 'lucide-react'
+import { useTestMode } from '@/contexts/TestModeContext'
 import type { AppSettings } from '@/types'
 
 export default function SettingsPage() {
@@ -16,6 +17,10 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
+  const [clearingTestData, setClearingTestData] = useState(false)
+  const [clearSuccess, setClearSuccess] = useState(false)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const { isTestMode, setIsTestMode } = useTestMode()
 
   useEffect(() => {
     async function load() {
@@ -32,7 +37,7 @@ export default function SettingsPage() {
     load()
   }, [])
 
-  function set(key: keyof AppSettings, value: string | number | null) {
+  function set(key: keyof AppSettings, value: string | number | null | boolean) {
     setSettings((prev) => ({ ...prev, [key]: value }))
   }
 
@@ -57,6 +62,33 @@ export default function SettingsPage() {
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2500)
+  }
+
+  async function handleToggleTestMode(value: boolean) {
+    setIsTestMode(value)
+    set('test_mode_enabled', value)
+    const supabase = createClient()
+    if (settings.id) {
+      await supabase
+        .from('app_settings')
+        .update({ test_mode_enabled: value, updated_at: new Date().toISOString() })
+        .eq('id', settings.id)
+    }
+  }
+
+  async function handleClearTestData() {
+    setClearingTestData(true)
+    setShowClearConfirm(false)
+    const supabase = createClient()
+
+    // Delete in FK-safe order — cascades handle reading_cards, order_addons, client_notes
+    await supabase.from('readings').delete().eq('is_test', true)
+    await supabase.from('orders').delete().eq('is_test', true)
+    await supabase.from('clients').delete().eq('is_test', true)
+
+    setClearingTestData(false)
+    setClearSuccess(true)
+    setTimeout(() => setClearSuccess(false), 3000)
   }
 
   async function handleGmailConnect() {
@@ -213,7 +245,7 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* UI */}
+      {/* Interface */}
       <section className="space-y-4">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400">
           Interface
@@ -225,6 +257,89 @@ export default function SettingsPage() {
             label="Dark mode (coming soon)"
             disabled
           />
+        </div>
+      </section>
+
+      {/* Data & Testing */}
+      <section className="space-y-4">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+          Data &amp; Testing
+        </h2>
+        <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-5">
+
+          {/* Test mode toggle */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-slate-900">Test Mode</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                All clients, orders, and readings created while active will be flagged as test data.
+                A yellow banner will appear across the app.
+              </p>
+            </div>
+            <Toggle
+              checked={isTestMode}
+              onChange={handleToggleTestMode}
+            />
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-slate-100" />
+
+          {/* Clear test data */}
+          <div>
+            <p className="text-sm font-medium text-slate-900 mb-1">Clear All Test Data</p>
+            <p className="text-xs text-slate-500 mb-3">
+              Permanently deletes all clients, orders, and readings marked as test data.
+              This cannot be undone.
+            </p>
+
+            {clearSuccess && (
+              <p className="mb-3 text-sm font-medium text-green-600 flex items-center gap-1.5">
+                <CheckCircle2 size={14} />
+                All test data cleared.
+              </p>
+            )}
+
+            {showClearConfirm ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle size={16} className="text-red-500 mt-0.5 shrink-0" />
+                  <p className="text-sm text-red-700">
+                    This will permanently delete all test clients, orders and readings.
+                    This cannot be undone.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    loading={clearingTestData}
+                    onClick={handleClearTestData}
+                  >
+                    <Trash2 size={13} />
+                    Yes, delete all test data
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowClearConfirm(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowClearConfirm(true)}
+                disabled={clearingTestData}
+              >
+                <Trash2 size={13} />
+                Clear all test data
+              </Button>
+            )}
+          </div>
         </div>
       </section>
     </div>

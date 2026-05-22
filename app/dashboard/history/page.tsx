@@ -49,6 +49,7 @@ export default function HistoryPage() {
       let query = supabase
         .from('readings')
         .select('*, order:orders(reading_tier, topic, status, client_id), client:clients(full_name, email)')
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(100)
 

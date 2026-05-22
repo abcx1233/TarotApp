@@ -27,24 +27,27 @@ async function getDashboardData() {
     { data: todayQueue },
     { data: recentReadings },
   ] = await Promise.all([
-    supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-    supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'in_progress'),
+    supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending').is('deleted_at', null),
+    supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'in_progress').is('deleted_at', null),
     supabase
       .from('orders')
       .select('price_total')
       .eq('status', 'sent')
+      .is('deleted_at', null)
       .gte('sent_at', todayStart)
       .lte('sent_at', todayEnd),
     supabase
       .from('orders')
       .select('*, client:clients(full_name, email)')
       .in('status', ['pending', 'in_progress'])
+      .is('deleted_at', null)
       .order('is_rush', { ascending: false })
       .order('due_at', { ascending: true })
       .limit(10),
     supabase
       .from('readings')
       .select('*, order:orders(reading_tier, topic, status), client:clients(full_name)')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(8),
   ])
@@ -148,6 +151,7 @@ export default async function DashboardPage() {
                 {todayQueue.map((order: {
                   id: string;
                   is_rush: boolean;
+                  is_test: boolean;
                   due_at: string | null;
                   status: string;
                   reading_tier: string;
@@ -176,9 +180,10 @@ export default async function DashboardPage() {
                       ) : '—'}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-1.5">
+                      <div className="flex gap-1.5 flex-wrap">
                         <StatusBadge status={order.status} />
                         {order.is_rush && <Badge variant="rush">Rush</Badge>}
+                        {order.is_test && <Badge variant="warning">TEST</Badge>}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right">
