@@ -28,7 +28,7 @@ export function CardAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
 
-  const results = searchCards(query, suitFilter).slice(0, 12)
+  const results = searchCards(query, suitFilter).slice(0, query.trim() ? 12 : 30)
 
   // Sync internal query when value changes externally
   useEffect(() => {
@@ -113,7 +113,7 @@ export function CardAutocomplete({
         aria-expanded={open}
       />
 
-      {open && query.trim().length > 0 && results.length > 0 && (
+      {open && results.length > 0 && (
         <ul
           ref={listRef}
           id={`${id}-list`}

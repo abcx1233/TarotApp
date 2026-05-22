@@ -154,7 +154,7 @@ export async function POST(request: Request) {
     reading_tier: f.readingTier || 'core',
     topic: f.topic || 'General',
     delivery_format: f.deliveryFormat || 'written',
-    delivery_channel: f.deliveryChannel || 'email',
+    delivery_channel: 'email',
     status: 'awaiting_review' as const,
     price_total: parseFloat(f.priceTotal || '0') || 0,
     is_rush: f.isRush || false,

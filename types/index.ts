@@ -184,7 +184,6 @@ export interface ReadingFormState {
   topic: string
   starSign: string
   deliveryFormat: DeliveryFormat
-  deliveryChannel: DeliveryChannel
   dueAt: string
   priceTotal: string
   isRush: boolean

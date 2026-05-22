@@ -23,7 +23,6 @@ import type {
   CardEntryForm,
   CardOrientation,
   DeliveryFormat,
-  DeliveryChannel,
   RestoredReadingData,
 } from '@/types'
 
@@ -50,7 +49,6 @@ function initialState(): ReadingFormState {
     topic: 'General',
     starSign: '',
     deliveryFormat: 'written',
-    deliveryChannel: 'email',
     dueAt: '',
     priceTotal: '',
     isRush: false,
@@ -130,7 +128,6 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         readingTier: (order?.reading_tier as ReadingTier) ?? 'core',
         topic: order?.topic ?? 'General',
         deliveryFormat: (order?.delivery_format as DeliveryFormat) ?? 'written',
-        deliveryChannel: (order?.delivery_channel as DeliveryChannel) ?? 'email',
         priceTotal: order?.price_total != null ? String(order.price_total) : '',
         isRush: order?.is_rush ?? false,
         dueAt: order?.due_at ? order.due_at.slice(0, 16) : '',
@@ -665,19 +662,6 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                 onChange={(v) => set('deliveryFormat', v as DeliveryFormat)}
               />
             </div>
-            <div>
-              <Label>Delivery channel</Label>
-              <PillGroup
-                options={[
-                  { value: 'email', label: 'Email' },
-                  { value: 'whatsapp', label: 'WhatsApp' },
-                  { value: 'account', label: 'Account' },
-                ]}
-                value={state.deliveryChannel}
-                onChange={(v) => set('deliveryChannel', v as DeliveryChannel)}
-              />
-            </div>
-
             <div>
               <Label htmlFor="due-at">Due date & time</Label>
               <Input

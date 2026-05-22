@@ -59,13 +59,14 @@ export function OutputPanel({
   const [readyState, setReadyState] = useState<'idle' | 'marking' | 'marked' | 'error'>('idle')
   const [sentState, setSentState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
+  const [uploadError, setUploadError] = useState<string | null>(null)
   const [mediaSignedUrl, setMediaSignedUrl] = useState<string | null>(null)
   const [mediaExpiresAt, setMediaExpiresAt] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
-  const isMediaDelivery = deliveryFormat === 'voice_note' || deliveryFormat === 'video'
-  const mediaLabel = deliveryFormat === 'voice_note' ? 'voice note' : 'video'
+  const isVoiceNote = deliveryFormat === 'voice_note'
+  const isVideo = deliveryFormat === 'video'
 
   async function handleCopy() {
     if (!generatedReading) return
@@ -77,8 +78,8 @@ export function OutputPanel({
   function buildDeliveryMessage(): string {
     const tierLabel = TIER_LABELS[readingTier] ?? readingTier
     const name = clientName.split(' ')[0] || clientName
-    if (isMediaDelivery && mediaSignedUrl) {
-      return `Hi ${name}, your ${tierLabel} ${topic} reading is ready as a ${mediaLabel}! 🎙️\n\n${mediaSignedUrl}\n\nThis link is valid for 30 days. Let me know if you have any questions 💙\n\n${businessName}`
+    if (isVoiceNote && mediaSignedUrl) {
+      return `Hi ${name}, your ${tierLabel} ${topic} reading is ready as a voice note! 🎙️\n\n${mediaSignedUrl}\n\nThis link is valid for 30 days. Let me know if you have any questions 💙\n\n${businessName}`
     }
     return generatedReading ?? ''
   }
@@ -139,10 +140,16 @@ export function OutputPanel({
 
   async function handleFileUpload(file: File) {
     if (!readingId) return
+    const MAX_MB = 25
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setUploadError(`This file is too large. Please compress your voice note and try again. Maximum size is ${MAX_MB}MB.`)
+      return
+    }
+    setUploadError(null)
     setUploadState('uploading')
     const supabase = createClient()
     const ext = file.name.split('.').pop() ?? ''
-    const fileName = `${deliveryFormat}-${Date.now()}.${ext}`
+    const fileName = `voice-note-${Date.now()}.${ext}`
     const path = `readings/${readingId}/${fileName}`
 
     const { error: uploadError } = await supabase.storage
@@ -209,13 +216,21 @@ export function OutputPanel({
         )}
       </div>
 
-      {/* Media upload section — voice note / video only */}
-      {isMediaDelivery && hasOutput && (
+      {/* Video: coming soon notice */}
+      {isVideo && hasOutput && (
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm font-medium text-slate-700">Video readings coming soon</p>
+          <p className="text-xs text-slate-500 mt-1.5">
+            Generate the reading above as your script, record your video, then share it with your client manually.
+          </p>
+        </div>
+      )}
+
+      {/* Voice note: file upload */}
+      {isVoiceNote && hasOutput && (
         <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
           <div>
-            <p className="text-sm font-medium text-slate-900 capitalize">
-              {deliveryFormat === 'voice_note' ? 'Voice Note' : 'Video'} Upload
-            </p>
+            <p className="text-sm font-medium text-slate-900">Voice Note Upload</p>
             <p className="text-xs text-slate-500 mt-0.5">
               Upload the recorded file to generate a shareable link
             </p>
@@ -228,17 +243,24 @@ export function OutputPanel({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept={deliveryFormat === 'voice_note' ? 'audio/*' : 'video/*'}
+                accept="audio/*"
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0]
-                  if (file) handleFileUpload(file)
+                  if (file) {
+                    setUploadError(null)
+                    handleFileUpload(file)
+                  }
+                  e.target.value = ''
                 }}
               />
               <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
                 <Upload size={13} />
                 Choose file
               </Button>
+              {uploadError && (
+                <p className="text-xs text-red-600">{uploadError}</p>
+              )}
             </>
           ) : uploadState === 'uploading' ? (
             <div className="flex items-center gap-2">
@@ -252,7 +274,7 @@ export function OutputPanel({
               <button
                 type="button"
                 className="text-sm underline underline-offset-2"
-                onClick={() => setUploadState('idle')}
+                onClick={() => { setUploadState('idle'); setUploadError(null) }}
               >
                 try again
               </button>
@@ -339,8 +361,16 @@ export function OutputPanel({
               {copied ? 'Copied!' : 'Copy'}
             </button>
 
-            {/* WhatsApp — disabled if no phone, or if media delivery with no URL yet */}
-            {noPhone ? (
+            {/* WhatsApp */}
+            {isVideo ? (
+              <span
+                title="Video delivery coming soon"
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-400 cursor-not-allowed select-none"
+              >
+                <MessageCircle size={13} />
+                WhatsApp
+              </span>
+            ) : noPhone ? (
               <span
                 title="Add a phone number to use this"
                 className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-400 cursor-not-allowed select-none"
@@ -348,9 +378,9 @@ export function OutputPanel({
                 <MessageCircle size={13} />
                 WhatsApp
               </span>
-            ) : isMediaDelivery && !mediaSignedUrl ? (
+            ) : isVoiceNote && !mediaSignedUrl ? (
               <span
-                title="Upload the media file first"
+                title="Upload the voice note file first"
                 className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-400 cursor-not-allowed select-none"
               >
                 <MessageCircle size={13} />
@@ -367,10 +397,18 @@ export function OutputPanel({
               </button>
             )}
 
-            {/* Email — disabled if media delivery with no URL yet */}
-            {isMediaDelivery && !mediaSignedUrl ? (
+            {/* Email */}
+            {isVideo ? (
               <span
-                title="Upload the media file first"
+                title="Video delivery coming soon"
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-400 cursor-not-allowed select-none"
+              >
+                <Mail size={13} />
+                Email
+              </span>
+            ) : isVoiceNote && !mediaSignedUrl ? (
+              <span
+                title="Upload the voice note file first"
                 className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-400 cursor-not-allowed select-none"
               >
                 <Mail size={13} />
