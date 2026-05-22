@@ -29,6 +29,7 @@ function initialState(): ReadingFormState {
     clientId: null,
     clientName: '',
     clientEmail: '',
+    clientPhone: '',
     readingTier: 'core',
     topic: 'General',
     deliveryFormat: 'written',
@@ -55,8 +56,6 @@ function initialState(): ReadingFormState {
     includeEnergyCleansing: false,
     energyCleansingNotes: '',
     generatedReading: null,
-    emailVersion: null,
-    whatsappVersion: null,
     isGenerating: false,
     generationError: null,
     savedReadingId: null,
@@ -72,7 +71,7 @@ type Action =
   | { type: 'SET_CARDS'; cards: CardEntryForm[] }
   | { type: 'SET_BOTTOM_CARD'; card: { name: string; orientation: CardOrientation } }
   | { type: 'SET_GENERATING'; value: boolean }
-  | { type: 'SET_OUTPUT'; reading: string; email: string; whatsapp: string; readingId: string; orderId: string }
+  | { type: 'SET_OUTPUT'; reading: string; readingId: string; orderId: string }
   | { type: 'SET_ERROR'; error: string }
   | { type: 'RESET' }
 
@@ -98,8 +97,6 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         isGenerating: false,
         generationError: null,
         generatedReading: action.reading,
-        emailVersion: action.email,
-        whatsappVersion: action.whatsapp,
         savedReadingId: action.readingId,
         savedOrderId: action.orderId,
         status: 'awaiting_review',
@@ -137,7 +134,8 @@ interface ReadingFormProps {
 export function ReadingForm({ initialTonePresets }: ReadingFormProps) {
   const [state, dispatch] = useReducer(reducer, undefined, initialState)
   const [tonePresets, setTonePresets] = useState<TonePreset[]>(initialTonePresets)
-  const [clientSuggestions, setClientSuggestions] = useState<{ id: string; full_name: string; email: string }[]>([])
+  const [clientSuggestions, setClientSuggestions] = useState<{ id: string; full_name: string; email: string; phone: string | null }[]>([])
+  const [businessName, setBusinessName] = useState('Deep Blue Divination')
   const { isTestMode } = useTestMode()
 
   const set = useCallback(
@@ -145,6 +143,26 @@ export function ReadingForm({ initialTonePresets }: ReadingFormProps) {
       dispatch({ type: 'SET', field, value }),
     []
   )
+
+  // Load app settings for default topic and business name
+  useEffect(() => {
+    async function loadSettings() {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('app_settings')
+        .select('default_topic, business_name')
+        .limit(1)
+        .single()
+
+      if (data?.default_topic) {
+        dispatch({ type: 'SET', field: 'topic', value: data.default_topic })
+      }
+      if (data?.business_name) {
+        setBusinessName(data.business_name)
+      }
+    }
+    loadSettings()
+  }, [])
 
   // Set first tone preset as default
   useEffect(() => {
@@ -171,7 +189,7 @@ export function ReadingForm({ initialTonePresets }: ReadingFormProps) {
     const supabase = createClient()
     const { data } = await supabase
       .from('clients')
-      .select('id, full_name, email')
+      .select('id, full_name, email, phone')
       .ilike('full_name', `%${query}%`)
       .limit(6)
     setClientSuggestions(data ?? [])
@@ -212,8 +230,6 @@ export function ReadingForm({ initialTonePresets }: ReadingFormProps) {
       dispatch({
         type: 'SET_OUTPUT',
         reading: data.generatedReading,
-        email: data.emailVersion,
-        whatsapp: data.whatsappVersion,
         readingId: data.readingId,
         orderId: data.orderId,
       })
@@ -226,7 +242,6 @@ export function ReadingForm({ initialTonePresets }: ReadingFormProps) {
   }
 
   async function handleSaveDraft() {
-    // Save current form state as draft (order + reading skeleton)
     const supabase = createClient()
     if (state.savedReadingId) {
       await supabase
@@ -261,8 +276,6 @@ export function ReadingForm({ initialTonePresets }: ReadingFormProps) {
     dispatch({ type: 'SET', field: 'status', value: 'sent' })
   }
 
-  const selectedTonePreset = tonePresets.find((p) => p.id === state.tonePresetId)
-
   return (
     <div className="flex flex-col xl:flex-row gap-0 h-full">
       {/* ── Left: Input panel ─────────────────────────────────────────── */}
@@ -292,6 +305,7 @@ export function ReadingForm({ initialTonePresets }: ReadingFormProps) {
                         set('clientId', c.id)
                         set('clientName', c.full_name)
                         set('clientEmail', c.email ?? '')
+                        set('clientPhone', c.phone ?? '')
                         setClientSuggestions([])
                       }}
                     >
@@ -354,7 +368,6 @@ export function ReadingForm({ initialTonePresets }: ReadingFormProps) {
                 <option>Career</option>
                 <option>General</option>
                 <option>Spiritual Guidance</option>
-                <option>Custom</option>
               </Select>
             </div>
           </FieldRow>
@@ -386,31 +399,15 @@ export function ReadingForm({ initialTonePresets }: ReadingFormProps) {
             </div>
           </FieldRow>
 
-          <FieldRow>
-            <div>
-              <Label htmlFor="due-at">Due date & time</Label>
-              <Input
-                id="due-at"
-                type="datetime-local"
-                value={state.dueAt}
-                onChange={(e) => set('dueAt', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select
-                id="status"
-                value={state.status}
-                onChange={(e) => set('status', e.target.value as typeof state.status)}
-              >
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="awaiting_review">Awaiting Review</option>
-                <option value="sent">Sent</option>
-                <option value="archived">Archived</option>
-              </Select>
-            </div>
-          </FieldRow>
+          <div>
+            <Label htmlFor="due-at">Due date & time</Label>
+            <Input
+              id="due-at"
+              type="datetime-local"
+              value={state.dueAt}
+              onChange={(e) => set('dueAt', e.target.value)}
+            />
+          </div>
 
           <div className="flex items-center gap-4">
             <Toggle
@@ -534,15 +531,15 @@ export function ReadingForm({ initialTonePresets }: ReadingFormProps) {
           </div>
           <div>
             <Label htmlFor="reader-notes">
-              Internal reader notes{' '}
+              Private Notes{' '}
               <span className="font-normal text-slate-400">(not sent to AI — saved to DB only)</span>
             </Label>
             <Textarea
               id="reader-notes"
               value={state.readerNotes}
               onChange={(e) => set('readerNotes', e.target.value)}
-              placeholder="Private notes about this reading…"
-              rows={3}
+              placeholder={`Notes for your eyes only — not included in the reading.\nUse this for context about the client: their situation,\nprevious readings, things to be mindful of, or anything\nyou want to remember next time.`}
+              rows={4}
             />
           </div>
         </Section>
@@ -566,8 +563,6 @@ export function ReadingForm({ initialTonePresets }: ReadingFormProps) {
       <div className="xl:w-[520px] shrink-0 flex flex-col p-6 min-h-[500px] xl:min-h-0">
         <OutputPanel
           generatedReading={state.generatedReading}
-          emailVersion={state.emailVersion}
-          whatsappVersion={state.whatsappVersion}
           isGenerating={state.isGenerating}
           generationError={state.generationError}
           onGenerate={handleGenerate}
@@ -576,6 +571,11 @@ export function ReadingForm({ initialTonePresets }: ReadingFormProps) {
           onMarkReady={handleMarkReady}
           onMarkSent={handleMarkSent}
           readingId={state.savedReadingId}
+          clientEmail={state.clientEmail}
+          clientPhone={state.clientPhone}
+          readingTier={state.readingTier}
+          topic={state.topic}
+          businessName={businessName}
         />
       </div>
     </div>

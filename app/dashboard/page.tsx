@@ -43,6 +43,7 @@ async function getDashboardData() {
       .is('deleted_at', null)
       .order('is_rush', { ascending: false })
       .order('due_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(10),
     supabase
       .from('readings')
@@ -182,7 +183,10 @@ export default async function DashboardPage() {
                     <td className="px-4 py-3">
                       <div className="flex gap-1.5 flex-wrap">
                         <StatusBadge status={order.status} />
-                        {order.is_rush && <Badge variant="rush">Rush</Badge>}
+                        {order.is_rush && <Badge variant="rush">RUSH</Badge>}
+                        {order.due_at && isToday(new Date(order.due_at)) && (
+                          <Badge variant="warning">DUE TODAY</Badge>
+                        )}
                         {order.is_test && <Badge variant="warning">TEST</Badge>}
                       </div>
                     </td>

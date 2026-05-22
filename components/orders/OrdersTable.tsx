@@ -114,7 +114,8 @@ export function OrdersTable({ orders, onUpdateStatus, onDuplicate, onArchive, on
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <StatusBadge status={order.status} />
-                    {order.is_rush && <Badge variant="rush">Rush</Badge>}
+                    {order.is_rush && <Badge variant="rush">RUSH</Badge>}
+                    {isDueToday && <Badge variant="warning">DUE TODAY</Badge>}
                     {order.is_test && <Badge variant="warning">TEST</Badge>}
                   </div>
                 </td>

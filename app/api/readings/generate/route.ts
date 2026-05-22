@@ -82,8 +82,23 @@ export async function POST(request: Request) {
     )
   }
 
-  const { generatedReading, emailVersion, whatsappVersion, generatedPrompt, groqModel } =
-    generationResult
+  const { generatedReading: rawReading, generatedPrompt, groqModel } = generationResult
+
+  // Append sign-off and disclaimer from the default template
+  let generatedReading = rawReading
+  const { data: defaultTemplate } = await supabase
+    .from('reading_templates')
+    .select('signoff_text, disclaimer_text')
+    .eq('is_default', true)
+    .limit(1)
+    .single()
+
+  if (defaultTemplate?.signoff_text?.trim()) {
+    generatedReading += `\n\n${defaultTemplate.signoff_text.trim()}`
+  }
+  if (defaultTemplate?.disclaimer_text?.trim()) {
+    generatedReading += `\n\n${defaultTemplate.disclaimer_text.trim()}`
+  }
 
   // Upsert client
   let clientId: string | null = f.clientId
@@ -157,7 +172,7 @@ export async function POST(request: Request) {
   }
 
   // Fetch tone preset id
-  let tonePresetId: string | null = f.tonePresetId || null
+  const tonePresetId: string | null = f.tonePresetId || null
 
   // Save reading
   const readingPayload = {
@@ -176,8 +191,8 @@ export async function POST(request: Request) {
     reader_notes: f.readerNotes || null,
     generated_prompt: generatedPrompt,
     generated_reading: generatedReading,
-    email_version: emailVersion,
-    whatsapp_version: whatsappVersion,
+    email_version: null,
+    whatsapp_version: null,
     groq_model: groqModel,
     prompt_version: 1,
     final_approved: false,
@@ -188,7 +203,6 @@ export async function POST(request: Request) {
   let readingId: string
 
   if (f.savedReadingId) {
-    // Get current regenerated_count and increment
     const { data: existingReading } = await supabase
       .from('readings')
       .select('regenerated_count')
@@ -214,7 +228,6 @@ export async function POST(request: Request) {
 
   // Save reading cards
   if (readingId) {
-    // Delete old cards for this reading
     await supabase.from('reading_cards').delete().eq('reading_id', readingId)
 
     const cardInserts = validCards.map((card: CardEntryForm, i: number) => {
@@ -230,7 +243,6 @@ export async function POST(request: Request) {
       }
     })
 
-    // Add bottom card
     if (f.bottomCard?.name?.trim()) {
       const bottomTarotCard = getCardBySuit(f.bottomCard.name)
       cardInserts.push({
@@ -261,7 +273,5 @@ export async function POST(request: Request) {
     readingId,
     orderId,
     generatedReading,
-    emailVersion,
-    whatsappVersion,
   })
 }

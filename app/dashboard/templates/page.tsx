@@ -66,49 +66,18 @@ function TemplateEditor({
             value={draft.signoff_text ?? ''}
             onChange={(e) => set('signoff_text', e.target.value)}
             placeholder="With love and light ✨"
-            rows={3}
+            rows={4}
           />
         </div>
 
         <div>
-          <Label htmlFor={`booking-cta-${draft.id}`}>Booking CTA</Label>
-          <Textarea
-            id={`booking-cta-${draft.id}`}
-            value={draft.booking_cta ?? ''}
-            onChange={(e) => set('booking_cta', e.target.value)}
-            placeholder="Ready to dive deeper? Book your next reading at…"
-            rows={3}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor={`email-subject-${draft.id}`}>Email subject template</Label>
-          <Input
-            id={`email-subject-${draft.id}`}
-            value={draft.email_subject_template ?? ''}
-            onChange={(e) => set('email_subject_template', e.target.value)}
-            placeholder="Your tarot reading from Deep Blue Divination ✨"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor={`whatsapp-${draft.id}`}>WhatsApp opening line</Label>
-          <Input
-            id={`whatsapp-${draft.id}`}
-            value={draft.whatsapp_opening_line ?? ''}
-            onChange={(e) => set('whatsapp_opening_line', e.target.value)}
-            placeholder="Hi lovely! Your reading is ready 💙"
-          />
-        </div>
-
-        <div className="sm:col-span-2">
           <Label htmlFor={`disclaimer-${draft.id}`}>Disclaimer text</Label>
           <Textarea
             id={`disclaimer-${draft.id}`}
             value={draft.disclaimer_text ?? ''}
             onChange={(e) => set('disclaimer_text', e.target.value)}
             placeholder="This reading is for entertainment and spiritual guidance purposes only…"
-            rows={3}
+            rows={4}
           />
         </div>
       </div>
@@ -165,7 +134,7 @@ export default function TemplatesPage() {
       </div>
 
       <p className="text-sm text-slate-500">
-        Manage sign-off text, booking CTAs, disclaimers, and message templates.
+        Sign-off text and disclaimer are automatically appended to every generated reading.
         Changes take effect on new readings immediately.
       </p>
 

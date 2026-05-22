@@ -1,14 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Copy, Check, RefreshCw, Loader2, FileDown, Mail, MessageCircle, ScrollText } from 'lucide-react'
-import { Tabs } from '@/components/ui/Tabs'
+import { Copy, Check, RefreshCw, Loader2, MessageCircle, Mail, ScrollText } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+
+const TIER_LABELS: Record<string, string> = {
+  mini: 'Mini',
+  core: 'Core',
+  premium: 'Premium',
+  celtic_cross: 'Celtic Cross',
+}
 
 interface OutputPanelProps {
   generatedReading: string | null
-  emailVersion: string | null
-  whatsappVersion: string | null
   isGenerating: boolean
   generationError: string | null
   onGenerate: () => void
@@ -17,62 +21,15 @@ interface OutputPanelProps {
   onMarkReady: () => void
   onMarkSent: () => void
   readingId: string | null
-}
-
-const OUTPUT_TABS = [
-  { id: 'full', label: 'Full Reading' },
-  { id: 'email', label: 'Email' },
-  { id: 'whatsapp', label: 'WhatsApp' },
-  { id: 'pdf', label: 'PDF' },
-]
-
-function CopyButton({ text, label }: { text: string; label?: string }) {
-  const [copied, setCopied] = useState(false)
-
-  async function handleCopy() {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-    >
-      {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
-      {label || (copied ? 'Copied!' : 'Copy')}
-    </button>
-  )
-}
-
-function ReadingTextArea({ content, placeholder }: { content: string | null; placeholder: string }) {
-  if (!content) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 p-8 text-center">
-        <ScrollText size={32} className="text-slate-300" />
-        <p className="text-sm text-slate-400">{placeholder}</p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="relative h-full">
-      <div className="absolute top-2 right-2">
-        <CopyButton text={content} />
-      </div>
-      <div className="h-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-4 pt-8 scrollbar-thin">
-        <p className="whitespace-pre-wrap text-sm leading-7 text-slate-800">{content}</p>
-      </div>
-    </div>
-  )
+  clientEmail: string
+  clientPhone: string
+  readingTier: string
+  topic: string
+  businessName: string
 }
 
 export function OutputPanel({
   generatedReading,
-  emailVersion,
-  whatsappVersion,
   isGenerating,
   generationError,
   onGenerate,
@@ -81,17 +38,42 @@ export function OutputPanel({
   onMarkReady,
   onMarkSent,
   readingId,
+  clientEmail,
+  clientPhone,
+  readingTier,
+  topic,
+  businessName,
 }: OutputPanelProps) {
-  const [activeTab, setActiveTab] = useState('full')
+  const [copied, setCopied] = useState(false)
 
-  const hasOutput = !!(generatedReading || emailVersion || whatsappVersion)
+  async function handleCopy() {
+    if (!generatedReading) return
+    await navigator.clipboard.writeText(generatedReading)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  function handleWhatsApp() {
+    if (!clientPhone || !generatedReading) return
+    const phone = clientPhone.replace(/\D/g, '')
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(generatedReading)}`
+    window.open(url, '_blank')
+  }
+
+  function handleEmail() {
+    if (!generatedReading) return
+    const tierLabel = TIER_LABELS[readingTier] ?? readingTier
+    const subject = `Your ${tierLabel} ${topic} Reading from ${businessName}`
+    const url = `mailto:${clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(generatedReading)}`
+    window.open(url, '_blank')
+  }
+
+  const hasOutput = !!generatedReading
+  const noPhone = !clientPhone.trim()
 
   return (
     <div className="flex flex-col h-full gap-4">
-      {/* Tab bar */}
-      <Tabs tabs={OUTPUT_TABS} activeTab={activeTab} onChange={setActiveTab} />
-
-      {/* Content area */}
+      {/* Reading output area */}
       <div className="flex-1 min-h-0">
         {isGenerating ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white p-8">
@@ -108,72 +90,21 @@ export function OutputPanel({
               Try again
             </Button>
           </div>
+        ) : generatedReading ? (
+          <div className="h-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-4 scrollbar-thin">
+            <p className="whitespace-pre-wrap text-sm leading-7 text-slate-800">{generatedReading}</p>
+          </div>
         ) : (
-          <>
-            {activeTab === 'full' && (
-              <ReadingTextArea
-                content={generatedReading}
-                placeholder="Generate a reading to see the full text here."
-              />
-            )}
-            {activeTab === 'email' && (
-              <div className="h-full space-y-2">
-                {emailVersion && (
-                  <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
-                    <Mail size={14} className="text-slate-500 shrink-0" />
-                    <p className="text-xs text-slate-500 truncate">
-                      {emailVersion.split('\n')[0]?.replace(/^Subject:\s*/i, '')}
-                    </p>
-                  </div>
-                )}
-                <ReadingTextArea
-                  content={emailVersion}
-                  placeholder="The email version will appear here after generating."
-                />
-              </div>
-            )}
-            {activeTab === 'whatsapp' && (
-              <div className="h-full space-y-2">
-                {whatsappVersion && (
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                    <MessageCircle size={12} />
-                    <span>{whatsappVersion.length} characters</span>
-                  </div>
-                )}
-                <ReadingTextArea
-                  content={whatsappVersion}
-                  placeholder="The WhatsApp version will appear here after generating."
-                />
-              </div>
-            )}
-            {activeTab === 'pdf' && (
-              <div className="flex h-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 p-8 text-center">
-                <FileDown size={32} className="text-slate-300" />
-                <p className="text-sm font-medium text-slate-500">PDF Export</p>
-                <p className="text-xs text-slate-400">
-                  PDF generation coming soon. Your reading is saved and available for copy.
-                </p>
-                {hasOutput && (
-                  <Button variant="outline" size="sm" disabled>
-                    <FileDown size={13} />
-                    Export PDF (coming soon)
-                  </Button>
-                )}
-              </div>
-            )}
-          </>
+          <div className="flex h-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 p-8 text-center">
+            <ScrollText size={32} className="text-slate-300" />
+            <p className="text-sm text-slate-400">Generate a reading to see the full text here.</p>
+          </div>
         )}
       </div>
 
-      {/* Error message */}
-      {generationError && !isGenerating && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2">
-          <p className="text-xs text-red-600">{generationError}</p>
-        </div>
-      )}
-
       {/* Sticky action bar */}
-      <div className="border-t border-slate-200 pt-3">
+      <div className="border-t border-slate-200 pt-3 space-y-3">
+        {/* Primary action */}
         <div className="flex flex-wrap gap-2">
           {!hasOutput ? (
             <Button
@@ -188,12 +119,7 @@ export function OutputPanel({
             </Button>
           ) : (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onRegenerate}
-                disabled={isGenerating}
-              >
+              <Button variant="outline" size="sm" onClick={onRegenerate} disabled={isGenerating}>
                 <RefreshCw size={13} />
                 Regenerate
               </Button>
@@ -204,11 +130,50 @@ export function OutputPanel({
           )}
         </div>
 
+        {/* Share buttons */}
         {hasOutput && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {generatedReading && <CopyButton text={generatedReading} label="Copy full" />}
-            {emailVersion && <CopyButton text={emailVersion} label="Copy email" />}
-            {whatsappVersion && <CopyButton text={whatsappVersion} label="Copy WhatsApp" />}
+          <div className="flex flex-wrap gap-2 items-center">
+            {/* Copy */}
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              {copied ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+
+            {/* WhatsApp */}
+            {noPhone ? (
+              <span
+                title="Add a phone number to the client to use this"
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-400 cursor-not-allowed select-none"
+              >
+                <MessageCircle size={13} />
+                WhatsApp
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleWhatsApp}
+                className="inline-flex items-center gap-1.5 rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 transition-colors"
+              >
+                <MessageCircle size={13} />
+                WhatsApp
+              </button>
+            )}
+
+            {/* Email */}
+            <button
+              type="button"
+              onClick={handleEmail}
+              className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
+            >
+              <Mail size={13} />
+              Email
+            </button>
+
+            {/* Status actions */}
             <div className="ml-auto flex gap-2">
               <Button variant="secondary" size="sm" onClick={onMarkReady}>
                 Mark Ready

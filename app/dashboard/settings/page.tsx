@@ -180,16 +180,26 @@ export default function SettingsPage() {
         </h2>
         <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
           <div>
-            <Label htmlFor="default-length">Default reading length (characters)</Label>
+            <Label htmlFor="business-name">Business name</Label>
             <Input
-              id="default-length"
-              type="number"
-              min="500"
-              max="20000"
-              step="500"
-              value={settings.default_reading_length ?? 6000}
-              onChange={(e) => set('default_reading_length', parseInt(e.target.value, 10))}
+              id="business-name"
+              value={settings.business_name ?? ''}
+              onChange={(e) => set('business_name', e.target.value)}
+              placeholder="Deep Blue Divination"
             />
+          </div>
+          <div>
+            <Label htmlFor="default-topic">Default topic</Label>
+            <Select
+              id="default-topic"
+              value={settings.default_topic ?? 'General'}
+              onChange={(e) => set('default_topic', e.target.value)}
+            >
+              <option>Love</option>
+              <option>Career</option>
+              <option>General</option>
+              <option>Spiritual Guidance</option>
+            </Select>
           </div>
           <div>
             <Label htmlFor="default-format">Default delivery format</Label>

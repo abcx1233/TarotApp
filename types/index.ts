@@ -128,6 +128,8 @@ export interface AppSettings {
   booking_url: string | null
   instagram_handle: string | null
   whatsapp_number: string | null
+  business_name: string | null
+  default_topic: string | null
   default_reading_length: number | null
   default_tone_preset_id: string | null
   default_delivery_format: DeliveryFormat | null
@@ -173,6 +175,7 @@ export interface ReadingFormState {
   clientId: string | null
   clientName: string
   clientEmail: string
+  clientPhone: string
   readingTier: ReadingTier
   topic: string
   deliveryFormat: DeliveryFormat
@@ -199,8 +202,6 @@ export interface ReadingFormState {
   includeEnergyCleansing: boolean
   energyCleansingNotes: string
   generatedReading: string | null
-  emailVersion: string | null
-  whatsappVersion: string | null
   isGenerating: boolean
   generationError: string | null
   savedReadingId: string | null
@@ -218,8 +219,6 @@ export interface GenerateReadingResponse {
   readingId: string
   orderId: string
   generatedReading: string
-  emailVersion: string
-  whatsappVersion: string
 }
 
 // ─── Dashboard Types ──────────────────────────────────────────────────────────
