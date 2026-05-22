@@ -82,7 +82,7 @@ export function OrdersTable({ orders, onUpdateStatus, onDuplicate, onArchive, on
                 <td className="px-4 py-3">
                   <div>
                     <p className="font-medium text-slate-900">
-                      {order.client?.full_name ?? '—'}
+                      {order.client?.full_name ?? <span className="text-slate-400">No client</span>}
                     </p>
                     {order.client?.email && (
                       <p className="text-xs text-slate-400 truncate max-w-[160px]">

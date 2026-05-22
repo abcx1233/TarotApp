@@ -1,6 +1,8 @@
 'use client'
 
 import { useReducer, useCallback, useEffect, useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
 import { CardEntry } from './CardEntry'
 import { TonePresetSelect } from './TonePresetSelect'
 import { AddOnsSection } from './AddOnsSection'
@@ -125,7 +127,6 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
       const client = data.client
       return {
         ...initialState(),
-        // Client
         clientId: client?.id ?? null,
         clientName: client?.full_name ?? '',
         clientEmail: client?.email ?? '',
@@ -133,7 +134,6 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         birthday: client?.birthday ? client.birthday.slice(0, 10) : '',
         starSign: client?.star_sign ?? '',
         isReturningClient: client?.is_returning ?? false,
-        // Order
         readingTier: (order?.reading_tier as ReadingTier) ?? 'core',
         topic: order?.topic ?? 'General',
         deliveryFormat: (order?.delivery_format as DeliveryFormat) ?? 'written',
@@ -141,7 +141,6 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         priceTotal: order?.price_total != null ? String(order.price_total) : '',
         isRush: order?.is_rush ?? false,
         dueAt: order?.due_at ? order.due_at.slice(0, 16) : '',
-        // Reading
         tonePresetId: data.tone_preset_id ?? '',
         readingLength: data.character_target ?? READING_CHARACTER_TARGETS.core,
         specificQuestion: data.specific_question ?? '',
@@ -155,7 +154,6 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         savedReadingId: data.id || null,
         savedOrderId: order?.id ?? null,
         status: data.id ? 'awaiting_review' : 'pending',
-        // Cards
         cards,
         bottomCard,
       }
@@ -195,14 +193,18 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
   const [clientSuggestions, setClientSuggestions] = useState<{ id: string; full_name: string; email: string; phone: string | null }[]>([])
   const [businessName, setBusinessName] = useState('Deep Blue Divination')
   const [isReopenMode, setIsReopenMode] = useState(false)
+  const [readingLengthOverridden, setReadingLengthOverridden] = useState(false)
   const { isTestMode } = useTestMode()
+  const router = useRouter()
 
-  // Track user-initiated tier changes so auto-suggest doesn't override a restored preset
+  const isDirtyRef = useRef(false)
   const lastUserSelectedTierRef = useRef<string>('')
 
   const set = useCallback(
-    (field: keyof ReadingFormState, value: ReadingFormState[keyof ReadingFormState]) =>
-      dispatch({ type: 'SET', field, value }),
+    (field: keyof ReadingFormState, value: ReadingFormState[keyof ReadingFormState]) => {
+      isDirtyRef.current = true
+      dispatch({ type: 'SET', field, value })
+    },
     []
   )
 
@@ -234,6 +236,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
       cards: mainCards.length > 0 ? mainCards : [makeBlankCard()],
       bottomCard,
     })
+    isDirtyRef.current = false
 
     if (initialReading.id) {
       setIsReopenMode(true)
@@ -310,6 +313,22 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
     setClientSuggestions(data ?? [])
   }
 
+  function handleBack() {
+    if (isDirtyRef.current) {
+      if (!window.confirm('You have unsaved changes. Leave this page?')) return
+    }
+    router.push('/dashboard')
+  }
+
+  function handleClearForm() {
+    if (!window.confirm('Clear the form and start fresh? Any unsaved changes will be lost.')) return
+    dispatch({ type: 'RESET' })
+    isDirtyRef.current = false
+    setIsReopenMode(false)
+    setReadingLengthOverridden(false)
+    router.replace('/dashboard/readings/new')
+  }
+
   async function handleGenerate() {
     const selectedPreset = tonePresets.find((p) => p.id === state.tonePresetId)
     if (!selectedPreset) {
@@ -348,6 +367,8 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
         readingId: data.readingId,
         orderId: data.orderId,
       })
+      isDirtyRef.current = false
+      router.replace(`/dashboard/readings/new?readingId=${data.readingId}`)
     } catch (err) {
       dispatch({
         type: 'SET_ERROR',
@@ -357,12 +378,30 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
   }
 
   async function handleSaveDraft() {
-    const supabase = createClient()
-    if (state.savedReadingId) {
-      await supabase
-        .from('readings')
-        .update({ reader_notes: state.readerNotes, updated_at: new Date().toISOString() })
-        .eq('id', state.savedReadingId)
+    const response = await fetch('/api/readings/save-draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ formState: state, isTestMode }),
+    })
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}))
+      throw new Error(data.error ?? 'Save failed')
+    }
+
+    const data = await response.json()
+
+    if (data.readingId && !state.savedReadingId) {
+      dispatch({ type: 'SET', field: 'savedReadingId', value: data.readingId })
+    }
+    if (data.orderId && !state.savedOrderId) {
+      dispatch({ type: 'SET', field: 'savedOrderId', value: data.orderId })
+    }
+
+    isDirtyRef.current = false
+
+    if (data.readingId) {
+      router.replace(`/dashboard/readings/new?readingId=${data.readingId}`)
     }
   }
 
@@ -384,15 +423,53 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
   async function handleMarkSent() {
     if (!state.savedOrderId) return
     const supabase = createClient()
-    await supabase
+
+    const { error: orderError } = await supabase
       .from('orders')
       .update({ status: 'sent', sent_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq('id', state.savedOrderId)
+
+    if (orderError) throw new Error(orderError.message)
+
+    if (state.savedReadingId) {
+      await supabase
+        .from('readings')
+        .update({ final_approved: true, updated_at: new Date().toISOString() })
+        .eq('id', state.savedReadingId)
+    }
+
     dispatch({ type: 'SET', field: 'status', value: 'sent' })
   }
 
   return (
     <div className="flex flex-col h-full">
+      {/* Page header */}
+      <div className="shrink-0 flex items-center gap-4 border-b border-slate-200 bg-white px-6 py-4">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 shrink-0"
+        >
+          <ArrowLeft size={14} />
+          Back
+        </button>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-base font-semibold text-slate-900">
+            {isReopenMode ? 'Edit Reading' : 'New Reading'}
+          </h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Fill in the details, enter the cards, then generate.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleClearForm}
+          className="shrink-0 text-xs text-slate-400 underline underline-offset-2 hover:text-slate-600"
+        >
+          Clear form
+        </button>
+      </div>
+
       {/* Reopen mode banner */}
       {isReopenMode && (
         <div className="shrink-0 flex items-center justify-between border-b border-amber-200 bg-amber-50 px-6 py-3">
@@ -407,7 +484,10 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
             className="ml-4 text-xs text-amber-700 underline underline-offset-2 hover:text-amber-900"
             onClick={() => {
               dispatch({ type: 'RESET' })
+              isDirtyRef.current = false
               setIsReopenMode(false)
+              setReadingLengthOverridden(false)
+              router.replace('/dashboard/readings/new')
             }}
           >
             Start fresh instead
@@ -440,10 +520,11 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                         key={c.id}
                         className="flex cursor-pointer items-center justify-between px-3 py-2 text-sm hover:bg-slate-50"
                         onMouseDown={() => {
-                          set('clientId', c.id)
-                          set('clientName', c.full_name)
-                          set('clientEmail', c.email ?? '')
-                          set('clientPhone', c.phone ?? '')
+                          isDirtyRef.current = true
+                          dispatch({ type: 'SET', field: 'clientId', value: c.id })
+                          dispatch({ type: 'SET', field: 'clientName', value: c.full_name })
+                          dispatch({ type: 'SET', field: 'clientEmail', value: c.email ?? '' })
+                          dispatch({ type: 'SET', field: 'clientPhone', value: c.phone ?? '' })
                           setClientSuggestions([])
                         }}
                       >
@@ -481,6 +562,17 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               </div>
             </FieldRow>
 
+            <div>
+              <Label htmlFor="client-phone">Phone</Label>
+              <Input
+                id="client-phone"
+                type="tel"
+                value={state.clientPhone}
+                onChange={(e) => set('clientPhone', e.target.value)}
+                placeholder="+44 7700 000000"
+              />
+            </div>
+
             <FieldRow>
               <div>
                 <Label htmlFor="reading-tier">Reading tier</Label>
@@ -488,7 +580,9 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                   id="reading-tier"
                   value={state.readingTier}
                   onChange={(e) => {
+                    isDirtyRef.current = true
                     lastUserSelectedTierRef.current = e.target.value
+                    setReadingLengthOverridden(false)
                     dispatch({ type: 'SET_TIER', tier: e.target.value as ReadingTier })
                   }}
                 >
@@ -569,7 +663,26 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
             <div>
               <Label htmlFor="reading-length">
                 Reading length (characters){' '}
-                <span className="font-normal text-slate-400">— auto-set by tier, overridable</span>
+                {!readingLengthOverridden ? (
+                  <button
+                    type="button"
+                    className="ml-1 font-normal text-brand-600 underline underline-offset-2 hover:text-brand-800"
+                    onClick={() => setReadingLengthOverridden(true)}
+                  >
+                    Override
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="ml-1 font-normal text-slate-400 underline underline-offset-2 hover:text-slate-600"
+                    onClick={() => {
+                      setReadingLengthOverridden(false)
+                      dispatch({ type: 'SET_TIER', tier: state.readingTier })
+                    }}
+                  >
+                    Reset to default
+                  </button>
+                )}
               </Label>
               <Input
                 id="reading-length"
@@ -579,6 +692,8 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                 step="500"
                 value={state.readingLength}
                 onChange={(e) => set('readingLength', parseInt(e.target.value, 10))}
+                readOnly={!readingLengthOverridden}
+                className={!readingLengthOverridden ? 'bg-slate-50 text-slate-500 cursor-default' : ''}
               />
             </div>
           </Section>
@@ -589,9 +704,15 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               cards={state.cards}
               suitFilter={state.suitFilter}
               bottomCard={state.bottomCard}
-              onCardsChange={(cards) => dispatch({ type: 'SET_CARDS', cards })}
+              onCardsChange={(cards) => {
+                isDirtyRef.current = true
+                dispatch({ type: 'SET_CARDS', cards })
+              }}
               onSuitFilterChange={(suit) => set('suitFilter', suit)}
-              onBottomCardChange={(card) => dispatch({ type: 'SET_BOTTOM_CARD', card })}
+              onBottomCardChange={(card) => {
+                isDirtyRef.current = true
+                dispatch({ type: 'SET_BOTTOM_CARD', card })
+              }}
             />
           </Section>
 

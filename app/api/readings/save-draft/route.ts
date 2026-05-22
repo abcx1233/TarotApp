@@ -1,22 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { generateFullReading } from '@/lib/ai/generate'
-import { formatAiError } from '@/lib/ai/errors'
-import { READING_CHARACTER_TARGETS } from '@/lib/ai/config'
 import { getCardBySuit } from '@/data/tarot-cards'
 import type { ReadingFormState, CardEntryForm } from '@/types'
-import type { PromptInput } from '@/lib/ai/prompts/builder'
-
-function mapCardToPromptInput(card: CardEntryForm) {
-  return {
-    name: card.name,
-    orientation: card.orientation,
-    positionLabel: card.positionLabel || undefined,
-  }
-}
 
 export async function POST(request: Request) {
-  // Auth check
   const supabase = createClient()
   const {
     data: { user },
@@ -26,79 +13,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Parse body
-  let body: { formState: ReadingFormState; tonePresetText: string; isTestMode?: boolean }
+  let body: { formState: ReadingFormState; isTestMode?: boolean }
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { formState: f, tonePresetText, isTestMode = false } = body
-
-  // Validate
-  if (!tonePresetText?.trim()) {
-    return NextResponse.json({ error: 'Tone preset text is required' }, { status: 422 })
-  }
-
-  const validCards = (f.cards ?? []).filter((c: CardEntryForm) => c.name?.trim())
-  if (validCards.length === 0) {
-    return NextResponse.json({ error: 'At least one card is required' }, { status: 422 })
-  }
-
-  // Build prompt input
-  const characterTarget =
-    f.readingLength || READING_CHARACTER_TARGETS[f.readingTier] || 6000
-
-  const promptInput: PromptInput = {
-    tonePresetText,
-    characterTarget,
-    topic: f.topic || 'General',
-    specificQuestion: f.specificQuestion || undefined,
-    mainFocus: f.mainFocus || undefined,
-    cards: validCards.map(mapCardToPromptInput),
-    bottomCard: {
-      name: f.bottomCard?.name || '',
-      orientation: f.bottomCard?.orientation || 'upright',
-    },
-    oracleCardName: f.includeOracleCard && f.oracleCardName ? f.oracleCardName : undefined,
-    includeEnergyCleansing: f.includeEnergyCleansing || false,
-    energyCleansingNotes: f.energyCleansingNotes || undefined,
-    birthday: f.birthday || undefined,
-    starSign: f.starSign || undefined,
-    relationshipStatus: f.relationshipStatus || undefined,
-    otherPersonName: f.otherPersonName || undefined,
-    isReturningClient: f.isReturningClient || false,
-  }
-
-  // Generate
-  let generationResult
-  try {
-    generationResult = await generateFullReading(promptInput)
-  } catch (err) {
-    return NextResponse.json(
-      { error: formatAiError(err) },
-      { status: 500 }
-    )
-  }
-
-  const { generatedReading: rawReading, generatedPrompt, groqModel } = generationResult
-
-  // Append sign-off and disclaimer from the default template
-  let generatedReading = rawReading
-  const { data: defaultTemplate } = await supabase
-    .from('reading_templates')
-    .select('signoff_text, disclaimer_text')
-    .eq('is_default', true)
-    .limit(1)
-    .single()
-
-  if (defaultTemplate?.signoff_text?.trim()) {
-    generatedReading += `\n\n${defaultTemplate.signoff_text.trim()}`
-  }
-  if (defaultTemplate?.disclaimer_text?.trim()) {
-    generatedReading += `\n\n${defaultTemplate.disclaimer_text.trim()}`
-  }
+  const { formState: f, isTestMode = false } = body
 
   // Upsert client
   let clientId: string | null = f.clientId
@@ -151,15 +73,14 @@ export async function POST(request: Request) {
     clientId = newClient?.id ?? null
   }
 
-  // Create or update order
+  // Create or update order (don't downgrade existing status)
   let orderId: string
-  const orderPayload = {
+  const orderBase = {
     client_id: clientId,
     reading_tier: f.readingTier || 'core',
     topic: f.topic || 'General',
     delivery_format: f.deliveryFormat || 'written',
     delivery_channel: f.deliveryChannel || 'email',
-    status: 'awaiting_review' as const,
     price_total: parseFloat(f.priceTotal || '0') || 0,
     is_rush: f.isRush || false,
     due_at: f.dueAt || null,
@@ -169,26 +90,23 @@ export async function POST(request: Request) {
   }
 
   if (f.savedOrderId) {
-    await supabase.from('orders').update(orderPayload).eq('id', f.savedOrderId)
+    await supabase.from('orders').update(orderBase).eq('id', f.savedOrderId)
     orderId = f.savedOrderId
   } else {
     const { data: newOrder } = await supabase
       .from('orders')
-      .insert({ ...orderPayload, source: 'manual' })
+      .insert({ ...orderBase, status: 'pending', source: 'manual' })
       .select('id')
       .single()
     orderId = newOrder?.id ?? ''
   }
 
-  // Fetch tone preset id
-  const tonePresetId: string | null = f.tonePresetId || null
-
-  // Save reading
+  // Save reading (preserve generated_reading if exists)
   const readingPayload = {
     order_id: orderId || null,
     client_id: clientId,
-    character_target: characterTarget,
-    tone_preset_id: tonePresetId,
+    character_target: f.readingLength || 6000,
+    tone_preset_id: f.tonePresetId || null,
     question_or_focus: f.mainFocus || null,
     specific_question: f.specificQuestion || null,
     bottom_of_deck_card: f.bottomCard?.name || null,
@@ -198,13 +116,7 @@ export async function POST(request: Request) {
     include_energy_cleansing: f.includeEnergyCleansing || false,
     energy_cleansing_notes: f.energyCleansingNotes || null,
     reader_notes: f.readerNotes || null,
-    generated_prompt: generatedPrompt,
-    generated_reading: generatedReading,
-    email_version: null,
-    whatsapp_version: null,
-    groq_model: groqModel,
-    prompt_version: 1,
-    final_approved: false,
+    generated_reading: f.generatedReading ?? null,
     is_test: isTestMode,
     updated_at: new Date().toISOString(),
   }
@@ -212,31 +124,21 @@ export async function POST(request: Request) {
   let readingId: string
 
   if (f.savedReadingId) {
-    const { data: existingReading } = await supabase
-      .from('readings')
-      .select('regenerated_count')
-      .eq('id', f.savedReadingId)
-      .single()
-
-    await supabase
-      .from('readings')
-      .update({
-        ...readingPayload,
-        regenerated_count: (existingReading?.regenerated_count ?? 0) + 1,
-      })
-      .eq('id', f.savedReadingId)
+    await supabase.from('readings').update(readingPayload).eq('id', f.savedReadingId)
     readingId = f.savedReadingId
   } else {
     const { data: newReading } = await supabase
       .from('readings')
-      .insert({ ...readingPayload, regenerated_count: 0 })
+      .insert({ ...readingPayload, regenerated_count: 0, final_approved: false })
       .select('id')
       .single()
     readingId = newReading?.id ?? ''
   }
 
-  // Save reading cards
-  if (readingId) {
+  // Save cards (only if valid cards exist)
+  const validCards = (f.cards ?? []).filter((c: CardEntryForm) => c.name?.trim())
+
+  if (readingId && validCards.length > 0) {
     await supabase.from('reading_cards').delete().eq('reading_id', readingId)
 
     const cardInserts = validCards.map((card: CardEntryForm, i: number) => {
@@ -265,22 +167,8 @@ export async function POST(request: Request) {
       })
     }
 
-    if (cardInserts.length > 0) {
-      await supabase.from('reading_cards').insert(cardInserts)
-    }
+    await supabase.from('reading_cards').insert(cardInserts)
   }
 
-  // Update order status
-  if (orderId) {
-    await supabase
-      .from('orders')
-      .update({ status: 'awaiting_review', updated_at: new Date().toISOString() })
-      .eq('id', orderId)
-  }
-
-  return NextResponse.json({
-    readingId,
-    orderId,
-    generatedReading,
-  })
+  return NextResponse.json({ readingId, orderId })
 }

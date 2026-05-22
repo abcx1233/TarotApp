@@ -124,7 +124,7 @@ export default function HistoryPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-medium text-slate-900 truncate">
-                      {reading.client?.full_name ?? 'Unknown'}
+                      {reading.client?.full_name ?? <span className="text-slate-400">No client</span>}
                     </p>
                     <StatusBadge status={reading.order?.status ?? 'pending'} />
                   </div>

@@ -164,7 +164,7 @@ export default async function DashboardPage() {
                       <div className="flex items-center gap-1.5">
                         {order.is_rush && <Zap size={11} className="text-red-500 shrink-0" />}
                         <span className="font-medium text-slate-800">
-                          {order.client?.full_name ?? '—'}
+                          {order.client?.full_name ?? <span className="text-slate-400">No client</span>}
                         </span>
                       </div>
                     </td>
@@ -227,7 +227,7 @@ export default async function DashboardPage() {
                 className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4"
               >
                 <p className="text-sm font-medium text-slate-900 truncate">
-                  {reading.client?.full_name ?? 'Unknown client'}
+                  {reading.client?.full_name ?? <span className="text-slate-400">No client</span>}
                 </p>
                 <p className="text-xs text-slate-400">
                   {TIER_SHORT[reading.order?.reading_tier ?? ''] ?? '—'} · {reading.order?.topic}

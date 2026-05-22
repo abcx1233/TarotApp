@@ -137,17 +137,8 @@ export default async function NewReadingPage({
   ])
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="border-b border-slate-200 bg-white px-6 py-4 shrink-0">
-        <h1 className="text-base font-semibold text-slate-900">New Reading</h1>
-        <p className="text-xs text-slate-500 mt-0.5">
-          Fill in the details, enter the cards, then generate.
-        </p>
-      </div>
-
-      <div className="flex-1 min-h-0">
-        <ReadingForm initialTonePresets={tonePresets} initialReading={initialReading} />
-      </div>
+    <div className="flex h-full flex-col min-h-0">
+      <ReadingForm initialTonePresets={tonePresets} initialReading={initialReading} />
     </div>
   )
 }

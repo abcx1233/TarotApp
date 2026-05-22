@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Copy, Check, RefreshCw, Loader2, MessageCircle, Mail, ScrollText } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
@@ -17,9 +18,9 @@ interface OutputPanelProps {
   generationError: string | null
   onGenerate: () => void
   onRegenerate: () => void
-  onSaveDraft: () => void
-  onMarkReady: () => void
-  onMarkSent: () => void
+  onSaveDraft: () => Promise<void>
+  onMarkReady: () => Promise<void>
+  onMarkSent: () => Promise<void>
   readingId: string | null
   clientEmail: string
   clientPhone: string
@@ -45,6 +46,9 @@ export function OutputPanel({
   businessName,
 }: OutputPanelProps) {
   const [copied, setCopied] = useState(false)
+  const [saveDraftState, setSaveDraftState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [sentState, setSentState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const router = useRouter()
 
   async function handleCopy() {
     if (!generatedReading) return
@@ -66,6 +70,32 @@ export function OutputPanel({
     const subject = `Your ${tierLabel} ${topic} Reading from ${businessName}`
     const url = `mailto:${clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(generatedReading)}`
     window.open(url, '_blank')
+  }
+
+  async function handleSaveDraftClick() {
+    if (saveDraftState === 'saving') return
+    setSaveDraftState('saving')
+    try {
+      await onSaveDraft()
+      setSaveDraftState('saved')
+      setTimeout(() => setSaveDraftState('idle'), 2000)
+    } catch {
+      setSaveDraftState('error')
+      setTimeout(() => setSaveDraftState('idle'), 3000)
+    }
+  }
+
+  async function handleMarkSentClick() {
+    if (!window.confirm('Mark this reading as sent? The order status will be updated to Sent.')) return
+    setSentState('sending')
+    try {
+      await onMarkSent()
+      setSentState('sent')
+      setTimeout(() => router.push('/dashboard'), 1500)
+    } catch {
+      setSentState('error')
+      setTimeout(() => setSentState('idle'), 3000)
+    }
   }
 
   const hasOutput = !!generatedReading
@@ -123,8 +153,19 @@ export function OutputPanel({
                 <RefreshCw size={13} />
                 Regenerate
               </Button>
-              <Button variant="ghost" size="sm" onClick={onSaveDraft}>
-                Save Draft
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSaveDraftClick}
+                disabled={saveDraftState === 'saving'}
+              >
+                {saveDraftState === 'saving'
+                  ? 'Saving…'
+                  : saveDraftState === 'saved'
+                  ? 'Draft saved ✓'
+                  : saveDraftState === 'error'
+                  ? 'Save failed — retry'
+                  : 'Save Draft'}
               </Button>
             </>
           )}
@@ -146,7 +187,7 @@ export function OutputPanel({
             {/* WhatsApp */}
             {noPhone ? (
               <span
-                title="Add a phone number to the client to use this"
+                title="Add a phone number to use this"
                 className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-400 cursor-not-allowed select-none"
               >
                 <MessageCircle size={13} />
@@ -178,8 +219,18 @@ export function OutputPanel({
               <Button variant="secondary" size="sm" onClick={onMarkReady}>
                 Mark Ready
               </Button>
-              <Button size="sm" onClick={onMarkSent} disabled={!readingId}>
-                Mark Sent
+              <Button
+                size="sm"
+                onClick={handleMarkSentClick}
+                disabled={!readingId || sentState === 'sending'}
+              >
+                {sentState === 'sending'
+                  ? 'Sending…'
+                  : sentState === 'sent'
+                  ? 'Sent! ✓'
+                  : sentState === 'error'
+                  ? 'Error — retry'
+                  : 'Mark Sent'}
               </Button>
             </div>
           </div>
