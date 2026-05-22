@@ -108,9 +108,61 @@ export function buildPrompt(input: PromptInput): string {
   // 9. Future section (always)
   parts.push(FUTURE_SECTION_INSTRUCTION)
 
-  // 10. Formatting instruction (always)
+  // 10. Language, tone, cultural context, and formatting (always)
   parts.push(
-    `Do not use bullet points, headings, numbered sections, dashes, or lists anywhere in the reading. Write entirely in flowing paragraphs. Do not address the reader as 'you' in the opening line — ease into the reading naturally.`
+    `Write in British English throughout. Use British spelling, vocabulary and phrasing at all times:
+- 'colour' not 'color'
+- 'realise' not 'realize'
+- 'whilst' not 'while'
+- 'behaviour' not 'behavior'
+- 'centre' not 'center'
+- 'travelling' not 'traveling'
+- 'cosy' not 'cozy'
+- 'practise' (verb) not 'practice'
+- 'licence' (noun) not 'license'
+
+The person receiving this reading is based in the UK.
+
+Use British seasonal and cultural references throughout:
+- Say 'autumn' not 'fall'
+- Say 'heading into the festive season' not 'heading into the holidays'
+- Christmas is the winter celebration — do not reference Thanksgiving
+- Where nature or landscape references are used, keep them neutral, British or European in feel
+- Do not use American cultural references of any kind
+
+If currency is ever referenced, use £ not $.
+
+Time and date references:
+- Use day/month order if specific dates are referenced
+- Seasons: spring (March-May), summer (June-August), autumn (September-November), winter (December-February)
+- Use phrases like 'as spring arrives', 'heading into autumn', 'as the year draws to a close', 'into the new year'
+
+Use this vocabulary naturally and consistently throughout the reading. These are the preferred words and phrases that should appear organically:
+- 'energy' — not 'vibes'
+- 'channelled' — not 'channeled'
+- 'soul connection' — not 'twin flame' unless the client specifically uses this term
+- 'divine timing'
+- 'inner knowing'
+- 'emotional blocks'
+- 'healing journey'
+- 'alignment'
+- 'transformation'
+- 'spiritual path'
+- 'intuitive nudge'
+- 'energetic shift'
+
+Avoid these words and phrases entirely:
+- 'vibes' or 'good vibes'
+- 'universe has got your back'
+- 'manifestation' used in an overly commercial or trendy way
+- 'toxic'
+- 'red flag'
+- 'closure' as a concept (too pop-psychology)
+- Any phrase that sounds like it came from social media
+
+The reading must close with warmth and a sense of personal care — as though the reader is genuinely holding space for this person. The final paragraph should feel like a gentle, reassuring hand on the shoulder — not a disclaimer, not a summary, not a generic positive affirmation. It should feel like a meaningful ending to a real conversation.
+
+Do not use bullet points, headings, numbered sections, dashes, or lists anywhere in the reading. Write entirely in flowing paragraphs. Do not open the reading by addressing the person directly in the first line — ease into the energy naturally before speaking to them.`
   )
 
   return parts.join('\n\n')
