@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { format, differenceInDays } from 'date-fns'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { StatusBadge } from '@/components/ui/Badge'
-import { Copy, Check, RotateCcw, Clock } from 'lucide-react'
+import { Copy, Check, RotateCcw, Clock, Trash2 } from 'lucide-react'
 import type { Reading } from '@/types'
 
 const TIER_LABELS: Record<string, string> = {
@@ -51,6 +51,12 @@ function ExpiryIndicator({ expiresAt }: { expiresAt: string | null | undefined }
   )
 }
 
+interface UndoData {
+  reading: Reading
+  orderId: string | null
+  prevOrderStatus: string | null
+}
+
 export default function HistoryPage() {
   const [readings, setReadings] = useState<Reading[]>([])
   const [loading, setLoading] = useState(true)
@@ -58,19 +64,22 @@ export default function HistoryPage() {
   const [tierFilter, setTierFilter] = useState('')
   const [topicFilter, setTopicFilter] = useState('')
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [undoData, setUndoData] = useState<UndoData | null>(null)
+  const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  async function load() {
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('readings')
+      .select('*, order:orders(reading_tier, topic, status, delivery_format, client_id), client:clients(full_name, email)')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(100)
+    setReadings((data ?? []) as Reading[])
+    setLoading(false)
+  }
 
   useEffect(() => {
-    async function load() {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from('readings')
-        .select('*, order:orders(reading_tier, topic, status, delivery_format, client_id), client:clients(full_name, email)')
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .limit(100)
-      setReadings((data ?? []) as Reading[])
-      setLoading(false)
-    }
     load()
   }, [])
 
@@ -90,6 +99,77 @@ export default function HistoryPage() {
         )
       )
     }
+  }
+
+  async function handleTrashReading(reading: Reading) {
+    const supabase = createClient()
+
+    const orderId = reading.order_id
+    const prevOrderStatus = reading.order?.status ?? null
+
+    // Update order status if needed
+    if (orderId && (prevOrderStatus === 'awaiting_review' || prevOrderStatus === 'in_progress')) {
+      await supabase
+        .from('orders')
+        .update({ status: 'pending', updated_at: new Date().toISOString() })
+        .eq('id', orderId)
+    }
+
+    // Trash the reading
+    await supabase
+      .from('readings')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', reading.id)
+
+    // Remove from list immediately
+    setReadings((prev) => prev.filter((r) => r.id !== reading.id))
+
+    // Clear previous undo timeout
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current)
+
+    // Show undo toast for 5 seconds
+    setUndoData({ reading, orderId, prevOrderStatus })
+    undoTimeoutRef.current = setTimeout(() => setUndoData(null), 5000)
+
+    // Update sidebar badge
+    window.dispatchEvent(new CustomEvent('trash-count-changed'))
+  }
+
+  async function handleUndo() {
+    if (!undoData) return
+    if (undoTimeoutRef.current) {
+      clearTimeout(undoTimeoutRef.current)
+      undoTimeoutRef.current = null
+    }
+
+    const supabase = createClient()
+
+    // Restore the reading
+    await supabase
+      .from('readings')
+      .update({ deleted_at: null })
+      .eq('id', undoData.reading.id)
+
+    // Restore order status if it was changed
+    if (
+      undoData.orderId &&
+      undoData.prevOrderStatus &&
+      ['awaiting_review', 'in_progress'].includes(undoData.prevOrderStatus)
+    ) {
+      await supabase
+        .from('orders')
+        .update({ status: undoData.prevOrderStatus, updated_at: new Date().toISOString() })
+        .eq('id', undoData.orderId)
+    }
+
+    // Re-insert reading into list at sorted position
+    setReadings((prev) => {
+      const next = [...prev, undoData.reading]
+      return next.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    })
+
+    setUndoData(null)
+    window.dispatchEvent(new CustomEvent('trash-count-changed'))
   }
 
   const filtered = readings.filter((r) => {
@@ -183,7 +263,9 @@ export default function HistoryPage() {
                     </Button>
                   )}
                   {reading.generated_reading && (
-                    <CopyButton text={reading.generated_reading} />
+                    <span onClick={(e) => e.stopPropagation()}>
+                      <CopyButton text={reading.generated_reading} />
+                    </span>
                   )}
                   <Link
                     href={`/dashboard/readings/new?readingId=${reading.id}`}
@@ -194,6 +276,14 @@ export default function HistoryPage() {
                       Reopen
                     </Button>
                   </Link>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); handleTrashReading(reading) }}
+                    className="rounded p-1.5 text-slate-300 hover:bg-red-50 hover:text-red-400 transition-colors"
+                    title="Move to Trash"
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
               </div>
 
@@ -268,6 +358,20 @@ export default function HistoryPage() {
               <p className="text-sm text-slate-400">No readings found.</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Undo toast */}
+      {undoData && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 rounded-lg bg-slate-900 px-4 py-3 text-sm text-white shadow-xl z-50">
+          <span>Reading moved to Trash</span>
+          <button
+            type="button"
+            onClick={handleUndo}
+            className="font-semibold text-brand-400 hover:text-brand-300 transition-colors"
+          >
+            Undo
+          </button>
         </div>
       )}
     </div>

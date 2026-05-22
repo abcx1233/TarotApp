@@ -104,7 +104,12 @@ export function Sidebar({ onClose }: SidebarProps) {
         // deleted_at column may not exist yet — fail silently
       }
     }
+
     fetchTrashCount()
+
+    const handler = () => fetchTrashCount()
+    window.addEventListener('trash-count-changed', handler)
+    return () => window.removeEventListener('trash-count-changed', handler)
   }, [])
 
   async function handleLogout() {

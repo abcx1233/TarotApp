@@ -91,6 +91,7 @@ export function OrdersTable({ orders, onUpdateStatus, onDuplicate, onArchive, on
             const isMediaDelivery =
               order.delivery_format === 'voice_note' || order.delivery_format === 'video'
             const hasMedia = !!order.reading?.media_signed_url
+            const hasFollowUp = order.order_addons?.some((a) => a.addon_type === 'follow_up') ?? false
 
             return (
               <tr
@@ -143,6 +144,7 @@ export function OrdersTable({ orders, onUpdateStatus, onDuplicate, onArchive, on
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <StatusBadge status={order.status} />
                     {order.is_rush && <Badge variant="rush">RUSH</Badge>}
+                    {hasFollowUp && <Badge variant="default">Follow-up</Badge>}
                     {isDueToday && <Badge variant="warning">DUE TODAY</Badge>}
                     {order.is_test && <Badge variant="warning">TEST</Badge>}
                     {isMediaDelivery && hasMedia && (

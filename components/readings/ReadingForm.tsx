@@ -7,6 +7,7 @@ import { clsx } from 'clsx'
 import { CardEntry, CELTIC_CROSS_POSITIONS } from './CardEntry'
 import { TonePresetSelect } from './TonePresetSelect'
 import { AddOnsSection } from './AddOnsSection'
+import { OrderAddOnsSection } from './OrderAddOnsSection'
 import { OutputPanel } from './OutputPanel'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
@@ -42,6 +43,13 @@ function makeCelticCrossCards(existing: CardEntryForm[] = []): CardEntryForm[] {
   }))
 }
 
+const TIER_DEFAULT_CARD_COUNT: Record<string, number> = {
+  mini: 3,
+  core: 8,
+  premium: 12,
+  celtic_cross: 10,
+}
+
 function initialState(): ReadingFormState {
   return {
     clientId: null,
@@ -60,7 +68,7 @@ function initialState(): ReadingFormState {
     tonePresetId: '',
     readingLength: READING_CHARACTER_TARGETS.core,
     suitFilter: 'all',
-    cards: [makeBlankCard()],
+    cards: Array.from({ length: TIER_DEFAULT_CARD_COUNT['core'] }, makeBlankCard),
     bottomCard: { name: '', orientation: 'upright' },
     questionsOrFocus: '',
     includeOracleCard: false,
@@ -68,6 +76,7 @@ function initialState(): ReadingFormState {
     includeEnergyCleansing: false,
     energyCleansingNotes: '',
     includeExtraQuestion: false,
+    extraQuestionText: '',
     includeFollowUp: false,
     generatedReading: null,
     isGenerating: false,
@@ -89,6 +98,7 @@ type Action =
   | { type: 'SET_ERROR'; error: string }
   | { type: 'SET_CELTIC_CROSS_LAYOUT'; existingCards: CardEntryForm[] }
   | { type: 'CLEAR_POSITION_LABELS' }
+  | { type: 'SET_CARD_COUNT'; targetCount: number; keep: boolean }
   | { type: 'RESTORE'; data: RestoredReadingData; cards: CardEntryForm[]; bottomCard: { name: string; orientation: CardOrientation } }
   | { type: 'RESET' }
 
@@ -124,6 +134,25 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
       return { ...state, cards: makeCelticCrossCards(action.existingCards) }
     case 'CLEAR_POSITION_LABELS':
       return { ...state, cards: state.cards.map((c) => ({ ...c, positionLabel: '' })) }
+    case 'SET_CARD_COUNT': {
+      if (!action.keep) {
+        return { ...state, cards: Array.from({ length: action.targetCount }, makeBlankCard) }
+      }
+      // Clear position labels (from Celtic Cross) and adjust count, never remove named cards
+      let cards = state.cards.map((c) => ({ ...c, positionLabel: '' }))
+      if (cards.length < action.targetCount) {
+        const extras = Array.from({ length: action.targetCount - cards.length }, makeBlankCard)
+        return { ...state, cards: [...cards, ...extras] }
+      }
+      if (cards.length > action.targetCount) {
+        const result = [...cards]
+        while (result.length > action.targetCount && !result[result.length - 1].name.trim()) {
+          result.pop()
+        }
+        return { ...state, cards: result }
+      }
+      return { ...state, cards }
+    }
     case 'RESTORE': {
       const { data, cards, bottomCard } = action
       const order = data.order
@@ -144,12 +173,13 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         dueAt: order?.due_at ? order.due_at.slice(0, 16) : '',
         tonePresetId: data.tone_preset_id ?? '',
         readingLength: data.character_target ?? READING_CHARACTER_TARGETS.core,
-        questionsOrFocus: data.question_or_focus ?? data.specific_question ?? '',
+        questionsOrFocus: data.question_or_focus ?? '',
         includeOracleCard: data.include_oracle_card ?? false,
         oracleCardName: data.oracle_card_name ?? '',
         includeEnergyCleansing: data.include_energy_cleansing ?? false,
         energyCleansingNotes: data.energy_cleansing_notes ?? '',
-        includeExtraQuestion: false,
+        includeExtraQuestion: !!(data.specific_question?.trim()),
+        extraQuestionText: data.specific_question ?? '',
         includeFollowUp: false,
         generatedReading: data.generated_reading,
         savedReadingId: data.id || null,
@@ -376,30 +406,41 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
     router.replace('/dashboard/readings/new')
   }
 
-  // Handle tier change with Celtic Cross logic (FIX 15, 17)
+  // Handle tier change with card-count auto-populate (CHANGE 6, 10)
   function handleTierChange(tier: ReadingTier) {
     isDirtyRef.current = true
     lastUserSelectedTierRef.current = tier
     const prevTier = state.readingTier
 
-    // FIX 15: force format to 'written' for Celtic Cross
+    // Force format to 'written' for Celtic Cross (CHANGE 10)
     if (tier === 'celtic_cross' && state.deliveryFormat !== 'written') {
       dispatch({ type: 'SET', field: 'deliveryFormat', value: 'written' })
     }
 
-    // FIX 17: Celtic Cross position layout
-    if (tier === 'celtic_cross' && prevTier !== 'celtic_cross') {
-      const hasNamedCards = state.cards.some((c) => c.name.trim())
+    const targetCount = TIER_DEFAULT_CARD_COUNT[tier] ?? 1
+    const hasNamedCards = state.cards.some((c) => c.name.trim())
+    const TIER_LABELS: Record<string, string> = { mini: 'Mini', core: 'Core', premium: 'Premium', celtic_cross: 'Celtic Cross' }
+
+    if (tier === 'celtic_cross') {
+      if (prevTier !== 'celtic_cross') {
+        if (hasNamedCards) {
+          const confirmed = window.confirm(
+            `Changing to Celtic Cross adjusts the card count to 10 cards.\nKeep your already entered cards?`
+          )
+          dispatch({ type: 'SET_CELTIC_CROSS_LAYOUT', existingCards: confirmed ? state.cards : [] })
+        } else {
+          dispatch({ type: 'SET_CELTIC_CROSS_LAYOUT', existingCards: state.cards })
+        }
+      }
+    } else {
       if (hasNamedCards) {
         const confirmed = window.confirm(
-          'Celtic Cross uses 10 specific positions. Reset card rows to Celtic Cross layout?\n\nYour entered cards will be kept but positions will be relabelled.'
+          `Changing to ${TIER_LABELS[tier]} adjusts the card count to ${targetCount} cards.\nKeep your already entered cards?`
         )
-        if (confirmed) dispatch({ type: 'SET_CELTIC_CROSS_LAYOUT', existingCards: state.cards })
+        dispatch({ type: 'SET_CARD_COUNT', targetCount, keep: confirmed })
       } else {
-        dispatch({ type: 'SET_CELTIC_CROSS_LAYOUT', existingCards: state.cards })
+        dispatch({ type: 'SET_CARD_COUNT', targetCount, keep: false })
       }
-    } else if (prevTier === 'celtic_cross' && tier !== 'celtic_cross') {
-      dispatch({ type: 'CLEAR_POSITION_LABELS' })
     }
 
     // Update tier and length
@@ -663,12 +704,29 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               )}
             </div>
 
+            <Toggle checked={state.isReturningClient} onChange={(v) => set('isReturningClient', v)} label="Returning client" />
+
+            {/* Due date — bottom of Order Info (CHANGE 7) */}
             <div>
               <Label htmlFor="due-at">Due date &amp; time</Label>
               <Input id="due-at" type="datetime-local" value={state.dueAt} onChange={(e) => set('dueAt', e.target.value)} />
+              <p className="mt-1 text-xs text-slate-400">Auto-filled when orders come in via Stripe — override if needed</p>
             </div>
 
-            <Toggle checked={state.isReturningClient} onChange={(v) => set('isReturningClient', v)} label="Returning client" />
+            {/* Order Add-Ons (CHANGE 1) */}
+            <div className="space-y-3">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Order Add-Ons</p>
+              <OrderAddOnsSection
+                includeExtraQuestion={state.includeExtraQuestion}
+                extraQuestionText={state.extraQuestionText}
+                includeFollowUp={state.includeFollowUp}
+                isRush={state.isRush}
+                onToggleExtraQuestion={(v) => { set('includeExtraQuestion', v); setIsPriceAutoSet(true) }}
+                onExtraQuestionTextChange={(v) => set('extraQuestionText', v)}
+                onToggleFollowUp={(v) => { set('includeFollowUp', v); setIsPriceAutoSet(true) }}
+                onToggleRush={(v) => { set('isRush', v); setIsPriceAutoSet(true) }}
+              />
+            </div>
           </Section>
 
           {/* Reading Setup */}
@@ -730,23 +788,17 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
             </div>
           </Section>
 
-          {/* Spirit Led Add-Ons */}
+          {/* Spirit Led Add-Ons (CHANGE 1) */}
           <Section title="Spirit Led Add-Ons">
             <AddOnsSection
               includeOracleCard={state.includeOracleCard}
               oracleCardName={state.oracleCardName}
               includeEnergyCleansing={state.includeEnergyCleansing}
               energyCleansingNotes={state.energyCleansingNotes}
-              includeExtraQuestion={state.includeExtraQuestion}
-              includeFollowUp={state.includeFollowUp}
-              isRush={state.isRush}
               onToggleOracleCard={(v) => { set('includeOracleCard', v); setIsPriceAutoSet(true) }}
               onOracleCardNameChange={(v) => set('oracleCardName', v)}
               onToggleEnergyCleansing={(v) => { set('includeEnergyCleansing', v); setIsPriceAutoSet(true) }}
               onEnergyCleansingNotesChange={(v) => set('energyCleansingNotes', v)}
-              onToggleExtraQuestion={(v) => { set('includeExtraQuestion', v); setIsPriceAutoSet(true) }}
-              onToggleFollowUp={(v) => { set('includeFollowUp', v); setIsPriceAutoSet(true) }}
-              onToggleRush={(v) => { set('isRush', v); setIsPriceAutoSet(true) }}
             />
           </Section>
 

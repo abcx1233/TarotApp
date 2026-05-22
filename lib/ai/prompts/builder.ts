@@ -12,6 +12,7 @@ export interface PromptInput {
   characterTarget: number
   topic: string
   questionsOrFocus?: string
+  specificQuestion?: string
   starSign?: string
   isReturningClient?: boolean
   cards: CardInput[]
@@ -44,6 +45,13 @@ export function buildPrompt(input: PromptInput): string {
   if (input.questionsOrFocus?.trim()) {
     parts.push(
       `The client's questions or areas of focus for this reading: ${input.questionsOrFocus.trim()}`
+    )
+  }
+
+  // 4a. Extra paid question
+  if (input.specificQuestion?.trim()) {
+    parts.push(
+      `The client has paid for an additional question to be answered fully and directly within this reading: ${input.specificQuestion.trim()}`
     )
   }
 

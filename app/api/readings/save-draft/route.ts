@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCardBySuit } from '@/data/tarot-cards'
+import { ADDON_PRICES } from '@/lib/config/pricing'
 import type { ReadingFormState, CardEntryForm } from '@/types'
 
 export async function POST(request: Request) {
@@ -100,6 +101,19 @@ export async function POST(request: Request) {
     orderId = newOrder?.id ?? ''
   }
 
+  // Save order addons (follow-up)
+  if (orderId) {
+    await supabase.from('order_addons').delete().eq('order_id', orderId).eq('addon_type', 'follow_up')
+    if (f.includeFollowUp) {
+      await supabase.from('order_addons').insert({
+        order_id: orderId,
+        addon_type: 'follow_up',
+        addon_price: ADDON_PRICES.follow_up,
+        addon_notes: null,
+      })
+    }
+  }
+
   // Save reading (preserve generated_reading if exists)
   const readingPayload = {
     order_id: orderId || null,
@@ -113,6 +127,7 @@ export async function POST(request: Request) {
     include_oracle_card: f.includeOracleCard || false,
     include_energy_cleansing: f.includeEnergyCleansing || false,
     energy_cleansing_notes: f.energyCleansingNotes || null,
+    specific_question: f.includeExtraQuestion && f.extraQuestionText?.trim() ? f.extraQuestionText.trim() : null,
     generated_reading: f.generatedReading ?? null,
     is_test: isTestMode,
     updated_at: new Date().toISOString(),

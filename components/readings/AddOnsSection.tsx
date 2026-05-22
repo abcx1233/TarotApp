@@ -10,16 +10,10 @@ interface AddOnsSectionProps {
   oracleCardName: string
   includeEnergyCleansing: boolean
   energyCleansingNotes: string
-  includeExtraQuestion: boolean
-  includeFollowUp: boolean
-  isRush: boolean
   onToggleOracleCard: (v: boolean) => void
   onOracleCardNameChange: (v: string) => void
   onToggleEnergyCleansing: (v: boolean) => void
   onEnergyCleansingNotesChange: (v: string) => void
-  onToggleExtraQuestion: (v: boolean) => void
-  onToggleFollowUp: (v: boolean) => void
-  onToggleRush: (v: boolean) => void
 }
 
 function AddonRow({
@@ -63,16 +57,10 @@ export function AddOnsSection({
   oracleCardName,
   includeEnergyCleansing,
   energyCleansingNotes,
-  includeExtraQuestion,
-  includeFollowUp,
-  isRush,
   onToggleOracleCard,
   onOracleCardNameChange,
   onToggleEnergyCleansing,
   onEnergyCleansingNotesChange,
-  onToggleExtraQuestion,
-  onToggleFollowUp,
-  onToggleRush,
 }: AddOnsSectionProps) {
   return (
     <div className="space-y-3">
@@ -116,30 +104,6 @@ export function AddOnsSection({
           />
         </div>
       </AddonRow>
-
-      <AddonRow
-        title="Extra Question"
-        description="Address an additional specific question within the reading"
-        price="6"
-        checked={includeExtraQuestion}
-        onChange={onToggleExtraQuestion}
-      />
-
-      <AddonRow
-        title="24-Hour Delivery"
-        description="Rush order — prioritised and delivered within 24 hours"
-        price="10"
-        checked={isRush}
-        onChange={onToggleRush}
-      />
-
-      <AddonRow
-        title="Follow-Up Within 48 Hours"
-        description="A brief follow-up response to one clarifying question"
-        price="5"
-        checked={includeFollowUp}
-        onChange={onToggleFollowUp}
-      />
     </div>
   )
 }

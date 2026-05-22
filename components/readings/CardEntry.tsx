@@ -133,7 +133,7 @@ const TIER_CARD_GUIDANCE: Record<string, string> = {
   mini: '3-card spread',
   core: '6–8 cards',
   premium: '10–12+ cards',
-  celtic_cross: '10 cards (Celtic Cross spread)',
+  celtic_cross: '10 cards — positions pre-filled',
 }
 
 export function CardEntry({

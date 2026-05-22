@@ -50,6 +50,7 @@ export interface Order {
   updated_at: string
   client?: Client
   reading?: { id: string; delivery_format?: string | null; media_signed_url?: string | null; media_url_expires_at?: string | null } | null
+  order_addons?: { addon_type: string }[]
 }
 
 export interface Reading {
@@ -200,6 +201,7 @@ export interface ReadingFormState {
   includeEnergyCleansing: boolean
   energyCleansingNotes: string
   includeExtraQuestion: boolean
+  extraQuestionText: string
   includeFollowUp: boolean
   generatedReading: string | null
   isGenerating: boolean

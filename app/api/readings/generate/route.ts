@@ -4,6 +4,7 @@ import { generateFullReading } from '@/lib/ai/generate'
 import { chatComplete } from '@/lib/ai/client'
 import { formatAiError } from '@/lib/ai/errors'
 import { READING_CHARACTER_TARGETS, AI_CONFIG } from '@/lib/ai/config'
+import { ADDON_PRICES } from '@/lib/config/pricing'
 import { getCardBySuit } from '@/data/tarot-cards'
 import type { ReadingFormState, CardEntryForm } from '@/types'
 import type { PromptInput } from '@/lib/ai/prompts/builder'
@@ -75,6 +76,7 @@ export async function POST(request: Request) {
     oracleCardName: f.includeOracleCard && f.oracleCardName ? f.oracleCardName : undefined,
     includeEnergyCleansing: f.includeEnergyCleansing || false,
     energyCleansingNotes: f.energyCleansingNotes || undefined,
+    specificQuestion: f.includeExtraQuestion && f.extraQuestionText?.trim() ? f.extraQuestionText.trim() : undefined,
   }
 
   // Generate
@@ -216,6 +218,19 @@ export async function POST(request: Request) {
     orderId = newOrder?.id ?? ''
   }
 
+  // Save order addons (follow-up)
+  if (orderId) {
+    await supabase.from('order_addons').delete().eq('order_id', orderId).eq('addon_type', 'follow_up')
+    if (f.includeFollowUp) {
+      await supabase.from('order_addons').insert({
+        order_id: orderId,
+        addon_type: 'follow_up',
+        addon_price: ADDON_PRICES.follow_up,
+        addon_notes: null,
+      })
+    }
+  }
+
   // Fetch tone preset id
   const tonePresetId: string | null = f.tonePresetId || null
 
@@ -232,6 +247,7 @@ export async function POST(request: Request) {
     include_oracle_card: f.includeOracleCard || false,
     include_energy_cleansing: f.includeEnergyCleansing || false,
     energy_cleansing_notes: f.energyCleansingNotes || null,
+    specific_question: f.includeExtraQuestion && f.extraQuestionText?.trim() ? f.extraQuestionText.trim() : null,
     generated_prompt: generatedPrompt,
     generated_reading: generatedReading,
     email_version: null,
