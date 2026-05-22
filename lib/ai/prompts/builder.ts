@@ -11,8 +11,9 @@ export interface PromptInput {
   tonePresetText: string
   characterTarget: number
   topic: string
-  specificQuestion?: string
-  mainFocus?: string
+  questionsOrFocus?: string
+  starSign?: string
+  isReturningClient?: boolean
   cards: CardInput[]
   bottomCard: {
     name: string
@@ -21,11 +22,6 @@ export interface PromptInput {
   oracleCardName?: string
   includeEnergyCleansing?: boolean
   energyCleansingNotes?: string
-  birthday?: string
-  starSign?: string
-  relationshipStatus?: string
-  otherPersonName?: string
-  isReturningClient?: boolean
 }
 
 export function buildPrompt(input: PromptInput): string {
@@ -40,33 +36,26 @@ export function buildPrompt(input: PromptInput): string {
   // 3. Topic
   parts.push(`The topic or area of focus for this reading is: ${input.topic}`)
 
-  // 4. Specific question
-  if (input.specificQuestion?.trim()) {
+  // 4. Questions or areas of focus
+  if (input.questionsOrFocus?.trim()) {
     parts.push(
-      `The client has asked a specific question. Make sure this is answered fully and directly within the reading: ${input.specificQuestion.trim()}`
+      `The client's questions or areas of focus for this reading: ${input.questionsOrFocus.trim()}`
     )
   }
 
-  // Personalisation context block
-  const personDetails: string[] = []
-  if (input.birthday) personDetails.push(`Birthday: ${input.birthday}`)
-  if (input.starSign) personDetails.push(`Star sign: ${input.starSign}`)
-  if (input.relationshipStatus)
-    personDetails.push(`Relationship status: ${input.relationshipStatus}`)
-  if (input.otherPersonName)
-    personDetails.push(`Other person's name: ${input.otherPersonName}`)
-  if (input.isReturningClient) personDetails.push(`This is a returning client.`)
-
-  if (personDetails.length > 0) {
-    parts.push(`Client details:\n${personDetails.join('\n')}`)
+  // 5. Star sign (astrological undertones)
+  if (input.starSign?.trim()) {
+    parts.push(
+      `The client's star sign is ${input.starSign}. Let this inform the astrological undertones of the reading where relevant — do not make it the focus, but let it add depth.`
+    )
   }
 
-  // Additional context
-  if (input.mainFocus?.trim()) {
-    parts.push(`Additional context from the client: ${input.mainFocus.trim()}`)
+  // 6. Returning client
+  if (input.isReturningClient) {
+    parts.push(`This is a returning client.`)
   }
 
-  // 5. Cards in spread
+  // 7. Cards in spread
   const cardLines = input.cards
     .filter((c) => c.name.trim())
     .map((card, i) => {
@@ -79,7 +68,7 @@ export function buildPrompt(input: PromptInput): string {
     parts.push(`Cards in this spread:\n${cardLines.join('\n')}`)
   }
 
-  // 6. Bottom of deck card
+  // 8. Bottom of deck card
   if (input.bottomCard.name.trim()) {
     const orientation =
       input.bottomCard.orientation === 'upright' ? 'Upright' : 'Reversed'
@@ -88,14 +77,14 @@ export function buildPrompt(input: PromptInput): string {
     )
   }
 
-  // 7. Oracle card
+  // 9. Oracle card
   if (input.oracleCardName?.trim()) {
     parts.push(
       `An oracle card has also come through for this person: ${input.oracleCardName.trim()}. Weave its message naturally and intuitively into the reading.`
     )
   }
 
-  // 8. Energy cleansing ritual
+  // 10. Energy cleansing ritual
   if (input.includeEnergyCleansing) {
     const ritualContext = input.energyCleansingNotes?.trim()
       ? ` Additional context: ${input.energyCleansingNotes.trim()}`
@@ -105,10 +94,10 @@ export function buildPrompt(input: PromptInput): string {
     )
   }
 
-  // 9. Future section (always)
+  // 11. Future section (always)
   parts.push(FUTURE_SECTION_INSTRUCTION)
 
-  // 10. Language, tone, cultural context, and formatting (always)
+  // 12. Language, tone, cultural context, and formatting (always)
   parts.push(
     `Write in British English throughout. Use British spelling, vocabulary and phrasing at all times:
 - 'colour' not 'color'

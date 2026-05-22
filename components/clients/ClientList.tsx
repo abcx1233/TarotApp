@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Star } from 'lucide-react'
+import { Search, Star, FileText } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { clsx } from 'clsx'
 import type { Client } from '@/types'
@@ -10,9 +10,10 @@ interface ClientListProps {
   clients: Client[]
   selectedId: string | null
   onSelect: (client: Client) => void
+  noteClientIds?: Set<string>
 }
 
-export function ClientList({ clients, selectedId, onSelect }: ClientListProps) {
+export function ClientList({ clients, selectedId, onSelect, noteClientIds }: ClientListProps) {
   const [search, setSearch] = useState('')
 
   const filtered = clients.filter(
@@ -48,11 +49,18 @@ export function ClientList({ clients, selectedId, onSelect }: ClientListProps) {
               selectedId === client.id && 'bg-brand-50 border-r-2 border-brand-500'
             )}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-1">
               <p className="text-sm font-medium text-slate-900 truncate">{client.full_name}</p>
-              {client.is_returning && (
-                <Star size={12} className="text-amber-400 fill-amber-400 shrink-0 ml-1" />
-              )}
+              <div className="flex items-center gap-1 shrink-0">
+                {noteClientIds?.has(client.id) && (
+                  <span title="Has private notes">
+                    <FileText size={11} className="text-slate-400" />
+                  </span>
+                )}
+                {client.is_returning && (
+                  <Star size={12} className="text-amber-400 fill-amber-400" />
+                )}
+              </div>
             </div>
             {client.email && (
               <p className="text-xs text-slate-400 truncate">{client.email}</p>

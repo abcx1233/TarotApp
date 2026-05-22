@@ -54,8 +54,9 @@ export async function POST(request: Request) {
     tonePresetText,
     characterTarget,
     topic: f.topic || 'General',
-    specificQuestion: f.specificQuestion || undefined,
-    mainFocus: f.mainFocus || undefined,
+    questionsOrFocus: f.questionsOrFocus || undefined,
+    starSign: f.starSign || undefined,
+    isReturningClient: f.isReturningClient || false,
     cards: validCards.map(mapCardToPromptInput),
     bottomCard: {
       name: f.bottomCard?.name || '',
@@ -64,11 +65,6 @@ export async function POST(request: Request) {
     oracleCardName: f.includeOracleCard && f.oracleCardName ? f.oracleCardName : undefined,
     includeEnergyCleansing: f.includeEnergyCleansing || false,
     energyCleansingNotes: f.energyCleansingNotes || undefined,
-    birthday: f.birthday || undefined,
-    starSign: f.starSign || undefined,
-    relationshipStatus: f.relationshipStatus || undefined,
-    otherPersonName: f.otherPersonName || undefined,
-    isReturningClient: f.isReturningClient || false,
   }
 
   // Generate
@@ -163,7 +159,6 @@ export async function POST(request: Request) {
     price_total: parseFloat(f.priceTotal || '0') || 0,
     is_rush: f.isRush || false,
     due_at: f.dueAt || null,
-    internal_notes: f.readerNotes || null,
     is_test: isTestMode,
     updated_at: new Date().toISOString(),
   }
@@ -189,15 +184,13 @@ export async function POST(request: Request) {
     client_id: clientId,
     character_target: characterTarget,
     tone_preset_id: tonePresetId,
-    question_or_focus: f.mainFocus || null,
-    specific_question: f.specificQuestion || null,
+    question_or_focus: f.questionsOrFocus || null,
     bottom_of_deck_card: f.bottomCard?.name || null,
     bottom_of_deck_orientation: f.bottomCard?.orientation || 'upright',
     oracle_card_name: f.includeOracleCard ? f.oracleCardName || null : null,
     include_oracle_card: f.includeOracleCard || false,
     include_energy_cleansing: f.includeEnergyCleansing || false,
     energy_cleansing_notes: f.energyCleansingNotes || null,
-    reader_notes: f.readerNotes || null,
     generated_prompt: generatedPrompt,
     generated_reading: generatedReading,
     email_version: null,

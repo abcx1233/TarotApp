@@ -60,8 +60,8 @@ export function OutputPanel({
   function handleWhatsApp() {
     if (!clientPhone || !generatedReading) return
     const phone = clientPhone.replace(/\D/g, '')
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(generatedReading)}`
-    window.open(url, '_blank')
+    const url = `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(generatedReading)}`
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   function handleEmail() {
@@ -86,12 +86,11 @@ export function OutputPanel({
   }
 
   async function handleMarkSentClick() {
-    if (!window.confirm('Mark this reading as sent? The order status will be updated to Sent.')) return
     setSentState('sending')
     try {
       await onMarkSent()
       setSentState('sent')
-      setTimeout(() => router.push('/dashboard'), 1500)
+      setTimeout(() => router.push('/dashboard'), 2000)
     } catch {
       setSentState('error')
       setTimeout(() => setSentState('idle'), 3000)
@@ -227,7 +226,7 @@ export function OutputPanel({
                 {sentState === 'sending'
                   ? 'Sending…'
                   : sentState === 'sent'
-                  ? 'Sent! ✓'
+                  ? 'Reading marked as sent ✓'
                   : sentState === 'error'
                   ? 'Error — retry'
                   : 'Mark Sent'}

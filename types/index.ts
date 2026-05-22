@@ -179,25 +179,20 @@ export interface ReadingFormState {
   clientPhone: string
   readingTier: ReadingTier
   topic: string
+  starSign: string
   deliveryFormat: DeliveryFormat
   deliveryChannel: DeliveryChannel
   dueAt: string
   priceTotal: string
   isRush: boolean
+  isReturningClient: boolean
   status: OrderStatus
   tonePresetId: string
   readingLength: number
   suitFilter: string
   cards: CardEntryForm[]
   bottomCard: { name: string; orientation: CardOrientation }
-  birthday: string
-  starSign: string
-  relationshipStatus: string
-  otherPersonName: string
-  isReturningClient: boolean
-  specificQuestion: string
-  mainFocus: string
-  readerNotes: string
+  questionsOrFocus: string
   includeOracleCard: boolean
   oracleCardName: string
   includeEnergyCleansing: boolean
@@ -275,4 +270,7 @@ export interface DashboardKPIs {
   inProgress: number
   sentToday: number
   revenueToday: number
+  revenueThisWeek: number
+  dueToday: number
+  oldestPendingDays: number | null
 }

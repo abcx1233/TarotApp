@@ -26,15 +26,6 @@ import type {
   RestoredReadingData,
 } from '@/types'
 
-// ─── Constants ─────────────────────────────────────────────────────────────────
-
-const TIER_LABELS: Record<string, string> = {
-  mini: 'Mini',
-  core: 'Core',
-  premium: 'Premium',
-  celtic_cross: 'Celtic Cross',
-}
-
 // ─── Initial state ─────────────────────────────────────────────────────────────
 
 function makeBlankCard(): CardEntryForm {
@@ -49,25 +40,20 @@ function initialState(): ReadingFormState {
     clientPhone: '',
     readingTier: 'core',
     topic: 'General',
+    starSign: '',
     deliveryFormat: 'written',
     deliveryChannel: 'email',
     dueAt: '',
     priceTotal: '',
     isRush: false,
+    isReturningClient: false,
     status: 'pending',
     tonePresetId: '',
     readingLength: READING_CHARACTER_TARGETS.core,
     suitFilter: 'all',
     cards: [makeBlankCard()],
     bottomCard: { name: '', orientation: 'upright' },
-    birthday: '',
-    starSign: '',
-    relationshipStatus: '',
-    otherPersonName: '',
-    isReturningClient: false,
-    specificQuestion: '',
-    mainFocus: '',
-    readerNotes: '',
+    questionsOrFocus: '',
     includeOracleCard: false,
     oracleCardName: '',
     includeEnergyCleansing: false,
@@ -131,7 +117,6 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         clientName: client?.full_name ?? '',
         clientEmail: client?.email ?? '',
         clientPhone: client?.phone ?? '',
-        birthday: client?.birthday ? client.birthday.slice(0, 10) : '',
         starSign: client?.star_sign ?? '',
         isReturningClient: client?.is_returning ?? false,
         readingTier: (order?.reading_tier as ReadingTier) ?? 'core',
@@ -143,9 +128,7 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         dueAt: order?.due_at ? order.due_at.slice(0, 16) : '',
         tonePresetId: data.tone_preset_id ?? '',
         readingLength: data.character_target ?? READING_CHARACTER_TARGETS.core,
-        specificQuestion: data.specific_question ?? '',
-        mainFocus: data.question_or_focus ?? '',
-        readerNotes: data.reader_notes ?? '',
+        questionsOrFocus: data.question_or_focus ?? data.specific_question ?? '',
         includeOracleCard: data.include_oracle_card ?? false,
         oracleCardName: data.oracle_card_name ?? '',
         includeEnergyCleansing: data.include_energy_cleansing ?? false,
@@ -170,7 +153,12 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-4">
-      <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400">{title}</h3>
+      <div className="flex items-center gap-3">
+        <span className="text-xs font-medium uppercase tracking-wide text-slate-400 shrink-0">
+          {title}
+        </span>
+        <div className="h-px flex-1 bg-slate-200" />
+      </div>
       {children}
     </div>
   )
@@ -189,7 +177,7 @@ interface ReadingFormProps {
 
 export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormProps) {
   const [state, dispatch] = useReducer(reducer, undefined, initialState)
-  const [tonePresets, setTonePresets] = useState<TonePreset[]>(initialTonePresets)
+  const [tonePresets] = useState<TonePreset[]>(initialTonePresets)
   const [clientSuggestions, setClientSuggestions] = useState<{ id: string; full_name: string; email: string; phone: string | null }[]>([])
   const [businessName, setBusinessName] = useState('Deep Blue Divination')
   const [isReopenMode, setIsReopenMode] = useState(false)
@@ -244,7 +232,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Load app settings for default topic and business name (skip if restoring)
+  // Load app settings (skip if restoring)
   useEffect(() => {
     if (initialReading) return
     async function loadSettings() {
@@ -266,7 +254,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Load business name even when restoring (for the action buttons)
+  // Load business name when restoring (for action buttons)
   useEffect(() => {
     if (!initialReading) return
     async function loadBusinessName() {
@@ -301,7 +289,6 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
     }
   }, [state.readingTier, tonePresets])
 
-  // Client search
   async function searchClients(query: string) {
     if (query.length < 2) { setClientSuggestions([]); return }
     const supabase = createClient()
@@ -443,28 +430,23 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
 
   return (
     <div className="flex flex-col h-full">
-      {/* Page header */}
-      <div className="shrink-0 flex items-center gap-4 border-b border-slate-200 bg-white px-6 py-4">
+      {/* Page header — Back | Title (centred) | Clear form */}
+      <div className="shrink-0 relative flex items-center border-b border-slate-200 bg-white px-6 py-4">
         <button
           type="button"
           onClick={handleBack}
-          className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 shrink-0"
+          className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
         >
           <ArrowLeft size={14} />
           Back
         </button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-base font-semibold text-slate-900">
-            {isReopenMode ? 'Edit Reading' : 'New Reading'}
-          </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Fill in the details, enter the cards, then generate.
-          </p>
-        </div>
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-base font-semibold text-slate-900 pointer-events-none">
+          {isReopenMode ? 'Edit Reading' : 'New Reading'}
+        </h1>
         <button
           type="button"
           onClick={handleClearForm}
-          className="shrink-0 text-xs text-slate-400 underline underline-offset-2 hover:text-slate-600"
+          className="ml-auto text-xs text-slate-400 underline underline-offset-2 hover:text-slate-600"
         >
           Clear form
         </button>
@@ -476,8 +458,6 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
           <p className="text-sm font-medium text-amber-900">
             Editing saved reading —{' '}
             <span className="font-semibold">{state.clientName || 'Unknown client'}</span>
-            {' · '}{TIER_LABELS[state.readingTier] ?? state.readingTier}
-            {' · '}{state.topic}
           </p>
           <button
             type="button"
@@ -499,8 +479,9 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
         {/* ── Left: Input panel ─────────────────────────────────────────── */}
         <div className="flex-1 min-w-0 overflow-y-auto p-6 space-y-8 xl:max-w-2xl border-r border-slate-200">
 
-          {/* A. Order Info */}
-          <Section title="A. Order Info">
+          {/* Order Info */}
+          <Section title="Order Info">
+            {/* Client name with autocomplete */}
             <div>
               <Label htmlFor="client-name">Client name</Label>
               <div className="relative">
@@ -573,25 +554,29 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               />
             </div>
 
-            <FieldRow>
-              <div>
-                <Label htmlFor="reading-tier">Reading tier</Label>
-                <Select
-                  id="reading-tier"
-                  value={state.readingTier}
-                  onChange={(e) => {
-                    isDirtyRef.current = true
-                    lastUserSelectedTierRef.current = e.target.value
-                    setReadingLengthOverridden(false)
+            <div>
+              <Label htmlFor="reading-tier">Reading tier</Label>
+              <Select
+                id="reading-tier"
+                value={state.readingTier}
+                onChange={(e) => {
+                  isDirtyRef.current = true
+                  lastUserSelectedTierRef.current = e.target.value
+                  if (!readingLengthOverridden) {
                     dispatch({ type: 'SET_TIER', tier: e.target.value as ReadingTier })
-                  }}
-                >
-                  <option value="mini">Mini Written (~3,000 chars)</option>
-                  <option value="core">Core Written (~6,000 chars)</option>
-                  <option value="premium">Premium Written (~12,000 chars)</option>
-                  <option value="celtic_cross">Celtic Cross (~5,000 chars)</option>
-                </Select>
-              </div>
+                  } else {
+                    dispatch({ type: 'SET', field: 'readingTier', value: e.target.value as ReadingTier })
+                  }
+                }}
+              >
+                <option value="mini">Mini Written (~3,000 chars)</option>
+                <option value="core">Core Written (~6,000 chars)</option>
+                <option value="premium">Premium Written (~12,000 chars)</option>
+                <option value="celtic_cross">Celtic Cross (~5,000 chars)</option>
+              </Select>
+            </div>
+
+            <FieldRow>
               <div>
                 <Label htmlFor="topic">Topic</Label>
                 <Select
@@ -603,6 +588,19 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                   <option>Career</option>
                   <option>General</option>
                   <option>Spiritual Guidance</option>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="star-sign">Star sign</Label>
+                <Select
+                  id="star-sign"
+                  value={state.starSign}
+                  onChange={(e) => set('starSign', e.target.value)}
+                >
+                  <option value="">Select…</option>
+                  {['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'].map((s) => (
+                    <option key={s}>{s}</option>
+                  ))}
                 </Select>
               </div>
             </FieldRow>
@@ -644,29 +642,34 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               />
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="space-y-3">
               <Toggle
                 checked={state.isRush}
                 onChange={(v) => set('isRush', v)}
                 label="Rush order"
               />
+              <Toggle
+                checked={state.isReturningClient}
+                onChange={(v) => set('isReturningClient', v)}
+                label="Returning client"
+              />
             </div>
           </Section>
 
-          {/* B. Reading Setup */}
-          <Section title="B. Reading Setup">
+          {/* Reading Setup */}
+          <Section title="Reading Setup">
             <TonePresetSelect
               presets={tonePresets}
               value={state.tonePresetId}
               onChange={(id) => set('tonePresetId', id)}
             />
             <div>
-              <Label htmlFor="reading-length">
-                Reading length (characters){' '}
+              <div className="flex items-baseline gap-2">
+                <Label htmlFor="reading-length">Reading length (characters)</Label>
                 {!readingLengthOverridden ? (
                   <button
                     type="button"
-                    className="ml-1 font-normal text-brand-600 underline underline-offset-2 hover:text-brand-800"
+                    className="text-xs text-brand-600 underline underline-offset-2 hover:text-brand-800"
                     onClick={() => setReadingLengthOverridden(true)}
                   >
                     Override
@@ -674,7 +677,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                 ) : (
                   <button
                     type="button"
-                    className="ml-1 font-normal text-slate-400 underline underline-offset-2 hover:text-slate-600"
+                    className="text-xs text-slate-400 underline underline-offset-2 hover:text-slate-600"
                     onClick={() => {
                       setReadingLengthOverridden(false)
                       dispatch({ type: 'SET_TIER', tier: state.readingTier })
@@ -683,7 +686,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                     Reset to default
                   </button>
                 )}
-              </Label>
+              </div>
               <Input
                 id="reading-length"
                 type="number"
@@ -695,11 +698,16 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                 readOnly={!readingLengthOverridden}
                 className={!readingLengthOverridden ? 'bg-slate-50 text-slate-500 cursor-default' : ''}
               />
+              {readingLengthOverridden && (
+                <p className="mt-1 text-xs text-amber-600">
+                  Custom length set — tier changes will not apply
+                </p>
+              )}
             </div>
           </Section>
 
-          {/* C. Card Entry */}
-          <Section title="C. Card Entry">
+          {/* Card Entry */}
+          <Section title="Card Entry">
             <CardEntry
               cards={state.cards}
               suitFilter={state.suitFilter}
@@ -716,98 +724,22 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
             />
           </Section>
 
-          {/* E. Personalisation */}
-          <Section title="E. Personalisation">
-            <FieldRow>
-              <div>
-                <Label htmlFor="birthday">Birthday</Label>
-                <Input
-                  id="birthday"
-                  type="date"
-                  value={state.birthday}
-                  onChange={(e) => set('birthday', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="star-sign">Star sign</Label>
-                <Select
-                  id="star-sign"
-                  value={state.starSign}
-                  onChange={(e) => set('starSign', e.target.value)}
-                >
-                  <option value="">Select…</option>
-                  {['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'].map((s) => (
-                    <option key={s}>{s}</option>
-                  ))}
-                </Select>
-              </div>
-            </FieldRow>
-
+          {/* Reading Focus */}
+          <Section title="Reading Focus">
             <div>
-              <Label htmlFor="relationship-status">Relationship status</Label>
-              <Input
-                id="relationship-status"
-                value={state.relationshipStatus}
-                onChange={(e) => set('relationshipStatus', e.target.value)}
-                placeholder="Single, partnered, complicated…"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="other-person">Other person's name</Label>
-              <Input
-                id="other-person"
-                value={state.otherPersonName}
-                onChange={(e) => set('otherPersonName', e.target.value)}
-                placeholder="For love readings (optional)"
-              />
-            </div>
-
-            <Toggle
-              checked={state.isReturningClient}
-              onChange={(v) => set('isReturningClient', v)}
-              label="Returning client"
-            />
-          </Section>
-
-          {/* F. Reading Focus */}
-          <Section title="F. Reading Focus">
-            <div>
-              <Label htmlFor="specific-question">Specific question</Label>
-              <Input
-                id="specific-question"
-                value={state.specificQuestion}
-                onChange={(e) => set('specificQuestion', e.target.value)}
-                placeholder="This will be answered directly in the reading (optional)"
-              />
-            </div>
-            <div>
-              <Label htmlFor="main-focus">Main focus / additional context</Label>
+              <Label htmlFor="questions-or-focus">Questions or Areas of Focus</Label>
               <Textarea
-                id="main-focus"
-                value={state.mainFocus}
-                onChange={(e) => set('mainFocus', e.target.value)}
-                placeholder="Context from the client, things to weave in…"
-                rows={4}
-              />
-            </div>
-            <div>
-              <Label htmlFor="reader-notes">
-                Private Notes{' '}
-                <span className="font-normal text-slate-400">(not sent to AI — saved to DB only)</span>
-              </Label>
-              <Textarea
-                id="reader-notes"
-                value={state.readerNotes}
-                onChange={(e) => set('readerNotes', e.target.value)}
-                placeholder={`Notes for your eyes only — not included in the reading.\nUse this for context about the client: their situation,\nprevious readings, things to be mindful of, or anything\nyou want to remember next time.`}
+                id="questions-or-focus"
+                value={state.questionsOrFocus}
+                onChange={(e) => set('questionsOrFocus', e.target.value)}
+                placeholder="Love & Relationships, Career & Work, Finance & Abundance, General Guidance — or leave blank to let spirit guide the reading"
                 rows={4}
               />
             </div>
           </Section>
 
-          {/* G. Spirit Led Add-Ons */}
-          <Section title="G. Spirit Led Add-Ons">
+          {/* Spirit Led Add-Ons */}
+          <Section title="Spirit Led Add-Ons">
             <AddOnsSection
               includeOracleCard={state.includeOracleCard}
               oracleCardName={state.oracleCardName}

@@ -13,17 +13,24 @@ export default function ClientsPage() {
   const [selected, setSelected] = useState<Client | null>(null)
   const [readings, setReadings] = useState<Reading[]>([])
   const [notes, setNotes] = useState<ClientNote[]>([])
+  const [noteClientIds, setNoteClientIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
       const supabase = createSupabaseClient()
-      const { data } = await supabase
-        .from('clients')
-        .select('*')
-        .is('deleted_at', null)
-        .order('full_name', { ascending: true })
-      setClients((data ?? []) as Client[])
+      const [{ data: clientData }, { data: noteData }] = await Promise.all([
+        supabase
+          .from('clients')
+          .select('*')
+          .is('deleted_at', null)
+          .order('full_name', { ascending: true }),
+        supabase
+          .from('client_notes')
+          .select('client_id'),
+      ])
+      setClients((clientData ?? []) as Client[])
+      setNoteClientIds(new Set((noteData ?? []).map((n: { client_id: string }) => n.client_id).filter(Boolean)))
       setLoading(false)
     }
     load()
@@ -62,6 +69,15 @@ export default function ClientsPage() {
     setNotes((n ?? []) as ClientNote[])
   }
 
+  function handleNotesChange(clientId: string, noteCount: number) {
+    setNoteClientIds((prev) => {
+      const next = new Set(prev)
+      if (noteCount > 0) next.add(clientId)
+      else next.delete(clientId)
+      return next
+    })
+  }
+
   return (
     <div className="flex h-full">
       {/* Left: Client list */}
@@ -82,6 +98,7 @@ export default function ClientsPage() {
             clients={clients}
             selectedId={selected?.id ?? null}
             onSelect={handleSelect}
+            noteClientIds={noteClientIds}
           />
         )}
       </div>
@@ -100,6 +117,7 @@ export default function ClientsPage() {
               )
             }}
             onTrash={handleTrashClient}
+            onNotesChange={handleNotesChange}
           />
         ) : (
           <div className="flex h-full items-center justify-center">

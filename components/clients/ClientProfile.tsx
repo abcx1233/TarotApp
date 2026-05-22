@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Star, Instagram, Plus, Trash2, AlertTriangle } from 'lucide-react'
+import { Star, Instagram, Plus, Trash2, AlertTriangle, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Textarea } from '@/components/ui/Textarea'
 import { Badge } from '@/components/ui/Badge'
@@ -16,32 +16,46 @@ interface ClientProfileProps {
   notes: ClientNote[]
   onUpdate: (client: Client) => void
   onTrash?: (clientId: string) => void
+  onNotesChange?: (clientId: string, noteCount: number) => void
 }
 
-export function ClientProfile({ client, readings, notes: initialNotes, onUpdate, onTrash }: ClientProfileProps) {
+export function ClientProfile({ client, readings, notes: initialNotes, onUpdate, onTrash, onNotesChange }: ClientProfileProps) {
   const [notes, setNotes] = useState<ClientNote[]>(initialNotes)
   const [newNote, setNewNote] = useState('')
-  const [addingNote, setAddingNote] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [confirmTrash, setConfirmTrash] = useState(false)
 
+  const tierLabels: Record<string, string> = {
+    mini: 'Mini', core: 'Core', premium: 'Premium', celtic_cross: 'Celtic Cross',
+  }
+
   async function handleAddNote() {
-    if (!newNote.trim()) return
+    if (!newNote.trim() || saving) return
+    setSaving(true)
     const supabase = createSupabaseClient()
     const { data, error } = await supabase
       .from('client_notes')
-      .insert({ client_id: client.id, note: newNote.trim() })
+      .insert({ client_id: client.id, note: newNote.trim(), tag: 'private' })
       .select()
       .single()
 
     if (!error && data) {
-      setNotes((prev) => [data as ClientNote, ...prev])
+      const updated = [data as ClientNote, ...notes]
+      setNotes(updated)
       setNewNote('')
-      setAddingNote(false)
+      onNotesChange?.(client.id, updated.length)
     }
+    setSaving(false)
   }
 
-  const tierLabels: Record<string, string> = {
-    mini: 'Mini', core: 'Core', premium: 'Premium', celtic_cross: 'Celtic Cross',
+  async function handleDeleteNote(noteId: string) {
+    const supabase = createSupabaseClient()
+    const { error } = await supabase.from('client_notes').delete().eq('id', noteId)
+    if (!error) {
+      const updated = notes.filter((n) => n.id !== noteId)
+      setNotes(updated)
+      onNotesChange?.(client.id, updated.length)
+    }
   }
 
   return (
@@ -176,48 +190,61 @@ export function ClientProfile({ client, readings, notes: initialNotes, onUpdate,
         )}
       </div>
 
-      {/* Client notes */}
+      {/* Private Notes */}
       <div>
-        <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400">Notes</h3>
-          <button
-            type="button"
-            onClick={() => setAddingNote(!addingNote)}
-            className="text-xs text-brand-600 hover:underline"
-          >
-            + Add note
-          </button>
+        <div className="mb-1">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+            Private Notes {notes.length > 0 && `(${notes.length})`}
+          </h3>
+          <p className="mt-0.5 text-xs text-slate-400">
+            For your eyes only — never sent to clients or included in readings
+          </p>
         </div>
 
-        {addingNote && (
-          <div className="mb-3 space-y-2 animate-fade-in">
-            <Textarea
-              value={newNote}
-              onChange={(e) => setNewNote(e.target.value)}
-              placeholder="Write a note about this client…"
-              rows={3}
-            />
-            <div className="flex gap-2">
-              <Button size="sm" onClick={handleAddNote}>Save</Button>
-              <Button size="sm" variant="ghost" onClick={() => setAddingNote(false)}>Cancel</Button>
-            </div>
-          </div>
-        )}
+        {/* Add note form */}
+        <div className="mt-3 space-y-2">
+          <Textarea
+            value={newNote}
+            onChange={(e) => setNewNote(e.target.value)}
+            placeholder="Add context about this client to inform future readings…"
+            rows={3}
+          />
+          <Button
+            size="sm"
+            onClick={handleAddNote}
+            disabled={!newNote.trim() || saving}
+          >
+            {saving ? 'Saving…' : 'Save note'}
+          </Button>
+        </div>
 
-        <div className="space-y-2">
-          {notes.map((note) => (
-            <div key={note.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2.5">
-              <p className="text-sm text-slate-800 whitespace-pre-wrap">{note.note}</p>
-              <p className="mt-1 text-xs text-slate-400">
-                {format(new Date(note.created_at), 'd MMM yyyy')}
-                {note.tag && (
-                  <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-slate-500">
-                    {note.tag}
-                  </span>
-                )}
-              </p>
-            </div>
-          ))}
+        {/* Notes timeline */}
+        <div className="mt-4 space-y-2">
+          {notes.length === 0 ? (
+            <p className="text-sm text-slate-400">
+              No notes yet — add context about this client to inform future readings.
+            </p>
+          ) : (
+            notes.map((note) => (
+              <div
+                key={note.id}
+                className="group relative rounded-lg border border-slate-200 bg-white px-3 py-2.5"
+              >
+                <p className="text-sm text-slate-800 whitespace-pre-wrap pr-6">{note.note}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {format(new Date(note.created_at), 'd MMM yyyy')}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteNote(note.id)}
+                  className="absolute right-2.5 top-2.5 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Delete note"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

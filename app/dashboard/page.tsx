@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { format, isToday, startOfDay, endOfDay } from 'date-fns'
+import { format, isToday, startOfDay, endOfDay, startOfWeek, differenceInDays } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
 import { KPICard } from '@/components/ui/Card'
 import { StatusBadge, Badge } from '@/components/ui/Badge'
@@ -12,6 +12,8 @@ import {
   Zap,
   Plus,
   ArrowRight,
+  Calendar,
+  TrendingUp,
 } from 'lucide-react'
 
 async function getDashboardData() {
@@ -19,11 +21,15 @@ async function getDashboardData() {
 
   const todayStart = startOfDay(new Date()).toISOString()
   const todayEnd = endOfDay(new Date()).toISOString()
+  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 }).toISOString()
 
   const [
     { count: pending },
     { count: inProgress },
     { data: sentToday },
+    { data: sentThisWeek },
+    { count: dueToday },
+    { data: oldestPendingRows },
     { data: todayQueue },
     { data: recentReadings },
   ] = await Promise.all([
@@ -36,6 +42,26 @@ async function getDashboardData() {
       .is('deleted_at', null)
       .gte('sent_at', todayStart)
       .lte('sent_at', todayEnd),
+    supabase
+      .from('orders')
+      .select('price_total')
+      .eq('status', 'sent')
+      .is('deleted_at', null)
+      .gte('sent_at', weekStart),
+    supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true })
+      .in('status', ['pending', 'in_progress'])
+      .is('deleted_at', null)
+      .gte('due_at', todayStart)
+      .lte('due_at', todayEnd),
+    supabase
+      .from('orders')
+      .select('created_at')
+      .eq('status', 'pending')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: true })
+      .limit(1),
     supabase
       .from('orders')
       .select('*, client:clients(full_name, email)')
@@ -57,6 +83,14 @@ async function getDashboardData() {
     (sum: number, o: { price_total: number }) => sum + (o.price_total ?? 0),
     0
   )
+  const revenueThisWeek = (sentThisWeek ?? []).reduce(
+    (sum: number, o: { price_total: number }) => sum + (o.price_total ?? 0),
+    0
+  )
+  const oldestPendingDays =
+    oldestPendingRows?.[0]?.created_at
+      ? differenceInDays(new Date(), new Date(oldestPendingRows[0].created_at))
+      : null
 
   return {
     kpis: {
@@ -64,6 +98,9 @@ async function getDashboardData() {
       inProgress: inProgress ?? 0,
       sentToday: sentToday?.length ?? 0,
       revenueToday,
+      revenueThisWeek,
+      dueToday: dueToday ?? 0,
+      oldestPendingDays,
     },
     todayQueue: todayQueue ?? [],
     recentReadings: recentReadings ?? [],
@@ -77,35 +114,56 @@ const TIER_SHORT: Record<string, string> = {
 export default async function DashboardPage() {
   const { kpis, todayQueue, recentReadings } = await getDashboardData()
 
+  const oldestPendingSub =
+    kpis.pending > 0 && kpis.oldestPendingDays !== null
+      ? kpis.oldestPendingDays === 0
+        ? 'oldest from today'
+        : `oldest from ${kpis.oldestPendingDays} day${kpis.oldestPendingDays === 1 ? '' : 's'} ago`
+      : undefined
+
   return (
-    <div className="p-6 space-y-8 max-w-6xl mx-auto">
+    <div className="p-6 space-y-6 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
           <p className="text-sm text-slate-500">{format(new Date(), 'EEEE, d MMMM yyyy')}</p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/dashboard/readings/new">
-            <Button size="sm">
-              <Plus size={14} />
-              New reading
-            </Button>
-          </Link>
-        </div>
+      </div>
+
+      {/* Quick actions */}
+      <div className="flex gap-3">
+        <Link href="/dashboard/readings/new">
+          <Button size="sm">
+            <Plus size={14} />
+            New Reading
+          </Button>
+        </Link>
+        <Link href="/dashboard/readings/new">
+          <Button size="sm" variant="outline">
+            <Plus size={14} />
+            Add Manual Order
+          </Button>
+        </Link>
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <KPICard
           label="Pending"
           value={kpis.pending}
           icon={<Clock size={18} />}
+          sub={oldestPendingSub}
         />
         <KPICard
           label="In Progress"
           value={kpis.inProgress}
           icon={<Loader2 size={18} />}
+        />
+        <KPICard
+          label="Due Today"
+          value={kpis.dueToday}
+          icon={<Calendar size={18} />}
         />
         <KPICard
           label="Sent today"
@@ -117,6 +175,11 @@ export default async function DashboardPage() {
           value={`£${kpis.revenueToday.toFixed(2)}`}
           icon={<PoundSterling size={18} />}
           accent
+        />
+        <KPICard
+          label="Revenue this week"
+          value={`£${kpis.revenueThisWeek.toFixed(2)}`}
+          icon={<TrendingUp size={18} />}
         />
       </div>
 
@@ -131,9 +194,15 @@ export default async function DashboardPage() {
 
         {todayQueue.length === 0 ? (
           <div className="rounded-xl border border-slate-200 bg-white px-6 py-10 text-center">
-            <p className="text-sm text-slate-400">No active orders right now.</p>
-            <Link href="/dashboard/readings/new" className="mt-3 inline-block">
-              <Button variant="outline" size="sm">Start a new reading</Button>
+            <p className="text-sm font-medium text-slate-700">You're all caught up ✨</p>
+            <p className="mt-1 text-sm text-slate-400">
+              No active orders right now — enjoy the quiet or start a new reading.
+            </p>
+            <Link href="/dashboard/readings/new" className="mt-4 inline-block">
+              <Button variant="outline" size="sm">
+                <Plus size={13} />
+                New Reading
+              </Button>
             </Link>
           </div>
         ) : (
