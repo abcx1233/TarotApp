@@ -4,7 +4,6 @@ import { useCallback } from 'react'
 import { X, Plus, RotateCcw } from 'lucide-react'
 import { CardAutocomplete } from './CardAutocomplete'
 import { SuitFilter } from './SuitFilter'
-import { Button } from '@/components/ui/Button'
 import { Label } from '@/components/ui/Label'
 import { clsx } from 'clsx'
 import type { CardEntryForm, CardOrientation } from '@/types'
@@ -44,7 +43,7 @@ function OrientationToggle({
         className={clsx(
           'px-2.5 py-1.5 text-xs font-medium transition-colors',
           value === 'upright'
-            ? 'bg-brand-600 text-white'
+            ? 'bg-sky-500 text-white'
             : 'bg-white text-slate-600 hover:bg-slate-50'
         )}
       >
@@ -56,7 +55,7 @@ function OrientationToggle({
         className={clsx(
           'px-2.5 py-1.5 text-xs font-medium transition-colors border-l border-slate-300',
           value === 'reversed'
-            ? 'bg-red-500 text-white'
+            ? 'bg-amber-500 text-white'
             : 'bg-white text-slate-600 hover:bg-slate-50'
         )}
       >
@@ -68,8 +67,8 @@ function OrientationToggle({
 
 function CardRow({ card, index, suitFilter, onUpdate, onRemove, onEnter }: CardRowProps) {
   return (
-    <div className="flex items-center gap-2 group animate-fade-in">
-      <span className="w-5 shrink-0 text-right text-xs text-slate-400 font-mono">
+    <div className="flex items-center gap-2 group animate-fade-in rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 py-2">
+      <span className="w-5 h-5 shrink-0 flex items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-500">
         {index + 1}
       </span>
 
@@ -77,7 +76,7 @@ function CardRow({ card, index, suitFilter, onUpdate, onRemove, onEnter }: CardR
         <CardAutocomplete
           id={`card-${card.id}`}
           value={card.name}
-          onChange={(name, tarotCard) =>
+          onChange={(name, tarotCard: TarotCard | undefined) =>
             onUpdate(card.id, { name, ...(tarotCard ? { suit: tarotCard.suit } : {}) })
           }
           suitFilter={suitFilter}
@@ -145,7 +144,7 @@ export function CardEntry({
       </div>
 
       {/* Column headers */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 px-2.5">
         <span className="w-5" />
         <span className="flex-1 text-xs font-medium text-slate-500">Card name</span>
         <span className="w-[90px] text-xs font-medium text-slate-500">Orientation</span>
@@ -168,14 +167,19 @@ export function CardEntry({
         ))}
       </div>
 
-      <Button type="button" variant="outline" size="sm" onClick={addCard}>
+      {/* Add card — dashed full-width button */}
+      <button
+        type="button"
+        onClick={addCard}
+        className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-500 hover:border-brand-400 hover:text-brand-600 transition-colors"
+      >
         <Plus size={14} />
-        Add card
-      </Button>
+        Add Card
+      </button>
 
-      {/* Bottom of deck */}
-      <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4">
-        <Label className="mb-2 text-slate-600 font-semibold flex items-center gap-1.5">
+      {/* Bottom of deck — indigo tint */}
+      <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
+        <Label className="mb-2 text-indigo-700 font-semibold flex items-center gap-1.5">
           <RotateCcw size={13} />
           Bottom of Deck Card
         </Label>
@@ -194,7 +198,7 @@ export function CardEntry({
             onChange={(orientation) => onBottomCardChange({ ...bottomCard, orientation })}
           />
         </div>
-        <p className="mt-2 text-xs text-slate-400">
+        <p className="mt-2 text-xs text-indigo-500/80">
           This card's energy weaves through the entire reading as an undercurrent.
         </p>
       </div>

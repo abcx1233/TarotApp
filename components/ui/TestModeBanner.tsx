@@ -2,10 +2,10 @@ export function TestModeBanner() {
   return (
     <div
       role="alert"
-      className="flex items-center justify-center gap-2 bg-amber-400 px-4 py-2 text-sm font-medium text-amber-900 shrink-0"
+      className="flex h-7 items-center justify-center gap-1.5 bg-amber-100 px-4 text-xs font-medium text-amber-800 shrink-0 border-b border-amber-200"
     >
-      <span aria-hidden="true">⚠️</span>
-      Test Mode is active — all data created will be marked as test data
+      <span aria-hidden="true" className="text-[11px]">⚠</span>
+      Test Mode active — data will be marked as test
     </div>
   )
 }

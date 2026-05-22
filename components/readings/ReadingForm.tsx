@@ -153,16 +153,15 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
   }
 }
 
-// ─── Section component ────────────────────────────────────────────────────────
+// ─── Section component (FIX 10) ───────────────────────────────────────────────
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-400 shrink-0">
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">
           {title}
-        </span>
-        <div className="h-px flex-1 bg-slate-200" />
+        </p>
       </div>
       {children}
     </div>
@@ -173,6 +172,7 @@ function FieldRow({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</div>
 }
 
+// PillGroup with deeper selected state (FIX 12)
 function PillGroup({
   options,
   value,
@@ -190,9 +190,9 @@ function PillGroup({
           type="button"
           onClick={() => onChange(opt.value)}
           className={clsx(
-            'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+            'rounded-md px-3 py-1.5 text-xs font-medium transition-all',
             value === opt.value
-              ? 'bg-brand-600 text-white'
+              ? 'bg-brand-700 text-white shadow-sm ring-1 ring-brand-800/20'
               : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
           )}
         >
@@ -225,6 +225,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
 
   const isDirtyRef = useRef(false)
   const lastUserSelectedTierRef = useRef<string>('')
+  const outputRef = useRef<HTMLDivElement>(null) // for FIX 5 auto-scroll
 
   const set = useCallback(
     (field: keyof ReadingFormState, value: ReadingFormState[keyof ReadingFormState]) => {
@@ -292,7 +293,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Load business name when restoring (for action buttons)
+  // Load business name when restoring
   useEffect(() => {
     if (!initialReading) return
     async function loadBusinessName() {
@@ -308,7 +309,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Set first tone preset as default (only if nothing is set yet)
+  // Set first tone preset as default
   useEffect(() => {
     if (tonePresets.length > 0 && !state.tonePresetId) {
       const defaultPreset = tonePresets.find((p) => p.is_default) ?? tonePresets[0]
@@ -316,7 +317,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
     }
   }, [tonePresets, state.tonePresetId])
 
-  // Suggest a tone preset when the user manually changes the tier
+  // Suggest tone preset on tier change
   useEffect(() => {
     if (state.readingTier !== lastUserSelectedTierRef.current) return
     const recommended = tonePresets.find((p) =>
@@ -368,6 +369,13 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
     }
 
     dispatch({ type: 'SET_GENERATING', value: true })
+
+    // FIX 5: scroll to output on small/medium screens after panel becomes visible
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 150)
+    }
 
     try {
       const response = await fetch('/api/readings/generate', {
@@ -468,7 +476,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
 
   return (
     <div className="flex flex-col h-full">
-      {/* Page header — Back | Title (centred) | Clear form */}
+      {/* Page header */}
       <div className="shrink-0 relative flex items-center border-b border-slate-200 bg-white px-6 py-4">
         <button
           type="button"
@@ -513,12 +521,11 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
         </div>
       )}
 
-      <div className={clsx('flex flex-1 min-h-0', hasOutput ? 'flex-col lg:flex-row' : 'flex-col')}>
-        {/* ── Left: Input panel ─────────────────────────────────────────── */}
-        <div className={clsx(
-          'flex-1 min-w-0 overflow-y-auto p-6 space-y-8',
-          hasOutput && 'lg:max-w-2xl lg:border-r lg:border-slate-200'
-        )}>
+      {/* ── Two-column layout (FIX 1) ─────────────────────────────────── */}
+      <div className="flex flex-1 min-h-0 flex-col lg:flex-row">
+
+        {/* ── Left: Form ─────────────────────────────────────────────── */}
+        <div className="flex-1 min-w-0 overflow-y-auto p-6 space-y-6 lg:border-r lg:border-slate-200">
 
           {/* Order Info */}
           <Section title="Order Info">
@@ -571,19 +578,26 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                 />
               </div>
               <div>
-                <Label htmlFor="price">Price (£)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={state.priceTotal}
-                  onChange={(e) => {
-                    set('priceTotal', e.target.value)
-                    setIsPriceAutoSet(false)
-                  }}
-                  placeholder="0.00"
-                />
+                {/* FIX 12: £ prefix inside price input */}
+                <Label htmlFor="price">Price</Label>
+                <div className="relative">
+                  <span className="pointer-events-none select-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">
+                    £
+                  </span>
+                  <Input
+                    id="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={state.priceTotal}
+                    onChange={(e) => {
+                      set('priceTotal', e.target.value)
+                      setIsPriceAutoSet(false)
+                    }}
+                    placeholder="0.00"
+                    className="pl-7"
+                  />
+                </div>
                 {isPriceAutoSet && (
                   <p className="mt-1 text-xs text-slate-400">Auto-set from tier — edit to override</p>
                 )}
@@ -667,8 +681,9 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                 onChange={(v) => set('deliveryFormat', v as DeliveryFormat)}
               />
             </div>
+
             <div>
-              <Label htmlFor="due-at">Due date & time</Label>
+              <Label htmlFor="due-at">Due date &amp; time</Label>
               <Input
                 id="due-at"
                 type="datetime-local"
@@ -780,9 +795,9 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
             />
           </Section>
 
-          {/* Generate button — only shown before any output exists */}
+          {/* Generate button — small/medium screens only (FIX 13) */}
           {!hasOutput && (
-            <div className="pb-2">
+            <div className="pb-2 lg:hidden">
               {state.generationError && (
                 <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
                   {state.generationError}
@@ -810,29 +825,35 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
           )}
         </div>
 
-        {/* ── Right: Output panel (only after generation) ───────────────── */}
-        {hasOutput && (
-          <div className="lg:w-[520px] shrink-0 flex flex-col border-t border-slate-200 lg:border-t-0 lg:overflow-y-auto">
-            <OutputPanel
-              generatedReading={state.generatedReading}
-              isGenerating={state.isGenerating}
-              generationError={state.generationError}
-              onGenerate={handleGenerate}
-              onRegenerate={handleGenerate}
-              onSaveDraft={handleSaveDraft}
-              onMarkReady={handleMarkReady}
-              onMarkSent={handleMarkSent}
-              readingId={state.savedReadingId}
-              clientName={state.clientName}
-              clientEmail={state.clientEmail}
-              clientPhone={state.clientPhone}
-              readingTier={state.readingTier}
-              topic={state.topic}
-              deliveryFormat={state.deliveryFormat}
-              businessName={businessName}
-            />
-          </div>
-        )}
+        {/* ── Right: Output panel (FIX 1) ─────────────────────────────── */}
+        {/* Always visible on lg+; only visible when hasOutput on smaller screens */}
+        <div
+          ref={outputRef}
+          className={clsx(
+            'shrink-0 flex-col lg:w-1/2 border-t border-slate-200 lg:border-t-0',
+            hasOutput ? 'flex' : 'hidden lg:flex'
+          )}
+        >
+          <OutputPanel
+            generatedReading={state.generatedReading}
+            isGenerating={state.isGenerating}
+            generationError={state.generationError}
+            onGenerate={handleGenerate}
+            onRegenerate={handleGenerate}
+            onSaveDraft={handleSaveDraft}
+            onMarkReady={handleMarkReady}
+            onMarkSent={handleMarkSent}
+            readingId={state.savedReadingId}
+            clientName={state.clientName}
+            clientEmail={state.clientEmail}
+            clientPhone={state.clientPhone}
+            readingTier={state.readingTier}
+            topic={state.topic}
+            deliveryFormat={state.deliveryFormat}
+            businessName={businessName}
+            readingLength={state.readingLength}
+          />
+        </div>
       </div>
     </div>
   )
