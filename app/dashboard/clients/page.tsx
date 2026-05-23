@@ -5,8 +5,23 @@ import { ClientList } from '@/components/clients/ClientList'
 import { ClientProfile } from '@/components/clients/ClientProfile'
 import { createClient as createSupabaseClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/Button'
-import { Plus } from 'lucide-react'
+import { Input } from '@/components/ui/Input'
+import { Label } from '@/components/ui/Label'
+import { Select } from '@/components/ui/Select'
+import { Textarea } from '@/components/ui/Textarea'
+import { Plus, X } from 'lucide-react'
 import type { Client, Reading, ClientNote } from '@/types'
+
+const STAR_SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces']
+
+const BLANK_NEW_CLIENT = {
+  full_name: '',
+  email: '',
+  phone: '',
+  star_sign: '',
+  instagram_handle: '',
+  general_notes: '',
+}
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([])
@@ -15,6 +30,17 @@ export default function ClientsPage() {
   const [notes, setNotes] = useState<ClientNote[]>([])
   const [noteClientIds, setNoteClientIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
+
+  const [showNewClientPanel, setShowNewClientPanel] = useState(false)
+  const [newClientForm, setNewClientForm] = useState(BLANK_NEW_CLIENT)
+  const [newClientNameError, setNewClientNameError] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(null), 3000)
+  }
 
   useEffect(() => {
     async function load() {
@@ -78,13 +104,65 @@ export default function ClientsPage() {
     })
   }
 
+  function openNewClientPanel() {
+    setNewClientForm(BLANK_NEW_CLIENT)
+    setNewClientNameError('')
+    setShowNewClientPanel(true)
+  }
+
+  function closeNewClientPanel() {
+    setShowNewClientPanel(false)
+    setNewClientNameError('')
+  }
+
+  async function handleSaveNewClient() {
+    if (!newClientForm.full_name.trim()) {
+      setNewClientNameError('Full name is required')
+      return
+    }
+    setNewClientNameError('')
+    setSaving(true)
+    try {
+      const supabase = createSupabaseClient()
+      const { data, error } = await supabase
+        .from('clients')
+        .insert({
+          full_name: newClientForm.full_name.trim(),
+          email: newClientForm.email.trim() || null,
+          phone: newClientForm.phone.trim() || null,
+          star_sign: newClientForm.star_sign || null,
+          instagram_handle: newClientForm.instagram_handle.trim() || null,
+          general_notes: newClientForm.general_notes.trim() || null,
+          total_spent: 0,
+          is_returning: false,
+          is_test: false,
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      const newClient = data as Client
+      setClients((prev) =>
+        [...prev, newClient].sort((a, b) => a.full_name.localeCompare(b.full_name))
+      )
+      closeNewClientPanel()
+      await handleSelect(newClient)
+      showToast('Client added ✓')
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="flex h-full">
       {/* Left: Client list */}
       <div className="w-64 shrink-0 border-r border-slate-200 bg-white overflow-hidden flex flex-col">
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
           <h1 className="text-sm font-semibold text-slate-900">Clients</h1>
-          <Button size="sm" variant="ghost" className="text-xs">
+          <Button size="sm" variant="ghost" className="text-xs" onClick={openNewClientPanel}>
             <Plus size={13} />
             New
           </Button>
@@ -128,6 +206,119 @@ export default function ClientsPage() {
           </div>
         )}
       </div>
+
+      {/* New Client slide-over */}
+      {showNewClientPanel && (
+        <div className="fixed inset-0 z-40 flex justify-end">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/20"
+            onClick={closeNewClientPanel}
+          />
+          {/* Panel */}
+          <div className="relative z-50 flex w-80 flex-col bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+              <h2 className="text-sm font-semibold text-slate-900">New Client</h2>
+              <button
+                type="button"
+                onClick={closeNewClientPanel}
+                className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div>
+                <Label htmlFor="nc-full-name">Full name *</Label>
+                <Input
+                  id="nc-full-name"
+                  value={newClientForm.full_name}
+                  onChange={(e) => setNewClientForm((p) => ({ ...p, full_name: e.target.value }))}
+                  placeholder="Jane Smith"
+                  error={newClientNameError}
+                />
+                {newClientNameError && (
+                  <p className="mt-1 text-xs text-red-600">{newClientNameError}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="nc-email">Email</Label>
+                <Input
+                  id="nc-email"
+                  type="email"
+                  value={newClientForm.email}
+                  onChange={(e) => setNewClientForm((p) => ({ ...p, email: e.target.value }))}
+                  placeholder="jane@example.com"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="nc-phone">Phone</Label>
+                <Input
+                  id="nc-phone"
+                  type="tel"
+                  value={newClientForm.phone}
+                  onChange={(e) => setNewClientForm((p) => ({ ...p, phone: e.target.value }))}
+                  placeholder="+44 7700 000000"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="nc-star-sign">Star sign</Label>
+                <Select
+                  id="nc-star-sign"
+                  value={newClientForm.star_sign}
+                  onChange={(e) => setNewClientForm((p) => ({ ...p, star_sign: e.target.value }))}
+                >
+                  <option value="">Select…</option>
+                  {STAR_SIGNS.map((s) => (
+                    <option key={s}>{s}</option>
+                  ))}
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="nc-instagram">Instagram handle</Label>
+                <Input
+                  id="nc-instagram"
+                  value={newClientForm.instagram_handle}
+                  onChange={(e) => setNewClientForm((p) => ({ ...p, instagram_handle: e.target.value }))}
+                  placeholder="@username"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="nc-notes">General notes</Label>
+                <Textarea
+                  id="nc-notes"
+                  value={newClientForm.general_notes}
+                  onChange={(e) => setNewClientForm((p) => ({ ...p, general_notes: e.target.value }))}
+                  placeholder="Any notes about this client…"
+                  rows={4}
+                />
+              </div>
+            </div>
+
+            <div className="shrink-0 flex gap-2 border-t border-slate-200 p-4">
+              <Button variant="outline" size="sm" onClick={closeNewClientPanel} className="flex-1">
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleSaveNewClient} disabled={saving} className="flex-1">
+                {saving ? 'Saving…' : 'Save'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-lg">
+          {toast}
+        </div>
+      )}
     </div>
   )
 }

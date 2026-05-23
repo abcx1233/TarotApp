@@ -56,7 +56,7 @@ function initialState(): ReadingFormState {
     clientName: '',
     clientEmail: '',
     clientPhone: '',
-    readingTier: 'core',
+    readingTier: 'mini',
     topic: 'General',
     starSign: '',
     deliveryFormat: 'written',
@@ -66,9 +66,9 @@ function initialState(): ReadingFormState {
     isReturningClient: false,
     status: 'pending',
     tonePresetId: '',
-    readingLength: READING_CHARACTER_TARGETS.core,
+    readingLength: READING_CHARACTER_TARGETS.mini,
     suitFilter: 'all',
-    cards: Array.from({ length: TIER_DEFAULT_CARD_COUNT['core'] }, makeBlankCard),
+    cards: Array.from({ length: TIER_DEFAULT_CARD_COUNT['mini'] }, makeBlankCard),
     bottomCard: { name: '', orientation: 'upright' },
     questionsOrFocus: '',
     includeOracleCard: false,
@@ -270,9 +270,19 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
   const hasOutput = !!(state.generatedReading || state.isGenerating || state.generationError)
   const isCelticCross = state.readingTier === 'celtic_cross'
 
+  const [validationErrors, setValidationErrors] = useState<{
+    clientName?: string
+    clientEmail?: string
+    cards?: string
+  }>({})
+
   const isDirtyRef = useRef(false)
   const lastUserSelectedTierRef = useRef<string>('')
   const outputRef = useRef<HTMLDivElement>(null)
+  const validationSummaryRef = useRef<HTMLDivElement>(null)
+  const clientNameRef = useRef<HTMLDivElement>(null)
+  const clientEmailRef = useRef<HTMLDivElement>(null)
+  const cardsRef = useRef<HTMLDivElement>(null)
 
   const set = useCallback(
     (field: keyof ReadingFormState, value: ReadingFormState[keyof ReadingFormState]) => {
@@ -452,15 +462,66 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
     setIsPriceAutoSet(true)
   }
 
+  function validateForm(): { clientName?: string; clientEmail?: string; cards?: string } {
+    const errors: { clientName?: string; clientEmail?: string; cards?: string } = {}
+
+    if (!state.clientName.trim()) {
+      errors.clientName = 'Client name is required'
+    }
+
+    const email = state.clientEmail.trim()
+    if (!email) {
+      errors.clientEmail = 'Email is required'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.clientEmail = 'Please enter a valid email address'
+    }
+
+    const filledCount = state.cards.filter((c) => c.name.trim()).length
+    if (state.readingTier === 'mini') {
+      if (filledCount !== 3) {
+        errors.cards = `Mini readings require exactly 3 cards — you have ${filledCount} entered`
+      }
+    } else if (state.readingTier === 'core') {
+      if (filledCount < 6) {
+        errors.cards = `Core readings require at least 6 cards — you have ${filledCount} entered`
+      }
+    } else if (state.readingTier === 'premium') {
+      if (filledCount < 10) {
+        errors.cards = `Premium readings require at least 10 cards — you have ${filledCount} entered`
+      }
+    } else if (state.readingTier === 'celtic_cross') {
+      const emptyCount = state.cards.filter((c) => !c.name.trim()).length
+      if (emptyCount > 0) {
+        errors.cards = `All 10 Celtic Cross positions must have a card selected — ${emptyCount} position${emptyCount === 1 ? '' : 's'} are empty`
+      }
+    }
+
+    return errors
+  }
+
   async function handleGenerate() {
+    const errors = validateForm()
+    const errorCount = Object.keys(errors).length
+    if (errorCount > 0) {
+      setValidationErrors(errors)
+      setTimeout(() => {
+        if (errorCount > 1) {
+          validationSummaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        } else if (errors.clientName) {
+          clientNameRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        } else if (errors.clientEmail) {
+          clientEmailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        } else if (errors.cards) {
+          cardsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 50)
+      return
+    }
+    setValidationErrors({})
+
     const selectedPreset = tonePresets.find((p) => p.id === state.tonePresetId)
     if (!selectedPreset) {
       dispatch({ type: 'SET_ERROR', error: 'Please select a tone preset.' })
-      return
-    }
-    const validCards = state.cards.filter((c) => c.name.trim())
-    if (validCards.length === 0) {
-      dispatch({ type: 'SET_ERROR', error: 'Add at least one card before generating.' })
       return
     }
 
@@ -588,9 +649,20 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
         {/* ── Left: Form ──────────────────────────────────────────────── */}
         <div className="flex-1 min-w-0 overflow-y-auto p-6 space-y-6 lg:border-r lg:border-slate-200">
 
+          {/* Validation summary — shown when multiple fields fail */}
+          {Object.keys(validationErrors).length > 1 && (
+            <div
+              ref={validationSummaryRef}
+              className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+              Please fix {Object.keys(validationErrors).length} issue{Object.keys(validationErrors).length !== 1 ? 's' : ''} before generating
+            </div>
+          )}
+
           {/* Order Info */}
           <Section title="Order Info">
-            <div>
+            {/* Row 1: Client name — full width */}
+            <div ref={clientNameRef}>
               <Label htmlFor="client-name">Client name</Label>
               <div className="relative">
                 <Input
@@ -598,6 +670,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                   value={state.clientName}
                   onChange={(e) => { set('clientName', e.target.value); searchClients(e.target.value) }}
                   placeholder="Search or type new client…"
+                  error={validationErrors.clientName}
                 />
                 {clientSuggestions.length > 0 && (
                   <ul className="absolute z-30 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg py-1">
@@ -621,18 +694,34 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                   </ul>
                 )}
               </div>
+              {validationErrors.clientName && (
+                <p className="mt-1 text-xs text-red-600">{validationErrors.clientName}</p>
+              )}
             </div>
 
-            <div>
-              <Label htmlFor="client-email">Email</Label>
-              <Input id="client-email" type="email" value={state.clientEmail} onChange={(e) => set('clientEmail', e.target.value)} placeholder="client@example.com" />
+            {/* Row 2: Email + Phone */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div ref={clientEmailRef}>
+                <Label htmlFor="client-email">Email</Label>
+                <Input
+                  id="client-email"
+                  type="email"
+                  value={state.clientEmail}
+                  onChange={(e) => set('clientEmail', e.target.value)}
+                  placeholder="client@example.com"
+                  error={validationErrors.clientEmail}
+                />
+                {validationErrors.clientEmail && (
+                  <p className="mt-1 text-xs text-red-600">{validationErrors.clientEmail}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="client-phone">Phone</Label>
+                <Input id="client-phone" type="tel" value={state.clientPhone} onChange={(e) => set('clientPhone', e.target.value)} placeholder="+44 7700 000000" />
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="client-phone">Phone</Label>
-              <Input id="client-phone" type="tel" value={state.clientPhone} onChange={(e) => set('clientPhone', e.target.value)} placeholder="+44 7700 000000" />
-            </div>
-
+            {/* Row 3: Reading tier — full width */}
             <div>
               <Label htmlFor="reading-tier">Reading tier</Label>
               <Select
@@ -647,6 +736,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               </Select>
             </div>
 
+            {/* Row 4: Topic + Star sign */}
             <FieldRow>
               <div>
                 <Label htmlFor="topic">Topic</Label>
@@ -668,6 +758,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               </div>
             </FieldRow>
 
+            {/* Row 5: Delivery format — full width */}
             <div>
               <Label>Delivery format</Label>
               <PillGroup
@@ -687,37 +778,57 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               )}
             </div>
 
+            {/* Row 6: Returning client — full width */}
             <Toggle checked={state.isReturningClient} onChange={(v) => set('isReturningClient', v)} label="Returning client" />
 
-            {/* 8. Price */}
-            <div>
-              <Label htmlFor="price">Price</Label>
-              <div className="relative">
-                <span className="pointer-events-none select-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">£</span>
-                <Input
-                  id="price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={state.priceTotal}
-                  onChange={(e) => { set('priceTotal', e.target.value); setIsPriceAutoSet(false) }}
-                  placeholder="0.00"
-                  className="pl-7"
-                />
+            {/* Row 7: Price + Due date */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="price">Price</Label>
+                <div className="relative">
+                  <span className="pointer-events-none select-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">£</span>
+                  <Input
+                    id="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={state.priceTotal}
+                    onChange={(e) => { set('priceTotal', e.target.value); setIsPriceAutoSet(false) }}
+                    placeholder="0.00"
+                    className="pl-7"
+                  />
+                </div>
+                {isPriceAutoSet && basePrice !== null && (
+                  <p className="mt-1 text-xs text-slate-500">
+                    {addonTotal > 0
+                      ? `Base: £${basePrice} + Add-ons: £${addonTotal} = Total: £${runningTotal} — `
+                      : 'Auto-set — '}
+                    <button type="button" className="underline hover:text-slate-700" onClick={() => setIsPriceAutoSet(false)}>
+                      edit to override
+                    </button>
+                  </p>
+                )}
               </div>
-              {isPriceAutoSet && basePrice !== null && (
-                <p className="mt-1 text-xs text-slate-500">
-                  {addonTotal > 0
-                    ? `Base: £${basePrice} + Add-ons: £${addonTotal} = Total: £${runningTotal} — `
-                    : 'Auto-set — '}
-                  <button type="button" className="underline hover:text-slate-700" onClick={() => setIsPriceAutoSet(false)}>
-                    edit to override
-                  </button>
-                </p>
-              )}
+              <div>
+                <Label htmlFor="due-at">Due date &amp; time</Label>
+                <Input id="due-at" type="datetime-local" value={state.dueAt} onChange={(e) => set('dueAt', e.target.value)} />
+                <p className="mt-1 text-xs text-slate-400">Auto-filled when orders come in via Stripe — override if needed</p>
+              </div>
             </div>
 
-            {/* 9. Order Add-Ons */}
+            {/* Row 8: Questions or Areas of Focus */}
+            <div>
+              <Label htmlFor="questions-or-focus">Questions or Areas of Focus</Label>
+              <Textarea
+                id="questions-or-focus"
+                value={state.questionsOrFocus}
+                onChange={(e) => set('questionsOrFocus', e.target.value)}
+                placeholder="Love & Relationships, Career & Work, Finance & Abundance, General Guidance — or leave blank to let spirit guide the reading"
+                rows={4}
+              />
+            </div>
+
+            {/* Row 9: Order Add-Ons */}
             <div className="space-y-3">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Order Add-Ons</p>
               <OrderAddOnsSection
@@ -730,13 +841,6 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                 onToggleFollowUp={(v) => { set('includeFollowUp', v); setIsPriceAutoSet(true) }}
                 onToggleRush={(v) => { set('isRush', v); setIsPriceAutoSet(true) }}
               />
-            </div>
-
-            {/* 10. Due date */}
-            <div>
-              <Label htmlFor="due-at">Due date &amp; time</Label>
-              <Input id="due-at" type="datetime-local" value={state.dueAt} onChange={(e) => set('dueAt', e.target.value)} />
-              <p className="mt-1 text-xs text-slate-400">Auto-filled when orders come in via Stripe — override if needed</p>
             </div>
           </Section>
 
@@ -773,28 +877,19 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
 
           {/* Card Entry */}
           <Section title="Card Entry">
-            <CardEntry
-              cards={state.cards}
-              suitFilter={state.suitFilter}
-              bottomCard={state.bottomCard}
-              onCardsChange={(cards) => { isDirtyRef.current = true; dispatch({ type: 'SET_CARDS', cards }) }}
-              onSuitFilterChange={(suit) => set('suitFilter', suit)}
-              onBottomCardChange={(card) => { isDirtyRef.current = true; dispatch({ type: 'SET_BOTTOM_CARD', card }) }}
-              isCelticCross={isCelticCross}
-              readingTier={state.readingTier}
-            />
-          </Section>
-
-          {/* Reading Focus */}
-          <Section title="Reading Focus">
-            <div>
-              <Label htmlFor="questions-or-focus">Questions or Areas of Focus</Label>
-              <Textarea
-                id="questions-or-focus"
-                value={state.questionsOrFocus}
-                onChange={(e) => set('questionsOrFocus', e.target.value)}
-                placeholder="Love & Relationships, Career & Work, Finance & Abundance, General Guidance — or leave blank to let spirit guide the reading"
-                rows={4}
+            <div ref={cardsRef}>
+              {validationErrors.cards && (
+                <p className="mb-3 text-xs text-red-600">{validationErrors.cards}</p>
+              )}
+              <CardEntry
+                cards={state.cards}
+                suitFilter={state.suitFilter}
+                bottomCard={state.bottomCard}
+                onCardsChange={(cards) => { isDirtyRef.current = true; dispatch({ type: 'SET_CARDS', cards }) }}
+                onSuitFilterChange={(suit) => set('suitFilter', suit)}
+                onBottomCardChange={(card) => { isDirtyRef.current = true; dispatch({ type: 'SET_BOTTOM_CARD', card }) }}
+                isCelticCross={isCelticCross}
+                readingTier={state.readingTier}
               />
             </div>
           </Section>
