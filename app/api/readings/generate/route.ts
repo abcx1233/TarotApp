@@ -77,6 +77,7 @@ export async function POST(request: Request) {
     includeEnergyCleansing: f.includeEnergyCleansing || false,
     energyCleansingNotes: f.energyCleansingNotes || undefined,
     specificQuestion: f.includeExtraQuestion && f.extraQuestionText?.trim() ? f.extraQuestionText.trim() : undefined,
+    futureTimeframe: f.futureTimeframe || undefined,
   }
 
   // Generate
@@ -91,6 +92,8 @@ export async function POST(request: Request) {
   }
 
   const { generatedReading: rawReading, generatedPrompt, groqModel } = generationResult
+
+  console.log('Future section included:', rawReading.includes('Future Energy'))
 
   // Length check and optional continuation
   const minLength = Math.floor(characterTarget * 0.85)
@@ -248,6 +251,7 @@ export async function POST(request: Request) {
     include_energy_cleansing: f.includeEnergyCleansing || false,
     energy_cleansing_notes: f.energyCleansingNotes || null,
     specific_question: f.includeExtraQuestion && f.extraQuestionText?.trim() ? f.extraQuestionText.trim() : null,
+    future_timeframe: f.futureTimeframe || null,
     generated_prompt: generatedPrompt,
     generated_reading: generatedReading,
     email_version: null,

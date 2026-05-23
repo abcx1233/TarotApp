@@ -78,6 +78,7 @@ function initialState(): ReadingFormState {
     includeExtraQuestion: false,
     extraQuestionText: '',
     includeFollowUp: false,
+    futureTimeframe: '',
     generatedReading: null,
     isGenerating: false,
     generationError: null,
@@ -181,6 +182,7 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         includeExtraQuestion: !!(data.specific_question?.trim()),
         extraQuestionText: data.specific_question ?? '',
         includeFollowUp: false,
+        futureTimeframe: data.future_timeframe ?? '',
         generatedReading: data.generated_reading,
         savedReadingId: data.id || null,
         savedOrderId: order?.id ?? null,
@@ -759,7 +761,39 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               </div>
             </FieldRow>
 
-            {/* Row 5: Delivery format — full width */}
+            {/* Row 5: Questions or Areas of Focus */}
+            <div>
+              <Label htmlFor="questions-or-focus">Questions or Areas of Focus</Label>
+              <Textarea
+                id="questions-or-focus"
+                value={state.questionsOrFocus}
+                onChange={(e) => set('questionsOrFocus', e.target.value)}
+                placeholder="Love & Relationships, Career & Work, Finance & Abundance, General Guidance — or leave blank to let spirit guide the reading"
+                rows={4}
+              />
+            </div>
+
+            {/* Row 6: Future focus */}
+            <div>
+              <Label htmlFor="future-timeframe">
+                Future focus{' '}
+                <span className="font-normal text-slate-400">(optional)</span>
+              </Label>
+              <Select
+                id="future-timeframe"
+                value={state.futureTimeframe}
+                onChange={(e) => set('futureTimeframe', e.target.value)}
+              >
+                <option value="">Select a timeframe...</option>
+                <option value="Next 3 months">Next 3 months</option>
+                <option value="Next 6 months">Next 6 months</option>
+                <option value="Rest of the year">Rest of the year</option>
+                <option value="Full 12 months">Full 12 months</option>
+                <option value="24 months">24 months</option>
+              </Select>
+            </div>
+
+            {/* Row 7: Delivery format — full width */}
             <div>
               <Label>Delivery format</Label>
               <PillGroup
@@ -779,10 +813,10 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               )}
             </div>
 
-            {/* Row 6: Returning client — full width */}
+            {/* Row 8: Returning client — full width */}
             <Toggle checked={state.isReturningClient} onChange={(v) => set('isReturningClient', v)} label="Returning client" />
 
-            {/* Row 7: Price + Due date */}
+            {/* Row 9: Price + Due date */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <Label htmlFor="price">Price</Label>
@@ -817,19 +851,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               </div>
             </div>
 
-            {/* Row 8: Questions or Areas of Focus */}
-            <div>
-              <Label htmlFor="questions-or-focus">Questions or Areas of Focus</Label>
-              <Textarea
-                id="questions-or-focus"
-                value={state.questionsOrFocus}
-                onChange={(e) => set('questionsOrFocus', e.target.value)}
-                placeholder="Love & Relationships, Career & Work, Finance & Abundance, General Guidance — or leave blank to let spirit guide the reading"
-                rows={4}
-              />
-            </div>
-
-            {/* Row 9: Order Add-Ons */}
+            {/* Row 10: Order Add-Ons */}
             <div className="space-y-3">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Order Add-Ons</p>
               <OrderAddOnsSection

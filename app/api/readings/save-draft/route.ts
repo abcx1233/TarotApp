@@ -121,6 +121,7 @@ export async function POST(request: Request) {
     character_target: f.readingLength || 6000,
     tone_preset_id: f.tonePresetId || null,
     question_or_focus: f.questionsOrFocus || null,
+    future_timeframe: f.futureTimeframe || null,
     bottom_of_deck_card: f.bottomCard?.name || null,
     bottom_of_deck_orientation: f.bottomCard?.orientation || 'upright',
     oracle_card_name: f.includeOracleCard ? f.oracleCardName || null : null,

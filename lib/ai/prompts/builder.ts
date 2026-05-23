@@ -23,6 +23,7 @@ export interface PromptInput {
   oracleCardName?: string
   includeEnergyCleansing?: boolean
   energyCleansingNotes?: string
+  futureTimeframe?: string
 }
 
 const WRITING_STYLE_GUIDE = `WRITING STYLE — THIS IS NON-NEGOTIABLE
@@ -46,7 +47,7 @@ SENTENCE AND PARAGRAPH STYLE:
 
 VOCABULARY — BANNED WORDS AND PHRASES:
 Never use these under any circumstances:
-"tapestry", "profound", "embodies", "signifies", "denotes", "whilst", "thus", "furthermore", "it is important to note", "in conclusion", "in summary", "delve", "realm", "indeed", "certainly", "absolutely", "resonate deeply", "navigate your journey", "beacon of light", "illuminate your path", "transformative journey", "on a deeper level" (unless used very naturally), "game-changer", "game changer", "the universe will support you", "the universe has a plan", "trust the universe", "trust the process", "remember that", "you are not alone", "endless possibilities", "a time of great opportunity", "on your journey", "this is a good time to", "navigate" (when used metaphorically — e.g. navigate your path, navigate this change, navigate challenges), "full of possibilities", "a path of growth", "step into your power", "you are worthy", "you deserve", "manifest your dreams", "law of attraction", "high vibrational", "raise your vibration", "toxic", "red flag", "self-care", "level up", "glow up", "show up", "you've got this", "keep going", "stay strong", "the best is yet to come", "everything happens for a reason", "things will get better", "brighter days ahead", "light at the end of the tunnel", "you are on the right path", "trust yourself", "believe in yourself"
+"tapestry", "profound", "embodies", "signifies", "denotes", "whilst", "thus", "furthermore", "it is important to note", "in conclusion", "in summary", "delve", "realm", "indeed", "certainly", "absolutely", "resonate deeply", "navigate your journey", "beacon of light", "illuminate your path", "transformative journey", "on a deeper level" (unless used very naturally), "indicating that", "this card is all about", "suggesting that", "it's essential to", "as you move forward", "it's important to", "this is a call to", "this can be challenging", "a double-edged sword", "labor of love", "labour of love", "working in your favour", "working in your favor", "highest good", "on the right path", "everything will work out", "trust in the universe", "trust in the natural flow", "everything is interconnected", "stay true to yourself", "never compromise your values", "seize opportunities", "pivot and adjust", "game-changer", "game changer", "the universe will support you", "the universe has a plan", "trust the universe", "trust the process", "remember that", "you are not alone", "endless possibilities", "a time of great opportunity", "on your journey", "this is a good time to", "navigate" (when used metaphorically — e.g. navigate your path, navigate this change, navigate challenges), "full of possibilities", "a path of growth", "step into your power", "you are worthy", "you deserve", "manifest your dreams", "law of attraction", "high vibrational", "raise your vibration", "toxic", "red flag", "self-care", "level up", "glow up", "show up", "you've got this", "keep going", "stay strong", "the best is yet to come", "everything happens for a reason", "things will get better", "brighter days ahead", "light at the end of the tunnel", "you are on the right path", "trust yourself", "believe in yourself"
 
 Note on "boundaries": use sparingly — do not repeat more than once in any reading.
 
@@ -201,27 +202,30 @@ export function buildPrompt(input: PromptInput): string {
     )
   }
 
-  // 12. Future section (month-by-month through December)
-  parts.push(buildFutureSectionInstruction(new Date()))
+  // 12. Future section
+  parts.push(buildFutureSectionInstruction(new Date(), input.futureTimeframe))
 
-  // 13. Anti-padding rule
+  // 13. Anti-invention / anti-padding rule
   parts.push(
-    `CRITICAL ANTI-PADDING RULE:
-Every paragraph in this reading must be grounded in the specific cards entered for this spread. Do not introduce themes, topics, relationships, life areas, or spiritual concepts that are not directly connected to the cards present.
+    `CRITICAL — READ THIS BEFORE WRITING ANYTHING:
+
+You have been given a specific list of cards. Those cards and ONLY those cards exist in this reading.
+
+You are STRICTLY FORBIDDEN from:
+- Referencing any card not in the list provided
+- Inventing card names to fill space
+- Introducing new cards after the future section begins
+- Adding content about topics not suggested by the actual cards in this spread
 
 If you need more content to reach the character target:
-- Go deeper into the cards already read
-- Explore the relationships between cards in more detail
-- Add more psychological and emotional depth to themes already introduced
-- Expand on the nuances of specific reversals
+- Go deeper into the psychology of cards already read
+- Explore the relationship between cards already present
+- Add more emotional and spiritual depth to themes already introduced
+- Expand on specific reversals with more nuance
 
-Do not:
-- Add generic spiritual filler unrelated to the cards
-- Introduce new life areas not suggested by the spread
-- Repeat the same points in different words
-- Write vague paragraphs that could apply to anyone
+You must not introduce any card, symbol, archetype or tarot concept that does not appear in the card list provided. This is non-negotiable.
 
-Every sentence must earn its place by being specific to the cards in this reading and the person receiving it.`
+Before writing each paragraph ask yourself: "Which specific card from the list justifies this paragraph?" If you cannot answer that question, do not write the paragraph.`
   )
 
   // 14. Closing energy instruction

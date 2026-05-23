@@ -203,6 +203,7 @@ export interface ReadingFormState {
   includeExtraQuestion: boolean
   extraQuestionText: string
   includeFollowUp: boolean
+  futureTimeframe: string
   generatedReading: string | null
   isGenerating: boolean
   generationError: string | null
@@ -246,6 +247,7 @@ export interface RestoredReadingData {
   include_energy_cleansing: boolean
   energy_cleansing_notes: string | null
   reader_notes: string | null
+  future_timeframe?: string | null
   generated_reading: string | null
   order: {
     id: string
