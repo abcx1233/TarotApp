@@ -31,6 +31,84 @@ function trimAtSentence(text: string, maxLength: number): string {
   return sub
 }
 
+function truncateAtEndMarker(text: string): string {
+  const idx = text.indexOf('[END OF READING]')
+  if (idx === -1) return text
+  console.log('END OF READING marker found and removed')
+  return text.slice(0, idx).trimEnd()
+}
+
+function truncateAfterSignOff(text: string, templateSignOff?: string): string {
+  const lower = text.toLowerCase()
+
+  // Check variants shortest-first so 'with love and light' matches before longer forms.
+  // Always include the template sign-off text as the highest-priority candidate.
+  const variants: string[] = [
+    'with love and light',
+    'with love and light ✨',
+    'with love and light.',
+  ]
+  if (templateSignOff?.trim()) {
+    const t = templateSignOff.trim().toLowerCase()
+    if (!variants.includes(t)) variants.unshift(t)
+  }
+
+  let truncateAt = -1
+  for (const variant of variants) {
+    const idx = lower.indexOf(variant)
+    if (idx !== -1) {
+      truncateAt = idx + variant.length
+      break
+    }
+  }
+
+  if (truncateAt !== -1) {
+    const trimmed = text.slice(0, truncateAt).trimEnd()
+    console.log('Truncated at sign-off position:', truncateAt)
+    const charsRemoved = text.trimEnd().length - trimmed.length
+    if (charsRemoved > 0) {
+      console.log('Content after sign-off removed:', charsRemoved, 'chars')
+    }
+    return trimmed
+  }
+
+  console.log('Sign-off not found in generated text')
+  return text
+}
+
+function truncateAfterClosingLines(text: string): string {
+  const paragraphs = text.split(/\n\n+/)
+  let lastShortSeqEnd = -1
+  let i = 0
+
+  while (i < paragraphs.length) {
+    const trimmed = paragraphs[i].trim()
+    if (trimmed.length > 0 && trimmed.length < 100) {
+      let j = i
+      while (j < paragraphs.length && paragraphs[j].trim().length < 100 && paragraphs[j].trim().length > 0) {
+        j++
+      }
+      const seqLen = j - i
+      // 3+ consecutive short paragraphs followed by longer content = likely closing lines mid-reading
+      if (seqLen >= 3 && j < paragraphs.length) {
+        lastShortSeqEnd = j - 1
+      }
+      i = j
+    } else {
+      i++
+    }
+  }
+
+  if (lastShortSeqEnd !== -1) {
+    const keptText = paragraphs.slice(0, lastShortSeqEnd + 1).join('\n\n')
+    const charsRemoved = text.length - keptText.length
+    console.log(`Detected closing lines at paragraph ${lastShortSeqEnd}, truncated ${charsRemoved} chars of content after them`)
+    return keptText
+  }
+
+  return text
+}
+
 function getMainBodyLength(text: string): number {
   const markers = ['\n\nFuture Energy', '\n\nOracle Card', '\n\nEnergy Cleansing Ritual']
   let earliest = text.length
@@ -105,10 +183,13 @@ export async function POST(request: Request) {
     includeFuture: f.includeFuture || false,
   }
 
+  // Dynamic max_tokens: character_target / 3 + 500 (headroom for future section and add-ons)
+  const maxTokens = Math.round(characterTarget / 3) + 500
+
   // Generate
   let generationResult
   try {
-    generationResult = await generateFullReading(promptInput)
+    generationResult = await generateFullReading(promptInput, maxTokens)
   } catch (err) {
     console.error('[route/generate] Generation error:', err)
     console.error('[route/generate] Error JSON:', JSON.stringify(err, Object.getOwnPropertyNames(err instanceof Error ? err : {})))
@@ -120,42 +201,10 @@ export async function POST(request: Request) {
 
   const { generatedReading: rawReading, generatedPrompt, aiModel } = generationResult
 
+  console.log('Raw generated text (last 500 chars):', rawReading.slice(-500))
   console.log('Future section included:', rawReading.includes('Future Energy'))
 
-  // Length check and optional continuation
-  const minLength = Math.floor(characterTarget * 0.85)
-  const maxLength = Math.ceil(characterTarget * 1.15)
-  let finalReading = rawReading
-
-  if (finalReading.length > maxLength) {
-    finalReading = trimAtSentence(finalReading, maxLength)
-  }
-
-  let attempts = 0
-  while (getMainBodyLength(finalReading) < minLength && attempts < 2) {
-    attempts++
-    const tail = finalReading.slice(-2000)
-    try {
-      const continuation = await chatComplete(
-        'You are an expert tarot reader. Continue the reading exactly where it left off.',
-        `The tarot reading so far is ${getMainBodyLength(finalReading)} characters in the main body. It needs at least ${minLength} characters. Continue naturally from where it ended. Do not repeat anything already written. Do not add a sign-off or closing — only continue the body of the reading.\n\n...\n${tail}`,
-        AI_CONFIG.maxTokens
-      )
-      finalReading = finalReading + '\n\n' + continuation
-      if (finalReading.length > maxLength) finalReading = trimAtSentence(finalReading, maxLength)
-    } catch {
-      break
-    }
-  }
-
-  const mainBodyLength = getMainBodyLength(finalReading)
-  const lengthStatus =
-    mainBodyLength < minLength ? 'SHORT' :
-    mainBodyLength > maxLength ? 'TRIMMED' : 'PASS'
-  console.log(`Main body: ${mainBodyLength} chars / ${characterTarget} target — ${lengthStatus} (total: ${finalReading.length} chars)`)
-
-  // Append sign-off and disclaimer from the default template
-  let generatedReading = finalReading
+  // Fetch template early so sign-off text is available for truncation
   const { data: defaultTemplate } = await supabase
     .from('reading_templates')
     .select('signoff_text, disclaimer_text')
@@ -163,6 +212,61 @@ export async function POST(request: Request) {
     .limit(1)
     .single()
 
+  console.log('Template sign-off text:', JSON.stringify(defaultTemplate?.signoff_text))
+
+  const minLength = Math.floor(characterTarget * 0.85)
+  const maxLength = Math.ceil(characterTarget * 1.15)
+
+  // Truncate at [END OF READING] marker first (primary mechanism), then fall back to
+  // sign-off detection. Both run before the length check so it measures clean body content.
+  let finalReading = truncateAtEndMarker(rawReading)
+  finalReading = truncateAfterSignOff(finalReading, defaultTemplate?.signoff_text)
+
+  if (finalReading.length > maxLength) {
+    finalReading = trimAtSentence(finalReading, maxLength)
+  }
+
+  // Card list for continuation prompt — must match what was given to the model
+  const cardListForContinuation = [
+    ...validCards.map((c: CardEntryForm) => c.name).filter(Boolean),
+    ...(promptInput.bottomCard?.name?.trim() ? [`${promptInput.bottomCard.name} (bottom of deck)`] : []),
+  ].join(', ')
+
+  let attempts = 0
+  while (getMainBodyLength(finalReading) < minLength && attempts < 2) {
+    attempts++
+    const currentLength = getMainBodyLength(finalReading)
+    const tail = finalReading.slice(-2000)
+    try {
+      const continuation = await chatComplete(
+        'You are an expert tarot reader. Continue the reading exactly where it left off.',
+        `The reading so far is ${currentLength} characters but needs to be at least ${minLength} characters. Write approximately ${minLength - currentLength} more characters of reading body.\n\nIMPORTANT: Do not repeat or summarise any card interpretation already written above. Do not go through the cards in order again. Do not restate what has already been said about any card.\n\nInstead, go deeper into ONE OR TWO of the most significant cards in this spread. Explore the relationship between two specific cards and what they reveal together, a deeper layer of psychological truth that has not been mentioned yet, what the person might be feeling that they have not admitted to themselves yet, or the shadow aspect of a card that was only touched on in the main reading.\n\nWrite new insight, not a summary of what is already there. Do not add any closing lines, sign-off, or farewell.\n\nOnly these cards exist in this spread: ${cardListForContinuation}\n\nDo not mention any other cards.\n\nAfter you finish writing, add this exact text on its own line:\n[END OF READING]\n\nDo not write anything after [END OF READING].\n\n...\n${tail}`,
+        AI_CONFIG.maxTokens
+      )
+      finalReading = finalReading + '\n\n' + continuation
+      finalReading = truncateAtEndMarker(finalReading)
+      finalReading = truncateAfterSignOff(finalReading, defaultTemplate?.signoff_text)
+      if (finalReading.length > maxLength) finalReading = trimAtSentence(finalReading, maxLength)
+    } catch {
+      break
+    }
+  }
+
+  // Heuristic closing-lines detection (catches cases where marker was not used)
+  finalReading = truncateAfterClosingLines(finalReading)
+
+  // Final safety pass: marker then sign-off
+  finalReading = truncateAtEndMarker(finalReading)
+  finalReading = truncateAfterSignOff(finalReading, defaultTemplate?.signoff_text)
+
+  const mainBodyLength = getMainBodyLength(finalReading)
+  const lengthStatus =
+    mainBodyLength < minLength ? 'SHORT' :
+    mainBodyLength > maxLength ? 'TRIMMED' : 'PASS'
+  console.log(`Main body: ${mainBodyLength} chars / ${characterTarget} target — ${lengthStatus} (total: ${finalReading.length} chars)`)
+
+  // Append sign-off and disclaimer
+  let generatedReading = finalReading
   if (defaultTemplate?.signoff_text?.trim()) {
     generatedReading += `\n\n${defaultTemplate.signoff_text.trim()}`
   }

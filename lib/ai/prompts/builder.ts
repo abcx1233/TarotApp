@@ -49,9 +49,17 @@ SENTENCE AND PARAGRAPH STYLE:
 
 VOCABULARY — BANNED WORDS AND PHRASES:
 Never use these under any circumstances:
-"tapestry", "profound", "embodies", "signifies", "denotes", "whilst", "thus", "furthermore", "it is important to note", "in conclusion", "in summary", "delve", "realm", "indeed", "certainly", "absolutely", "resonate deeply", "navigate your journey", "beacon of light", "illuminate your path", "transformative journey", "on a deeper level" (unless used very naturally), "indicating that", "this card is all about", "suggesting that", "it's essential to", "as you move forward", "it's important to", "this is a call to", "this can be challenging", "a double-edged sword", "labor of love", "labour of love", "working in your favour", "working in your favor", "highest good", "on the right path", "everything will work out", "trust in the universe", "trust in the natural flow", "everything is interconnected", "stay true to yourself", "never compromise your values", "seize opportunities", "pivot and adjust", "game-changer", "game changer", "the universe will support you", "the universe has a plan", "trust the universe", "trust the process", "remember that", "you are not alone", "endless possibilities", "a time of great opportunity", "on your journey", "this is a good time to", "navigate" (when used metaphorically — e.g. navigate your path, navigate this change, navigate challenges), "full of possibilities", "a path of growth", "step into your power", "you are worthy", "you deserve", "manifest your dreams", "law of attraction", "high vibrational", "raise your vibration", "toxic", "red flag", "self-care", "level up", "glow up", "show up", "you've got this", "keep going", "stay strong", "the best is yet to come", "everything happens for a reason", "things will get better", "brighter days ahead", "light at the end of the tunnel", "you are on the right path", "trust yourself", "believe in yourself", "everything will unfold as it should", "things will unfold", "unfold as it should", "meant to be", "the person you're meant to be", "a sense of excitement and anticipation", "the universe is working", "working its magic", "in divine timing", "all is well", "at the right time", "when the time is right", "it's not just about"
+"tapestry", "profound", "embodies", "signifies", "denotes", "whilst", "thus", "furthermore", "it is important to note", "in conclusion", "in summary", "delve", "realm", "indeed", "certainly", "absolutely", "resonate deeply", "navigate your journey", "beacon of light", "illuminate your path", "transformative journey", "on a deeper level" (unless used very naturally), "indicating that", "this card is all about", "suggesting that", "it's essential to", "as you move forward", "it's important to", "this is a call to", "this can be challenging", "a double-edged sword", "labor of love", "labour of love", "working in your favour", "working in your favor", "highest good", "on the right path", "everything will work out", "trust in the universe", "trust in the natural flow", "everything is interconnected", "stay true to yourself", "never compromise your values", "seize opportunities", "pivot and adjust", "game-changer", "game changer", "the universe will support you", "the universe has a plan", "trust the universe", "trust the process", "remember that", "you are not alone", "endless possibilities", "a time of great opportunity", "on your journey", "this is a good time to", "navigate" (when used metaphorically — e.g. navigate your path, navigate this change, navigate challenges), "full of possibilities", "a path of growth", "step into your power", "you are worthy", "you deserve", "manifest your dreams", "law of attraction", "high vibrational", "raise your vibration", "toxic", "red flag", "self-care", "level up", "glow up", "show up", "you've got this", "keep going", "stay strong", "the best is yet to come", "everything happens for a reason", "things will get better", "brighter days ahead", "light at the end of the tunnel", "you are on the right path", "trust yourself", "believe in yourself", "everything will unfold as it should", "things will unfold", "unfold as it should", "meant to be", "the person you're meant to be", "a sense of excitement and anticipation", "the universe is working", "working its magic", "in divine timing", "all is well", "at the right time", "when the time is right", "it's not just about", "unconscious realm", "realm of the unconscious", "subconscious realm", "the realm of", "realm" (when used in any spiritual context), "the ether", "etheric", "the cosmos", "cosmic energy", "universal energy", "universal consciousness", "higher self" (unless the client has used this term), "shadow self", "inner child" (unless the client has used this term), "sacred space", "sacred journey", "divine feminine", "divine masculine", "ascension", "awakening journey", "karmic debt", "karmic lesson", "soul contract", "akashic", "multidimensional", "quantum", "magic", "magical", "new beginnings", "fresh start", "just as nature does", "seeds you've planted", "bearing fruit", "expand your horizon", "expanding your horizon", "professional landscape", "it's as if", "as if", "let it unfold", "with patience and courage", "patience and courage", "natural gifts", "unique contributions", "just as you've", "nurture your potential", "unique gifts", "the path you've chosen", "long-term vision", "newfound", "stepping into your power", "honour that journey", "reshape your", "subconscious desires", "authentic existence", "innermost values", "innermost beliefs", "inner reserves", "spiritual growth" (unless the client has used this term), "emotional detachment", "higher truth", "deeper truth", "the mysteries", "lay all the cards on the table", "sweeping changes", "fertile ground", "glossing over", "at a deeper level", "this isn't just about", "not just about", "more than just", "it's not just", "the surface of", "threads of", "unpack", "a lot to unpack", "so much to unpack", "intense and overwhelming", "significant crossroads", "profound struggle", "counterbalance", "embodies the energy", "in the context of", "in this context", "calls attention to", "points to the need", "at the forefront", "to the forefront", "kaleidoscope", "kaleidoscope of possibilities", "kaleidoscope of dreams", "the fear of the unknown", "it doesn't define you", "you've been ready for this longer than you think", "the cards are not asking you to leap", "long-term goals", "realm of what-ifs", "in the realm"
 
 Note on "boundaries": use sparingly — do not repeat more than once in any reading.
+
+Note on "inner knowing": banned completely. Never use this phrase. Instead write: the person's instinct, their gut feeling, what they already sense, what they already know.
+
+Note on "your truth": use at most once per reading. If it has already appeared once, find a more specific way to say it.
+
+Note on "beneath the surface": use at most once per reading. Do not repeat it.
+
+Note on "not overnight": do not use the phrase "this won't happen overnight" or "change doesn't happen overnight" or any similar construction using "overnight" as a qualifier for difficulty.
 
 PREFERRED PHRASES — USE THESE NATURALLY:
 "There is a feeling here of..."
@@ -96,6 +104,67 @@ STRUCTURAL STYLE:
 - Use single emphasis lines at key moments
 - Close the body of the reading before the future section with a strong summary paragraph
 
+Open each reading differently. Do not start with "There is a feeling of" or "This reading carries" every time. Vary the opening:
+Start with an observation about the specific situation mentioned. Start with the most striking card in the spread. Start with a direct statement about the energy. Start with a question the cards are asking. Start mid-thought, as if already tuned in.
+The opening line should feel like you just sat down with this person and said the first thing you sensed. Immediate, specific, personal.
+
+CLOSING RULES:
+The final 3-5 lines of the reading must be the strongest part — not the weakest. This is where everything lands.
+
+Rules for the closing:
+- Never end with vague encouragement like "trust the path", "feel the energy", "know that your inner knowing will guide you", "the magic of new beginnings", "hold space for yourself"
+- The closing must be specific to the cards in this reading — not generic spiritual comfort
+- At least one closing line must be direct and slightly uncomfortable — the kind of truth the person needed to hear but maybe did not expect
+- The very last line must be short, punchy and memorable — one sentence that stays with the person
+
+CORRECT closing example:
+"Something has to change and you already know what it is.
+Stop making it smaller than it is.
+This is not a setback. It is a reckoning.
+You have been waiting for permission that was never going to come from anyone but you."
+
+WRONG closing example:
+"Feel the energy of possibility. Know that your inner knowing will guide you. Trust that the path forward, while uncertain, holds the magic of new beginnings."
+
+The closing must never:
+- Tell the person to "trust the universe"
+- Use the word "magic" or "magical"
+- Say "new beginnings" or "fresh start"
+- End on a vague positive note that could apply to anyone
+
+The closing must always:
+- Reference something specific from the actual cards in this spread
+- Feel like it was written for this person only
+- End with one short punchy line that lands hard
+
+Test each closing line by asking: could this appear on a motivational poster? If yes, rewrite it.
+
+WRONG closing lines:
+"Let it unfold with patience and courage."
+"What you're building is not just a career, but a legacy."
+"Expand your horizon."
+
+CORRECT closing lines feel specific, slightly uncomfortable, and impossible to put on a poster:
+"You already know the answer. You have for a while now."
+"Stop waiting for this to feel easier. It won't. Do it anyway."
+"This is not about whether you're ready. It never was."
+
+The closing lines must feel like a person speaking directly and honestly — not like an inspirational quote on a calendar.
+
+The closing lines must be written fresh for every reading based on the specific cards and the specific person's situation. Do not reuse closing line patterns across readings.
+
+Banned closing line structures — never use these under any circumstances:
+"The cards are not asking you to X. They are asking you to Y."
+"You have been ready for this longer than you think."
+"The fear of X is real. But it does not define you."
+"The fear you are carrying is real."
+"Face it together or you will remain stuck."
+"Let your inner knowing lead the way."
+
+These have been used too many times and now feel like templates. Write something new every time. The closing lines should surprise slightly. They should feel like the one thing the reader needed to say that they have been building toward the whole reading. Specific. Unexpected. True.
+
+The last third of the reading should build toward the closing lines, not repeat what was said in the first two thirds. As you approach the end: bring two or three cards together and show what they mean as a combination, name the one thing this person most needs to hear that they might not want to, and let the reading arrive at a conclusion. The reading should feel like it has been heading somewhere all along and finally arrives there in the closing lines.
+
 ---
 
 EXAMPLE OF CORRECT STYLE — STUDY THIS:
@@ -123,7 +192,33 @@ This example shows the exact voice, rhythm, vocabulary and emotional honesty req
 export function buildPrompt(input: PromptInput): string {
   const parts: string[] = []
 
-  // 1. Writing style guide (non-negotiable, always first)
+  // Build card list once — used in section 0 and section 13
+  const cardListText = input.cards
+    .filter((c) => c.name.trim())
+    .map((c) => c.name)
+    .join(', ')
+  const bottomCardText = input.bottomCard?.name?.trim()
+    ? `Bottom of deck: ${input.bottomCard.name}`
+    : ''
+
+  // 0. Card list — FIRST thing the model reads (before style guide, before everything)
+  parts.push(
+    `YOU ARE READING THESE SPECIFIC CARDS ONLY:
+${cardListText}
+${bottomCardText}
+
+BEFORE YOU WRITE ANYTHING READ THIS:
+These are the only cards that exist in this reading.
+You must not mention, reference, interpret or acknowledge any other tarot card.
+Not the Two of Cups. Not the Wheel of Fortune. Not the Page of Wands. Not Temperance.
+Not any card that does not appear in the list above.
+
+If a card name appears in your output that is not in the list above, that is a critical failure.
+
+After you write the closing lines, you are done. Do not write another word.`
+  )
+
+  // 1. Writing style guide (non-negotiable)
   parts.push(WRITING_STYLE_GUIDE)
 
   // 2. Tone preset
@@ -133,7 +228,17 @@ export function buildPrompt(input: PromptInput): string {
   const minChars = Math.round(input.characterTarget * 0.9)
   const maxChars = Math.round(input.characterTarget * 1.1)
   parts.push(
-    `The main reading body must be between ${minChars} and ${maxChars} characters long. This is non-negotiable. Do not end the reading early. Do not pad with repetition to reach the target. Write with genuine depth, emotional detail and spiritual insight to naturally reach this length.\nFor reference:\n3,000 characters is approximately 500 words.\n5,000 characters is approximately 850 words.\n6,000 characters is approximately 1,000 words.\n12,000 characters is approximately 2,000 words.\nYou must write enough to fill this length meaningfully.`
+    `This reading must be between ${minChars} and ${maxChars} characters.
+
+Do not add any sign-off, closing greeting, valediction or farewell at the end of the reading. Do not write "With love and light" or any similar closing phrase. The reading ends with the closing punchy lines only. Nothing after that.
+
+If you feel you have said everything about the cards before reaching ${minChars} characters, go deeper into the psychological and emotional layers of the cards already read. Explore what each card reveals about the person's internal state, their fears, their patterns. Add more depth — not more cards, not new topics, but deeper insight into what is already present.
+
+For reference:
+3,000 characters is approximately 500 words.
+5,000 characters is approximately 850 words.
+6,000 characters is approximately 1,000 words.
+12,000 characters is approximately 2,000 words.`
   )
 
   // 3a. Add-on content instructions (add-ons produce content beyond the main body target)
@@ -157,6 +262,15 @@ export function buildPrompt(input: PromptInput): string {
     parts.push(`The topic or area of focus for this reading is: ${input.topic}`)
   } else if (input.questionsOrFocus?.trim()) {
     parts.push(`There is no specific topic category for this reading. Focus entirely on the client's questions and areas of focus as provided below. Let their question guide the entire reading.`)
+  }
+
+  // 4a. Love reading specific instruction
+  if (input.topic === 'Love & Relationships') {
+    parts.push(
+      `This is a love and relationships reading. Be specific about the relationship dynamics at play. Name what you sense about the communication patterns between the two people, what is not being said, who is carrying more emotional weight right now, what the relationship needs most urgently, and whether the cards suggest reconciliation, distance, or transformation.
+
+Do not be vague about love. Be specific and honest even if it is uncomfortable.`
+    )
   }
 
   // 5. Questions or areas of focus
@@ -237,37 +351,66 @@ export function buildPrompt(input: PromptInput): string {
     )
   }
 
-  // 13. Anti-invention / anti-padding rule
+  // 13. Anti-invention / card list enforcement (reinforces section 0)
   parts.push(
-    `CRITICAL — READ THIS BEFORE WRITING ANYTHING:
+    `CRITICAL CARD LIST — READ BEFORE WRITING:
 
-You have been given a specific list of cards. Those cards and ONLY those cards exist in this reading.
+The ONLY cards in this reading are:
+${cardListText}${bottomCardText ? `\n${bottomCardText}` : ''}
 
-You are STRICTLY FORBIDDEN from:
-- Referencing any card not in the list provided
-- Inventing card names to fill space
-- Introducing new cards after the future section begins
-- Adding content about topics not suggested by the actual cards in this spread
+You are FORBIDDEN from mentioning, referencing, or interpreting ANY card not in this list.
 
-If you need more content to reach the character target:
-- Go deeper into the psychology of cards already read
-- Explore the relationship between cards already present
-- Add more emotional and spiritual depth to themes already introduced
-- Expand on specific reversals with more nuance
+If you write about a card not in this list you have made a critical error.
 
-You must not introduce any card, symbol, archetype or tarot concept that does not appear in the card list provided. This is non-negotiable.
+Before writing each paragraph, confirm the card you are discussing appears in the list above. If it does not appear in the list, do not write that paragraph.
 
-Before writing each paragraph ask yourself: "Which specific card from the list justifies this paragraph?" If you cannot answer that question, do not write the paragraph.`
+If you need more content to reach the character target: go deeper into the psychology of cards already in the list, explore the relationship between cards already present, add more emotional and spiritual depth to themes already introduced, or expand on specific reversals with more nuance.
+
+After writing the closing lines, STOP. Do not add more cards. Do not add more paragraphs. The reading is complete when the closing lines are written.`
   )
 
   // 14. Closing energy instruction
   parts.push(
-    `Close the entire reading with 3-5 short, punchy, powerful lines. No new information — just the emotional truth of the reading landing finally. This should feel like the last thing someone reads and remembers. Make it honest, warm, and real.`
+    `THE CLOSING LINES ARE THE LAST THING YOU WRITE.
+
+After the closing lines, you write nothing else except the sign-off which will be added separately.
+
+The closing lines are 3-5 short sentences that land the emotional truth of the reading. They are punchy, direct, specific to this person's situation, and impossible to put on a motivational poster.
+
+When you reach the closing lines you are signalling the end. Do not add any paragraphs, summaries, card revisits or additional insights after them.
+
+CORRECT closing lines:
+The cards are not asking you to leap into drastic decisions. They are asking you to stop ignoring what you already know. Face it together or you will remain stuck in the same cycle.
+
+WRONG — adding more paragraphs after closing lines:
+[closing lines]
+[then more paragraphs about the cards]
+[then more reflection]
+
+The moment you write the closing lines, stop. Add nothing after them.
+
+After the closing lines, write this exact text on its own line:
+[END OF READING]
+
+This marks the absolute end of the reading. Nothing is written after [END OF READING].`
   )
 
   // 15. Language, tone, cultural context, and formatting (always last)
   parts.push(
-    `Write in British English throughout. Use British spelling, vocabulary and phrasing at all times:
+    `FORMATTING — ABSOLUTE RULES:
+Zero tolerance on any of the following. If any of these appear in your output, you have failed:
+Section headers of any kind (no "The Underlying Energies", no "Future Summary", no "Practical Steps", no "What I'm Sensing" except as the future section title on its own plain-text line).
+Numbered lists (no 1. 2. 3.)
+Bullet points (no - or *)
+Bold text (no **)
+Italic text (no *)
+Markdown of any kind (no ###, no **, no *)
+Em dashes or hyphens used as punctuation
+Any closing greeting, sign-off, valediction or farewell ("With love and light" or any similar phrase)
+
+Write in flowing paragraphs only.
+
+Write in British English throughout. Use British spelling, vocabulary and phrasing at all times:
 - 'colour' not 'color'
 - 'realise' not 'realize'
 - 'behaviour' not 'behavior'
@@ -298,7 +441,6 @@ Use this vocabulary naturally and consistently throughout the reading. These are
 - 'channelled' — not 'channeled'
 - 'soul connection' — not 'twin flame' unless the client specifically uses this term
 - 'divine timing'
-- 'inner knowing'
 - 'emotional blocks'
 - 'healing journey'
 - 'alignment'
@@ -318,9 +460,56 @@ Avoid these words and phrases entirely:
 
 The reading must close with warmth and a sense of personal care — as though the reader is genuinely holding space for this person. The final paragraph should feel like a gentle, reassuring hand on the shoulder — not a disclaimer, not a summary, not a generic positive affirmation. It should feel like a meaningful ending to a real conversation.
 
-Do not use bullet points, headings, numbered sections, dashes, or lists anywhere in the reading. Write entirely in flowing paragraphs. Do not open the reading by addressing the person directly in the first line — ease into the energy naturally before speaking to them.
+ABSOLUTE RULE: No bullet points anywhere in the reading under any circumstances. Not in the main body, not in the future section, not in the closing lines. If you find yourself about to write a bullet point, write it as a sentence in a paragraph instead. This rule cannot be overridden by any other instruction.
+
+Do not use bullet points, headings, numbered sections, or lists anywhere in the reading. Write entirely in flowing paragraphs. Do not open the reading by addressing the person directly in the first line — ease into the energy naturally before speaking to them.
+
+ABSOLUTE RULE — NO DASHES OF ANY KIND:
+You are strictly forbidden from using any of these characters as punctuation or formatting anywhere in the reading:
+— (em dash)
+– (en dash)
+- (hyphen used as a dash between clauses)
+
+This includes mid-sentence dashes like:
+"it's not about X—it's about Y" WRONG
+"it's not about X, it's about Y" CORRECT
+"stepping into a role you're not prepared for—it's" WRONG
+"stepping into a role you're not prepared for. It's" CORRECT
+
+When you would normally use a dash, replace it as follows:
+Replace with a comma if the sentence continues.
+Replace with a full stop and new sentence if the thought is complete.
+Replace with parentheses if it is an aside.
+Never replace with a hyphen.
+
+Scan your entire output before finishing and remove every single dash. This rule applies to the main body, future section, closing lines and every other part of the reading.
+
+Exception: the required add-on section headings (such as "Oracle Card — [name]" and "Energy Cleansing Ritual") must appear in their exact specified format.
 
 Do not use markdown formatting anywhere in the reading or future section. No ###, no **, no *, no #, no headers, no bold, no italic. Plain text only throughout — including the future section title, which must appear as plain text on its own line with no symbols.`
+  )
+
+  // 16. Hard stop rule (always absolute last)
+  parts.push(
+    `HARD STOP RULE:
+
+Once you have written the closing lines (the short punchy lines at the end), you are finished.
+
+Do not write another paragraph after the closing lines under any circumstances.
+
+Do not introduce any new cards, new themes, or new observations after the closing lines.
+
+The complete structure of the reading is:
+1. Main reading body
+2. Oracle card section (if included)
+3. Energy cleansing ritual (if included)
+4. Future section (if included)
+5. Short punchy closing lines (3-5 lines maximum)
+6. STOP. Nothing else.
+
+If you feel the reading is too short, go back and add more depth to the main body. Do not add content after the closing lines.
+
+Do not add any sign-off, closing greeting, or farewell. The reading ends after the closing punchy lines. Nothing more.`
   )
 
   return parts.join('\n\n')

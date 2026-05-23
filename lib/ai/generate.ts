@@ -14,19 +14,22 @@ export interface GenerationResult {
 }
 
 export async function generateFullReading(
-  promptInput: PromptInput
+  promptInput: PromptInput,
+  maxTokens?: number
 ): Promise<GenerationResult> {
   const generatedPrompt = buildPrompt(promptInput)
+  const tokensToUse = maxTokens ?? AI_CONFIG.maxTokens
 
   console.log('[generate] Prompt length (chars):', generatedPrompt.length)
   console.log('[generate] Prompt length (approx tokens):', Math.round(generatedPrompt.length / 4))
+  console.log('[generate] Max tokens:', tokensToUse)
 
   let generatedReading: string
   try {
     generatedReading = await chatComplete(
       'You are an expert tarot reader and spiritual guide. Follow the instructions precisely.',
       generatedPrompt,
-      AI_CONFIG.maxTokens
+      tokensToUse
     )
   } catch (err) {
     console.error('[generate] Groq API error:', err)
