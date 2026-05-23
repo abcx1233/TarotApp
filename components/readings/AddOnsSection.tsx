@@ -3,7 +3,7 @@
 import { Toggle } from '@/components/ui/Toggle'
 import { Textarea } from '@/components/ui/Textarea'
 import { Label } from '@/components/ui/Label'
-import { CardAutocomplete } from './CardAutocomplete'
+import { Input } from '@/components/ui/Input'
 
 interface AddOnsSectionProps {
   includeOracleCard: boolean
@@ -72,13 +72,13 @@ export function AddOnsSection({
         onChange={onToggleOracleCard}
       >
         <div>
-          <Label htmlFor="oracle-card-name">Oracle Card Name</Label>
-          <CardAutocomplete
+          <Label htmlFor="oracle-card-name">Oracle card name</Label>
+          <Input
             id="oracle-card-name"
+            type="text"
             value={oracleCardName}
-            onChange={(v) => onOracleCardNameChange(v)}
-            suitFilter="all"
-            placeholder="e.g. The River, Inner Child…"
+            onChange={(e) => onOracleCardNameChange(e.target.value)}
+            placeholder="e.g. The Moon, Awakening, Trust..."
           />
         </div>
       </AddonRow>
