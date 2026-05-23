@@ -135,8 +135,10 @@ export function buildPrompt(input: PromptInput): string {
     `This reading must be between ${minChars} and ${maxChars} characters long. This is non-negotiable. Do not end the reading early. Do not pad with repetition to reach the target. Write with genuine depth, emotional detail and spiritual insight to naturally reach this length.\nFor reference:\n3,000 characters is approximately 500 words.\n5,000 characters is approximately 850 words.\n6,000 characters is approximately 1,000 words.\n12,000 characters is approximately 2,000 words.\nYou must write enough to fill this length meaningfully.`
   )
 
-  // 4. Topic
-  parts.push(`The topic or area of focus for this reading is: ${input.topic}`)
+  // 4. Topic (omit if blank — reading focuses on questions/focus field only)
+  if (input.topic?.trim()) {
+    parts.push(`The topic or area of focus for this reading is: ${input.topic}`)
+  }
 
   // 5. Questions or areas of focus
   if (input.questionsOrFocus?.trim()) {

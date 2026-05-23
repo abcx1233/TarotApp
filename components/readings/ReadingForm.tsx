@@ -57,7 +57,7 @@ function initialState(): ReadingFormState {
     clientEmail: '',
     clientPhone: '',
     readingTier: 'mini',
-    topic: 'General Guidance',
+    topic: '',
     starSign: '',
     deliveryFormat: 'written',
     dueAt: '',
@@ -167,7 +167,7 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         starSign: client?.star_sign ?? '',
         isReturningClient: client?.is_returning ?? false,
         readingTier: (order?.reading_tier as ReadingTier) ?? 'core',
-        topic: order?.topic ?? 'General Guidance',
+        topic: order?.topic ?? '',
         deliveryFormat: (order?.delivery_format as DeliveryFormat) ?? 'written',
         priceTotal: order?.price_total != null ? String(order.price_total) : '',
         isRush: order?.is_rush ?? false,
@@ -362,8 +362,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
     if (initialReading) return
     async function loadSettings() {
       const supabase = createClient()
-      const { data } = await supabase.from('app_settings').select('default_topic, business_name').limit(1).single()
-      if (data?.default_topic) dispatch({ type: 'SET', field: 'topic', value: data.default_topic })
+      const { data } = await supabase.from('app_settings').select('business_name').limit(1).single()
       if (data?.business_name) setBusinessName(data.business_name)
     }
     loadSettings()
@@ -735,7 +734,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
                 <option value="mini">Mini Written (~3,000 chars)</option>
                 <option value="core">Core Written (~6,000 chars)</option>
                 <option value="premium">Premium Written (~12,000 chars)</option>
-                <option value="celtic_cross">Celtic Cross (~5,000 chars)</option>
+                <option value="celtic_cross">Celtic Cross (~6,000 chars)</option>
               </Select>
             </div>
 
@@ -744,6 +743,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               <div>
                 <Label htmlFor="topic">Topic</Label>
                 <Select id="topic" value={state.topic} onChange={(e) => set('topic', e.target.value)}>
+                  <option value=""></option>
                   <option>Love & Relationships</option>
                   <option>Career & Work</option>
                   <option>Finance & Abundance</option>

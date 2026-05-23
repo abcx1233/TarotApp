@@ -9,7 +9,7 @@ export const READING_CHARACTER_TARGETS: Record<string, number> = {
   mini: 3000,
   core: 6000,
   premium: 12000,
-  celtic_cross: 5000,
+  celtic_cross: 6000,
 }
 
 export const EMAIL_VERSION_MAX_CHARS = 1500
