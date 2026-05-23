@@ -110,7 +110,7 @@ function truncateAfterClosingLines(text: string): string {
 }
 
 function getMainBodyLength(text: string): number {
-  const markers = ['\n\nFuture Energy', '\n\nOracle Card', '\n\nEnergy Cleansing Ritual']
+  const markers = ['\n\nFuture Energy', '\n\nOracle Card', '\n\nA Ritual For You']
   let earliest = text.length
   for (const marker of markers) {
     const idx = text.indexOf(marker)
@@ -162,6 +162,10 @@ export async function POST(request: Request) {
   const characterTarget =
     f.readingLength || READING_CHARACTER_TARGETS[f.readingTier] || 6000
 
+  console.log('API received energy cleansing:', {
+    includeEnergyCleansing: f.includeEnergyCleansing,
+  })
+
   const promptInput: PromptInput = {
     tonePresetText,
     characterTarget,
@@ -176,7 +180,6 @@ export async function POST(request: Request) {
     },
     oracleCardName: f.includeOracleCard && f.oracleCardName ? f.oracleCardName : undefined,
     includeEnergyCleansing: f.includeEnergyCleansing || false,
-    energyCleansingNotes: f.energyCleansingNotes || undefined,
     specificQuestion: f.includeExtraQuestion && f.extraQuestionText?.trim() ? f.extraQuestionText.trim() : undefined,
     futureTimeframe: f.futureTimeframe || undefined,
     tier: f.readingTier,
@@ -199,7 +202,17 @@ export async function POST(request: Request) {
     )
   }
 
-  const { generatedReading: rawReading, generatedPrompt, aiModel } = generationResult
+  const { generatedReading: _rawText, generatedPrompt, aiModel } = generationResult
+
+  // Server-side dash removal (safety net — fires regardless of model compliance)
+  let rawReading = _rawText
+    .replace(/—/g, ', ')
+    .replace(/–/g, ', ')
+    .replace(/\s,\s/g, ', ')
+    .replace(/,\s*,/g, ',')
+  // Restore oracle card heading format damaged by em dash removal above
+  rawReading = rawReading.replace(/^Oracle Card,\s+/gm, 'Oracle Card — ')
+  console.log('Dash removal applied')
 
   console.log('Raw generated text (last 500 chars):', rawReading.slice(-500))
   console.log('Future section included:', rawReading.includes('Future Energy'))
@@ -219,6 +232,9 @@ export async function POST(request: Request) {
 
   // Truncate at [END OF READING] marker first (primary mechanism), then fall back to
   // sign-off detection. Both run before the length check so it measures clean body content.
+  console.log('Searching for END OF READING marker')
+  console.log('Marker found:', rawReading.includes('[END OF READING]'))
+  console.log('Raw text sample (chars 3000-3500):', rawReading.slice(3000, 3500))
   let finalReading = truncateAtEndMarker(rawReading)
   finalReading = truncateAfterSignOff(finalReading, defaultTemplate?.signoff_text)
 
@@ -381,7 +397,7 @@ export async function POST(request: Request) {
     oracle_card_name: f.includeOracleCard ? f.oracleCardName || null : null,
     include_oracle_card: f.includeOracleCard || false,
     include_energy_cleansing: f.includeEnergyCleansing || false,
-    energy_cleansing_notes: f.energyCleansingNotes || null,
+    energy_cleansing_notes: null,
     specific_question: f.includeExtraQuestion && f.extraQuestionText?.trim() ? f.extraQuestionText.trim() : null,
     future_timeframe: f.futureTimeframe || null,
     generated_prompt: generatedPrompt,

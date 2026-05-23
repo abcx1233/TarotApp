@@ -199,7 +199,6 @@ export interface ReadingFormState {
   includeOracleCard: boolean
   oracleCardName: string
   includeEnergyCleansing: boolean
-  energyCleansingNotes: string
   includeExtraQuestion: boolean
   extraQuestionText: string
   includeFollowUp: boolean

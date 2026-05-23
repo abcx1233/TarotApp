@@ -74,7 +74,6 @@ function initialState(): ReadingFormState {
     includeOracleCard: false,
     oracleCardName: '',
     includeEnergyCleansing: false,
-    energyCleansingNotes: '',
     includeExtraQuestion: false,
     extraQuestionText: '',
     includeFollowUp: false,
@@ -179,7 +178,6 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         includeOracleCard: data.include_oracle_card ?? false,
         oracleCardName: data.oracle_card_name ?? '',
         includeEnergyCleansing: data.include_energy_cleansing ?? false,
-        energyCleansingNotes: data.energy_cleansing_notes ?? '',
         includeExtraQuestion: !!(data.specific_question?.trim()),
         extraQuestionText: data.specific_question ?? '',
         includeFollowUp: false,
@@ -537,6 +535,10 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
     }
 
     try {
+      console.log('Regenerate payload add-ons:', {
+        includeEnergyCleansing: state.includeEnergyCleansing,
+        includeOracleCard: state.includeOracleCard,
+      })
       const response = await fetch('/api/readings/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -935,11 +937,9 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               includeOracleCard={state.includeOracleCard}
               oracleCardName={state.oracleCardName}
               includeEnergyCleansing={state.includeEnergyCleansing}
-              energyCleansingNotes={state.energyCleansingNotes}
               onToggleOracleCard={(v) => { set('includeOracleCard', v); setIsPriceAutoSet(true) }}
               onOracleCardNameChange={(v) => set('oracleCardName', v)}
               onToggleEnergyCleansing={(v) => { set('includeEnergyCleansing', v); setIsPriceAutoSet(true) }}
-              onEnergyCleansingNotesChange={(v) => set('energyCleansingNotes', v)}
             />
           </Section>
 

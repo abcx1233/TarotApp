@@ -127,7 +127,7 @@ export async function POST(request: Request) {
     oracle_card_name: f.includeOracleCard ? f.oracleCardName || null : null,
     include_oracle_card: f.includeOracleCard || false,
     include_energy_cleansing: f.includeEnergyCleansing || false,
-    energy_cleansing_notes: f.energyCleansingNotes || null,
+    energy_cleansing_notes: null,
     specific_question: f.includeExtraQuestion && f.extraQuestionText?.trim() ? f.extraQuestionText.trim() : null,
     generated_reading: f.generatedReading ?? null,
     is_test: isTestMode,

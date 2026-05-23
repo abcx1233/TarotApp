@@ -22,7 +22,6 @@ export interface PromptInput {
   }
   oracleCardName?: string
   includeEnergyCleansing?: boolean
-  energyCleansingNotes?: string
   futureTimeframe?: string
   tier?: string
   includeFuture?: boolean
@@ -191,6 +190,7 @@ This example shows the exact voice, rhythm, vocabulary and emotional honesty req
 
 export function buildPrompt(input: PromptInput): string {
   const parts: string[] = []
+  console.log('Prompt builder energy cleansing:', input.includeEnergyCleansing)
 
   // Build card list once — used in section 0 and section 13
   const cardListText = input.cards
@@ -252,7 +252,7 @@ For reference:
       addonLines.push(`- Oracle Card section: write an additional 300-500 characters after the main reading body. Begin this section on a new line with exactly the heading "Oracle Card" followed by a dash and the card name, e.g. "Oracle Card — ${input.oracleCardName?.trim()}"`)
     }
     if (hasEnergyCleansing) {
-      addonLines.push(`- Energy Cleansing Ritual: write an additional 200-400 characters after the oracle card section (or after the main body if there is no oracle card). Begin this section on a new line with exactly the heading "Energy Cleansing Ritual"`)
+      addonLines.push(`- Energy Cleansing Ritual: write an additional 300-500 characters after the closing lines. Begin this section on a new line with exactly the heading "A Ritual For You"`)
     }
     parts.push(addonLines.join('\n'))
   }
@@ -288,10 +288,30 @@ Do not be vague about love. Be specific and honest even if it is uncomfortable.`
   }
 
   // 6. Star sign (astrological undertones)
+  console.log('Star sign received:', input.starSign)
   if (input.starSign?.trim()) {
-    parts.push(
-      `The client's star sign is ${input.starSign}. Let this inform the astrological undertones of the reading where relevant — do not make it the focus, but let it add depth.`
-    )
+    const starSignTraits: Record<string, string> = {
+      'Aries': 'bold, impulsive, passionate, competitive, independent, natural leader, impatient, driven by action',
+      'Taurus': 'grounded, loyal, sensual, stubborn, patient, values security and comfort, resistant to change',
+      'Gemini': 'curious, adaptable, communicative, restless, dual nature, quick thinking, easily bored',
+      'Cancer': 'deeply emotional, intuitive, nurturing, protective, moody, strong attachment to home and family',
+      'Leo': 'warm, generous, proud, dramatic, needs recognition and validation, loyal, natural performer, fear of being overlooked',
+      'Virgo': 'analytical, detail-oriented, perfectionist, anxious, service-oriented, critical of self and others',
+      'Libra': 'diplomatic, indecisive, harmony-seeking, relationship-focused, avoids conflict, strong sense of fairness',
+      'Scorpio': 'intense, deep, secretive, transformative, suspicious, powerful emotional undercurrents, all or nothing',
+      'Sagittarius': 'freedom-loving, philosophical, blunt, optimistic, restless, avoids emotional depth, seeks adventure',
+      'Capricorn': 'ambitious, disciplined, emotionally reserved, fears failure, values status and achievement, slow to trust',
+      'Aquarius': 'independent, unconventional, emotionally detached, idealistic, values freedom, struggles with intimacy',
+      'Pisces': 'deeply sensitive, intuitive, escapist, empathetic, struggles with boundaries, spiritual, prone to self-sacrifice',
+    }
+
+    const traits = starSignTraits[input.starSign] || ''
+
+    if (traits) {
+      parts.push(
+        `The client is a ${input.starSign}. Their energy carries these qualities: ${traits}. Let this inform the reading naturally and specifically — reference their sign's traits, tendencies and patterns where relevant to the cards. Do not dedicate a separate section to astrology. Weave it in as natural observation, for example: 'As a Leo, the fear of being overlooked is real for you' or 'Your Scorpio nature means this feels more intense than it might for others.' Only reference the star sign where it genuinely adds insight to what the cards are showing.`
+      )
+    }
   }
 
   // 7. Returning client
@@ -330,11 +350,24 @@ Do not be vague about love. Be specific and honest even if it is uncomfortable.`
 
   // 11. Energy cleansing ritual
   if (input.includeEnergyCleansing) {
-    const ritualContext = input.energyCleansingNotes?.trim()
-      ? ` Additional context: ${input.energyCleansingNotes.trim()}`
-      : ''
     parts.push(
-      `After the oracle card section (or after the main reading body if there is no oracle card), write an energy cleansing ritual beginning with the heading "Energy Cleansing Ritual". Make it feel spiritual, grounded and specific to their situation — not generic. Describe a simple ritual they can do at home using items they are likely to have.${ritualContext}`
+      `After the closing lines and before the sign-off, include a personalised energy cleansing ritual under this exact heading written on its own line:
+
+A Ritual For You
+
+The ritual must be 300-500 characters long and feel genuinely worth receiving as a paid add-on. It must be completely specific to the cards in this reading and the situation described.
+
+Structure the ritual like this:
+
+First sentence: Name the specific energy that needs to be cleared or invited based on the cards. Connect it directly to what was revealed in the reading. For example if The Tower appeared write about releasing what has collapsed. If the 8 of Cups appeared write about letting go.
+
+Second and third sentences: Describe the specific items to use and why they connect to this person's energy. Choose from: candles (colour matters, white for clarity, black for release, pink for love, green for growth), salt (for cleansing), water (for emotional healing), rosemary (for clarity and protection), lavender (for calm), rose petals (for love), a piece of paper and pen (for releasing), crystals if relevant.
+
+Fourth sentence: Simple step by step action. Light the candle, write what needs releasing, burn it safely, sit in the smoke of the herbs. Make it practical and doable at home.
+
+Fifth sentence: A closing intention or affirmation written specifically for this person based on what the cards revealed. Not generic. Something they will feel was written just for them.
+
+The ritual must read as a flowing paragraph, not a list. No bullet points. No numbered steps. Just warm, spiritual, practical guidance that feels like it came from the reader personally.`
     )
   }
 
@@ -464,27 +497,28 @@ ABSOLUTE RULE: No bullet points anywhere in the reading under any circumstances.
 
 Do not use bullet points, headings, numbered sections, or lists anywhere in the reading. Write entirely in flowing paragraphs. Do not open the reading by addressing the person directly in the first line — ease into the energy naturally before speaking to them.
 
-ABSOLUTE RULE — NO DASHES OF ANY KIND:
-You are strictly forbidden from using any of these characters as punctuation or formatting anywhere in the reading:
-— (em dash)
-– (en dash)
-- (hyphen used as a dash between clauses)
+ZERO TOLERANCE DASH RULE:
 
-This includes mid-sentence dashes like:
-"it's not about X—it's about Y" WRONG
-"it's not about X, it's about Y" CORRECT
-"stepping into a role you're not prepared for—it's" WRONG
-"stepping into a role you're not prepared for. It's" CORRECT
+The em dash and en dash must never appear anywhere in this reading. Not once. Not ever.
 
-When you would normally use a dash, replace it as follows:
-Replace with a comma if the sentence continues.
-Replace with a full stop and new sentence if the thought is complete.
-Replace with parentheses if it is an aside.
-Never replace with a hyphen.
+Before you submit your response scan every single sentence for the dash character. If you find one rewrite that sentence without it.
 
-Scan your entire output before finishing and remove every single dash. This rule applies to the main body, future section, closing lines and every other part of the reading.
+Common fixes:
+WRONG: "The Magician, a card of potential, brings energy" [with em dash replacing the comma]
+RIGHT: "The Magician brings the energy of potential"
 
-Exception: the required add-on section headings (such as "Oracle Card — [name]" and "Energy Cleansing Ritual") must appear in their exact specified format.
+WRONG: "This is not about fear — it is about trust"
+RIGHT: "This is not about fear. It is about trust."
+
+Replace every dash with either:
+A comma if the sentence continues naturally.
+A full stop and new sentence if the thought is complete.
+A colon if introducing a list.
+Nothing at all if the sentence reads fine without punctuation there.
+
+This rule applies everywhere: main body, future section, closing lines, ritual section.
+
+Exception only: the required add-on heading "Oracle Card — [name]" must appear in that exact format.
 
 Do not use markdown formatting anywhere in the reading or future section. No ###, no **, no *, no #, no headers, no bold, no italic. Plain text only throughout — including the future section title, which must appear as plain text on its own line with no symbols.`
   )
