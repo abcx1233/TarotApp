@@ -78,6 +78,7 @@ function initialState(): ReadingFormState {
     includeExtraQuestion: false,
     extraQuestionText: '',
     includeFollowUp: false,
+    includeFuture: false,
     futureTimeframe: '',
     generatedReading: null,
     isGenerating: false,
@@ -182,6 +183,7 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         includeExtraQuestion: !!(data.specific_question?.trim()),
         extraQuestionText: data.specific_question ?? '',
         includeFollowUp: false,
+        includeFuture: !!(data.future_timeframe),
         futureTimeframe: data.future_timeframe ?? '',
         generatedReading: data.generated_reading,
         savedReadingId: data.id || null,
@@ -774,24 +776,33 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               />
             </div>
 
-            {/* Row 6: Future focus */}
-            <div>
-              <Label htmlFor="future-timeframe">
-                Future focus{' '}
-                <span className="font-normal text-slate-400">(optional)</span>
-              </Label>
-              <Select
-                id="future-timeframe"
-                value={state.futureTimeframe}
-                onChange={(e) => set('futureTimeframe', e.target.value)}
-              >
-                <option value="">Select a timeframe...</option>
-                <option value="Next 3 months">Next 3 months</option>
-                <option value="Next 6 months">Next 6 months</option>
-                <option value="Rest of the year">Rest of the year</option>
-                <option value="Full 12 months">Full 12 months</option>
-                <option value="24 months">24 months</option>
-              </Select>
+            {/* Row 6: Include future energy toggle + optional timeframe */}
+            <div className="space-y-2">
+              <Toggle
+                checked={state.includeFuture}
+                onChange={(v) => {
+                  set('includeFuture', v)
+                  if (!v) set('futureTimeframe', '')
+                }}
+                label="Include future energy"
+              />
+              {state.includeFuture && (
+                <div>
+                  <Label htmlFor="future-timeframe">Future timeframe</Label>
+                  <Select
+                    id="future-timeframe"
+                    value={state.futureTimeframe}
+                    onChange={(e) => set('futureTimeframe', e.target.value)}
+                  >
+                    <option value="">Select a timeframe...</option>
+                    <option value="Next 3 months">Next 3 months</option>
+                    <option value="Next 6 months">Next 6 months</option>
+                    <option value="Rest of the year">Rest of the year</option>
+                    <option value="Full 12 months">Full 12 months</option>
+                    <option value="24 months">24 months</option>
+                  </Select>
+                </div>
+              )}
             </div>
 
             {/* Row 7: Delivery format — full width */}
@@ -982,6 +993,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
             deliveryFormat={state.deliveryFormat}
             businessName={businessName}
             readingLength={state.readingLength}
+            hasAddons={state.includeOracleCard || state.includeEnergyCleansing}
           />
         </div>
       </div>

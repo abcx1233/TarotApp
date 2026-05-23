@@ -44,6 +44,7 @@ interface OutputPanelProps {
   deliveryFormat: string
   businessName: string
   readingLength: number
+  hasAddons?: boolean
 }
 
 export function OutputPanel({
@@ -64,6 +65,7 @@ export function OutputPanel({
   deliveryFormat,
   businessName,
   readingLength,
+  hasAddons = false,
 }: OutputPanelProps) {
   const [copied, setCopied] = useState(false)
   const [saveDraftState, setSaveDraftState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
@@ -348,11 +350,13 @@ export function OutputPanel({
         )}
       </div>
 
-      {/* ── Character count (FIX 6) ──────────────────────────────────── */}
+      {/* ── Character count ───────────────────────────────────────────── */}
       {hasOutput && (
         <div className="shrink-0 flex items-center px-6 py-2 border-t border-slate-100">
           <span className={clsx('text-xs', charCountColor)}>
-            {charCount.toLocaleString()} / {charTarget.toLocaleString()} characters
+            {hasAddons && charCount > charTarget
+              ? `${charCount.toLocaleString()} characters (${charTarget.toLocaleString()} reading + ${(charCount - charTarget).toLocaleString()} add-ons)`
+              : `${charCount.toLocaleString()} / ${charTarget.toLocaleString()} characters`}
           </span>
         </div>
       )}

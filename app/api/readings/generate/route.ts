@@ -31,6 +31,16 @@ function trimAtSentence(text: string, maxLength: number): string {
   return sub
 }
 
+function getMainBodyLength(text: string): number {
+  const markers = ['\n\nFuture Energy', '\n\nOracle Card', '\n\nEnergy Cleansing Ritual']
+  let earliest = text.length
+  for (const marker of markers) {
+    const idx = text.indexOf(marker)
+    if (idx !== -1 && idx < earliest) earliest = idx
+  }
+  return earliest
+}
+
 function mapCardToPromptInput(card: CardEntryForm) {
   return {
     name: card.name,
@@ -77,7 +87,7 @@ export async function POST(request: Request) {
   const promptInput: PromptInput = {
     tonePresetText,
     characterTarget,
-    topic: f.topic || 'General',
+    topic: f.topic || '',
     questionsOrFocus: f.questionsOrFocus || undefined,
     starSign: f.starSign || undefined,
     isReturningClient: f.isReturningClient || false,
@@ -92,6 +102,7 @@ export async function POST(request: Request) {
     specificQuestion: f.includeExtraQuestion && f.extraQuestionText?.trim() ? f.extraQuestionText.trim() : undefined,
     futureTimeframe: f.futureTimeframe || undefined,
     tier: f.readingTier,
+    includeFuture: f.includeFuture || false,
   }
 
   // Generate
@@ -119,13 +130,13 @@ export async function POST(request: Request) {
   }
 
   let attempts = 0
-  while (finalReading.length < minLength && attempts < 2) {
+  while (getMainBodyLength(finalReading) < minLength && attempts < 2) {
     attempts++
     const tail = finalReading.slice(-2000)
     try {
       const continuation = await chatComplete(
         'You are an expert tarot reader. Continue the reading exactly where it left off.',
-        `The tarot reading so far is ${finalReading.length} characters. It needs at least ${minLength} characters. Continue naturally from where it ended. Do not repeat anything already written. Do not add a sign-off or closing — only continue the body of the reading.\n\n...\n${tail}`,
+        `The tarot reading so far is ${getMainBodyLength(finalReading)} characters in the main body. It needs at least ${minLength} characters. Continue naturally from where it ended. Do not repeat anything already written. Do not add a sign-off or closing — only continue the body of the reading.\n\n...\n${tail}`,
         AI_CONFIG.maxTokens
       )
       finalReading = finalReading + '\n\n' + continuation
@@ -135,10 +146,11 @@ export async function POST(request: Request) {
     }
   }
 
+  const mainBodyLength = getMainBodyLength(finalReading)
   const lengthStatus =
-    finalReading.length < minLength ? 'SHORT' :
-    finalReading.length > maxLength ? 'TRIMMED' : 'PASS'
-  console.log(`Reading length: ${finalReading.length} chars / ${characterTarget} target — ${lengthStatus}`)
+    mainBodyLength < minLength ? 'SHORT' :
+    mainBodyLength > maxLength ? 'TRIMMED' : 'PASS'
+  console.log(`Main body: ${mainBodyLength} chars / ${characterTarget} target — ${lengthStatus} (total: ${finalReading.length} chars)`)
 
   // Append sign-off and disclaimer from the default template
   let generatedReading = finalReading

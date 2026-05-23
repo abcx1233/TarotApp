@@ -25,6 +25,7 @@ export interface PromptInput {
   energyCleansingNotes?: string
   futureTimeframe?: string
   tier?: string
+  includeFuture?: boolean
 }
 
 const WRITING_STYLE_GUIDE = `WRITING STYLE — THIS IS NON-NEGOTIABLE
@@ -132,12 +133,30 @@ export function buildPrompt(input: PromptInput): string {
   const minChars = Math.round(input.characterTarget * 0.9)
   const maxChars = Math.round(input.characterTarget * 1.1)
   parts.push(
-    `This reading must be between ${minChars} and ${maxChars} characters long. This is non-negotiable. Do not end the reading early. Do not pad with repetition to reach the target. Write with genuine depth, emotional detail and spiritual insight to naturally reach this length.\nFor reference:\n3,000 characters is approximately 500 words.\n5,000 characters is approximately 850 words.\n6,000 characters is approximately 1,000 words.\n12,000 characters is approximately 2,000 words.\nYou must write enough to fill this length meaningfully.`
+    `The main reading body must be between ${minChars} and ${maxChars} characters long. This is non-negotiable. Do not end the reading early. Do not pad with repetition to reach the target. Write with genuine depth, emotional detail and spiritual insight to naturally reach this length.\nFor reference:\n3,000 characters is approximately 500 words.\n5,000 characters is approximately 850 words.\n6,000 characters is approximately 1,000 words.\n12,000 characters is approximately 2,000 words.\nYou must write enough to fill this length meaningfully.`
   )
 
-  // 4. Topic (omit if blank — reading focuses on questions/focus field only)
+  // 3a. Add-on content instructions (add-ons produce content beyond the main body target)
+  const hasOracleCard = !!input.oracleCardName?.trim()
+  const hasEnergyCleansing = !!input.includeEnergyCleansing
+  if (hasOracleCard || hasEnergyCleansing) {
+    const addonLines: string[] = [
+      `The character target above applies to the main reading body only. The following add-ons must each add their own dedicated content ON TOP of the main reading — do not include their content within the main character count:`,
+    ]
+    if (hasOracleCard) {
+      addonLines.push(`- Oracle Card section: write an additional 300-500 characters after the main reading body. Begin this section on a new line with exactly the heading "Oracle Card" followed by a dash and the card name, e.g. "Oracle Card — ${input.oracleCardName?.trim()}"`)
+    }
+    if (hasEnergyCleansing) {
+      addonLines.push(`- Energy Cleansing Ritual: write an additional 200-400 characters after the oracle card section (or after the main body if there is no oracle card). Begin this section on a new line with exactly the heading "Energy Cleansing Ritual"`)
+    }
+    parts.push(addonLines.join('\n'))
+  }
+
+  // 4. Topic
   if (input.topic?.trim()) {
     parts.push(`The topic or area of focus for this reading is: ${input.topic}`)
+  } else if (input.questionsOrFocus?.trim()) {
+    parts.push(`There is no specific topic category for this reading. Focus entirely on the client's questions and areas of focus as provided below. Let their question guide the entire reading.`)
   }
 
   // 5. Questions or areas of focus
@@ -191,7 +210,7 @@ export function buildPrompt(input: PromptInput): string {
   // 10. Oracle card
   if (input.oracleCardName?.trim()) {
     parts.push(
-      `An oracle card has also come through: ${input.oracleCardName.trim()}. Give this card its own dedicated section within the reading. Explore its spiritual meaning in the context of this person's situation. Connect it to the themes already present in the tarot cards. The oracle card should feel like an additional spiritual layer that deepens the reading — not a bolt-on at the end.`
+      `An oracle card has also come through: ${input.oracleCardName.trim()}. After completing the main reading body, write the oracle card section beginning with the heading "Oracle Card — ${input.oracleCardName.trim()}". Explore its spiritual meaning in the context of this person's situation. Connect it to the themes already present in the tarot cards. The oracle card should feel like an additional spiritual layer that deepens the reading.`
     )
   }
 
@@ -201,13 +220,21 @@ export function buildPrompt(input: PromptInput): string {
       ? ` Additional context: ${input.energyCleansingNotes.trim()}`
       : ''
     parts.push(
-      `At the end of the reading, include a personalised energy cleansing ritual suggestion for this person. Make it feel spiritual, grounded and specific to their situation — not generic. Describe a simple ritual they can do at home using items they are likely to have.${ritualContext}`
+      `After the oracle card section (or after the main reading body if there is no oracle card), write an energy cleansing ritual beginning with the heading "Energy Cleansing Ritual". Make it feel spiritual, grounded and specific to their situation — not generic. Describe a simple ritual they can do at home using items they are likely to have.${ritualContext}`
     )
   }
 
-  // 12. Future section (skip for mini readings when no timeframe selected)
-  if (input.tier !== 'mini' || input.futureTimeframe) {
+  // 12. Future section — strict toggle control
+  const includeFutureSection = input.includeFuture && (input.tier !== 'mini' || !!input.futureTimeframe)
+  if (includeFutureSection) {
+    parts.push(
+      `The future section must be clearly separate from the main body of the reading. Write the main reading first, close it naturally, then begin the future section. The main body must never reference or predict specific future months or timeframes — save all future energy for the dedicated future section at the end.`
+    )
     parts.push(buildFutureSectionInstruction(new Date(), input.futureTimeframe))
+  } else {
+    parts.push(
+      `This reading does not include a dedicated future section. You may naturally reference energy that is building or shifting as part of the reading flow, but do not structure any part of the reading as a future forecast or timeline. Do not create a future section, do not use month names, do not predict specific future periods.`
+    )
   }
 
   // 13. Anti-invention / anti-padding rule

@@ -203,6 +203,7 @@ export interface ReadingFormState {
   includeExtraQuestion: boolean
   extraQuestionText: string
   includeFollowUp: boolean
+  includeFuture: boolean
   futureTimeframe: string
   generatedReading: string | null
   isGenerating: boolean
