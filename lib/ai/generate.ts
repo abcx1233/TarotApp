@@ -18,6 +18,9 @@ export async function generateFullReading(
 ): Promise<GenerationResult> {
   const generatedPrompt = buildPrompt(promptInput)
 
+  console.log('[generate] Prompt length (chars):', generatedPrompt.length)
+  console.log('[generate] Prompt length (approx tokens):', Math.round(generatedPrompt.length / 4))
+
   let generatedReading: string
   try {
     generatedReading = await chatComplete(
@@ -26,6 +29,8 @@ export async function generateFullReading(
       AI_CONFIG.maxTokens
     )
   } catch (err) {
+    console.error('[generate] Groq API error:', err)
+    console.error('[generate] Error details:', JSON.stringify(err, Object.getOwnPropertyNames(err instanceof Error ? err : {})))
     throw new GroqGenerationError('Failed to generate the main reading', err)
   }
 

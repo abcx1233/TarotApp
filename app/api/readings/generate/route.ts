@@ -110,6 +110,8 @@ export async function POST(request: Request) {
   try {
     generationResult = await generateFullReading(promptInput)
   } catch (err) {
+    console.error('[route/generate] Generation error:', err)
+    console.error('[route/generate] Error JSON:', JSON.stringify(err, Object.getOwnPropertyNames(err instanceof Error ? err : {})))
     return NextResponse.json(
       { error: formatAiError(err) },
       { status: 500 }
