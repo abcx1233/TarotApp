@@ -478,8 +478,8 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
 
     const filledCount = state.cards.filter((c) => c.name.trim()).length
     if (state.readingTier === 'mini') {
-      if (filledCount !== 3) {
-        errors.cards = `Mini readings require exactly 3 cards — you have ${filledCount} entered`
+      if (filledCount < 3) {
+        errors.cards = `Mini readings require at least 3 cards — you have ${filledCount} entered`
       }
     } else if (state.readingTier === 'core') {
       if (filledCount < 6) {
