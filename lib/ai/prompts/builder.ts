@@ -230,7 +230,7 @@ export function buildPrompt(input: PromptInput): string {
     parts.push(
       `The future section must be clearly separate from the main body of the reading. Write the main reading first, close it naturally, then begin the future section. The main body must never reference or predict specific future months or timeframes — save all future energy for the dedicated future section at the end.`
     )
-    parts.push(buildFutureSectionInstruction(new Date(), input.futureTimeframe))
+    parts.push(buildFutureSectionInstruction(new Date(), input.futureTimeframe, input.tier))
   } else {
     parts.push(
       `This reading does not include a dedicated future section. You may naturally reference energy that is building or shifting as part of the reading flow, but do not structure any part of the reading as a future forecast or timeline. Do not create a future section, do not use month names, do not predict specific future periods.`
@@ -318,7 +318,9 @@ Avoid these words and phrases entirely:
 
 The reading must close with warmth and a sense of personal care — as though the reader is genuinely holding space for this person. The final paragraph should feel like a gentle, reassuring hand on the shoulder — not a disclaimer, not a summary, not a generic positive affirmation. It should feel like a meaningful ending to a real conversation.
 
-Do not use bullet points, headings, numbered sections, dashes, or lists anywhere in the reading. Write entirely in flowing paragraphs. Do not open the reading by addressing the person directly in the first line — ease into the energy naturally before speaking to them.`
+Do not use bullet points, headings, numbered sections, dashes, or lists anywhere in the reading. Write entirely in flowing paragraphs. Do not open the reading by addressing the person directly in the first line — ease into the energy naturally before speaking to them.
+
+Do not use markdown formatting anywhere in the reading or future section. No ###, no **, no *, no #, no headers, no bold, no italic. Plain text only throughout — including the future section title, which must appear as plain text on its own line with no symbols.`
   )
 
   return parts.join('\n\n')

@@ -1,5 +1,12 @@
 const FUTURE_STYLE_RULES = `FUTURE SECTION STYLE — NON-NEGOTIABLE
 
+FORMATTING — CRITICAL:
+Do not use any markdown formatting in the future section. No ###, no **, no *, no #, no headers. Write the title as plain text on its own line, followed by a blank line, then begin the prose. Like this:
+
+What I'm Sensing — The Next 6 Months
+
+In the first part of this period...
+
 The future section must flow as continuous prose — not a list of months, not a structured report, not a timeline.
 
 Write as if you are actively channelling and sensing what is coming. You are tuning in — not filing a report.
@@ -9,8 +16,8 @@ WHAT IT MUST DO:
 - Use natural time language: "in the first part of this period", "as this moves forward", "around the middle of this", "towards the end of this period", "there's a moment coming that feels significant — watch for it"
 - Reference specific cards from this spread to anchor every energy shift — do not write generic future energy
 - Build naturally: early period first, then middle, then end — without rigid headers
-- Include at least one "watch for this" moment — something specific the person should be alert to
-- Close with 3-5 short punchy lines that land as final truth — not a summary
+- Include the specified number of "watch for this" moments — something specific the person should be alert to, tied to a named card
+- Close with the specified number of short punchy lines that land as final truth — not a summary
 
 WHAT IT MUST NOT DO:
 - Use month names as headers or labels (no "June", "July", "August" etc)
@@ -38,75 +45,127 @@ They ask you to keep moving.
 That's enough."
 
 EXAMPLE OF WRONG STYLE — DO NOT DO THIS:
-"June
+"### What I'm Sensing — The Next 6 Months
+
+**June**
 The Emperor's presence is strong, calling for decisive actions and boundaries.
 
-July
-The High Priestess asks you to go inward.
+**July**
+The High Priestess asks you to go inward."`
 
-August
-With the 3 of Cups, the energy is much lighter."`
+interface TierConfig {
+  label: string
+  chars: string
+  paragraphs: string
+  watchMoments: string
+  closingLines: string
+  depth: string
+}
+
+function getTierConfig(tier?: string): TierConfig {
+  switch (tier) {
+    case 'mini':
+      return {
+        label: 'Mini',
+        chars: '400-600',
+        paragraphs: '2-3',
+        watchMoments: 'one',
+        closingLines: '2-3',
+        depth: 'concise and focused',
+      }
+    case 'premium':
+      return {
+        label: 'Premium',
+        chars: '1200-1600',
+        paragraphs: '4-6',
+        watchMoments: 'two or three',
+        closingLines: '4-5',
+        depth: 'deeply explored',
+      }
+    case 'celtic_cross':
+      return {
+        label: 'Celtic Cross',
+        chars: '700-1000',
+        paragraphs: '3-4',
+        watchMoments: 'one or two',
+        closingLines: '3-4',
+        depth: 'developed',
+      }
+    default:
+      return {
+        label: 'Core',
+        chars: '700-1000',
+        paragraphs: '3-4',
+        watchMoments: 'one or two',
+        closingLines: '3-4',
+        depth: 'developed',
+      }
+  }
+}
+
+function tierInstruction(tc: TierConfig, title: string, coverageGuide: string): string {
+  return `After the main body of the reading, write a future section. The title is: ${title}
+
+${FUTURE_STYLE_RULES}
+
+${coverageGuide}
+
+The future section for this ${tc.label} reading should be approximately ${tc.chars} characters — ${tc.depth}. Write ${tc.paragraphs} flowing paragraphs. Include ${tc.watchMoments} "watch for this" moment tied to a specific named card from this spread.
+
+Close with ${tc.closingLines} short punchy lines. The most honest lines in the entire reading. No new information — just the truth landing.`
+}
 
 export function buildFutureSectionInstruction(
   _now: Date = new Date(),
-  futureTimeframe?: string
+  futureTimeframe?: string,
+  tier?: string
 ): string {
+  const tc = getTierConfig(tier)
+
   if (futureTimeframe === 'Next 3 months') {
-    return `After the main body of the reading, write a future section titled "What I'm Sensing — The Next 3 Months".
-
-${FUTURE_STYLE_RULES}
-
-Cover the arc of the next 3 months in flowing prose: the early weeks, a mid-period shift, and the closing energy. Include one clear "watch for this" moment tied to a specific card from this spread. Approximately 400-600 characters total for this section.
-
-Close with 2-3 short punchy lines. The most honest lines in the entire reading. No new information — just the truth landing.`
+    return tierInstruction(
+      tc,
+      'What I\'m Sensing — The Next 3 Months',
+      'Cover the arc of the next 3 months in flowing prose: the early weeks, a mid-period shift, and the closing energy.'
+    )
   }
 
   if (futureTimeframe === 'Next 6 months') {
-    return `After the main body of the reading, write a future section titled "What I'm Sensing — The Next 6 Months".
-
-${FUTURE_STYLE_RULES}
-
-Cover the arc of the next 6 months in flowing prose: early period energy, a meaningful mid-period shift, and the energy as the period closes. Include one or two "watch for this" moments tied to specific cards from this spread. Approximately 600-900 characters total for this section.
-
-Close with 3-4 short punchy lines. The most honest lines in the entire reading. No new information — just the truth landing.`
+    return tierInstruction(
+      tc,
+      'What I\'m Sensing — The Next 6 Months',
+      'Cover the arc of the next 6 months in flowing prose: early period energy, a meaningful mid-period shift, and the energy as the period closes.'
+    )
   }
 
   if (futureTimeframe === 'Rest of the year') {
-    return `After the main body of the reading, write a future section titled "What I'm Sensing — The Rest of Your Year".
-
-${FUTURE_STYLE_RULES}
-
-Cover the remaining months of this year as a flowing narrative — how the energy builds, where it shifts, and how it resolves as the year closes. Include at least one significant "watch for this" moment tied to a specific card from this spread. Approximately 800-1000 characters total for this section.
-
-Close with 3-5 short punchy lines. The most honest lines in the entire reading. No new information — just the truth landing.`
+    return tierInstruction(
+      tc,
+      'What I\'m Sensing — The Rest of Your Year',
+      'Cover the remaining months of this year as a flowing narrative — how the energy builds, where it shifts, and how it resolves as the year closes.'
+    )
   }
 
   if (futureTimeframe === 'Full 12 months') {
-    return `After the main body of the reading, write a future section titled "What I'm Sensing — The Year Ahead".
-
-${FUTURE_STYLE_RULES}
-
-Cover the full year in flowing prose across four natural phases: the early months, the spring-into-summer energy, the autumn shift, and the year's end. Show the overall arc and transformation. Include two "watch for this" moments tied to specific cards from this spread. Approximately 1000-1400 characters total for this section.
-
-Close with 4-5 short punchy lines. The most honest lines in the entire reading. No new information — just the truth landing.`
+    return tierInstruction(
+      tc,
+      'What I\'m Sensing — The Year Ahead',
+      'Cover the full year in flowing prose across four natural phases: the early months, the spring-into-summer energy, the autumn shift, and the year\'s end. Show the overall arc and transformation.'
+    )
   }
 
   if (futureTimeframe === '24 months') {
-    return `After the main body of the reading, write a future section titled "What I'm Sensing — The Next Two Years".
-
-${FUTURE_STYLE_RULES}
-
-Write Year 1 as a detailed flowing narrative — early period, mid-period shift, and closing energy — with specific card references throughout. Write Year 2 as a broader sense of direction and themes rather than detailed prediction. Include two or three "watch for this" moments across both years. Approximately 1400-1800 characters total for this section.
-
-Close with 4-5 short punchy lines. The most honest lines in the entire reading. No new information — just the truth landing.`
+    return tierInstruction(
+      tc,
+      'What I\'m Sensing — The Next Two Years',
+      'Write Year 1 as a detailed flowing narrative — early period, mid-period shift, and closing energy — with specific card references throughout. Write Year 2 as a broader sense of direction and themes rather than detailed prediction.'
+    )
   }
 
   // Default: no timeframe selected — cover energy moving forward through to year end
-  return `After the main body of the reading, write a future section titled "What I'm Sensing Ahead".
-
-${FUTURE_STYLE_RULES}
-
-Cover the energy moving forward in flowing prose — through to the end of the year. Use natural time markers without month headers. Include at least one "watch for this" moment tied to a specific card from this spread. Approximately 600-900 characters total for this section.
-
-Close with 3-5 short punchy lines. The most honest lines in the entire reading. No new information — just the truth landing.`
+  return tierInstruction(
+    tc,
+    'What I\'m Sensing Ahead',
+    'Cover the energy moving forward in flowing prose — through to the end of the year. Use natural time markers without month headers.'
+  )
 }
