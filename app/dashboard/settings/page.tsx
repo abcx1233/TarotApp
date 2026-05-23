@@ -223,12 +223,12 @@ export default function SettingsPage() {
         </h2>
         <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
           <div>
-            <Label>Groq model</Label>
+            <Label>AI model</Label>
             <div className="mt-1 flex items-center gap-2">
               <code className="rounded-md bg-slate-100 px-3 py-2 text-sm font-mono text-slate-700">
-                {process.env.NEXT_PUBLIC_GROQ_MODEL_DISPLAY ?? 'llama-3.3-70b-versatile'}
+                {process.env.NEXT_PUBLIC_AI_MODEL_DISPLAY ?? 'gpt-4o'}
               </code>
-              <span className="text-xs text-slate-400">(read-only — set via GROQ_MODEL env var)</span>
+              <span className="text-xs text-slate-400">(read-only — set via OPENAI_MODEL env var)</span>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 # Reader Console
 
-Private internal dashboard for Deep Blue Divination. Manages tarot reading orders, generates AI readings via Groq, and handles client tracking.
+Private internal dashboard for Deep Blue Divination. Manages tarot reading orders, generates AI readings via OpenAI GPT-4o, and handles client tracking.
 
 ---
 
@@ -10,7 +10,7 @@ Private internal dashboard for Deep Blue Divination. Manages tarot reading order
 - **TypeScript**
 - **Tailwind CSS**
 - **Supabase** — auth + Postgres
-- **Groq** (via OpenAI SDK) — AI reading generation
+- **OpenAI GPT-4o** — AI reading generation
 - **Gmail API** — outbound email delivery
 
 ---
@@ -37,13 +37,13 @@ Required variables:
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase anon/publishable key |
-| `GROQ_API_KEY` | Your Groq API key |
+| `OPENAI_API_KEY` | Your OpenAI API key — get one at [platform.openai.com](https://platform.openai.com) |
 
 Optional (add when ready):
 
 | Variable | Description |
 |---|---|
-| `GROQ_MODEL` | Groq model name (default: `llama-3.3-70b-versatile`) |
+| `OPENAI_MODEL` | OpenAI model name (default: `gpt-4o`) |
 | `STRIPE_WEBHOOK_SECRET` | For Stripe inbound order webhook |
 | `WEBHOOK_SECRET` | For generic inbound webhook (Supabase/Zapier) |
 | `GMAIL_CLIENT_ID` | Gmail OAuth2 client ID |
@@ -158,9 +158,9 @@ Readings are generated in three steps:
 2. **Email version** — adapted for email delivery with subject line
 3. **WhatsApp version** — plain text, no formatting, chunked for messaging
 
-All generation happens server-side only. `GROQ_API_KEY` is never exposed to the browser.
+All generation happens server-side only. `OPENAI_API_KEY` is never exposed to the browser.
 
-Max tokens is set to `5000` to support readings up to ~12,000 characters.
+Max tokens is set to `4096` to support readings up to ~12,000 characters.
 
 ---
 
@@ -177,7 +177,7 @@ components/        Reusable UI and feature components
 data/              Tarot card dataset (78 Light Seers cards)
 lib/
   supabase/        Client, server, and middleware helpers
-  ai/              Groq client, prompt builder, generation pipeline
+  ai/              OpenAI client, prompt builder, generation pipeline
   gmail/           OAuth2 and send helpers
   webhooks/        Stripe parser and order creation
   integrations/    Website status sync

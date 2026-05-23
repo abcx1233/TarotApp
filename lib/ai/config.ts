@@ -1,7 +1,6 @@
 export const AI_CONFIG = {
-  baseURL: 'https://api.groq.com/openai/v1',
-  model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
-  maxTokens: 5000,
+  model: process.env.OPENAI_MODEL || 'gpt-4o',
+  maxTokens: 4096,
   temperature: 0.85,
 } as const
 

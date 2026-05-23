@@ -118,7 +118,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const { generatedReading: rawReading, generatedPrompt, groqModel } = generationResult
+  const { generatedReading: rawReading, generatedPrompt, aiModel } = generationResult
 
   console.log('Future section included:', rawReading.includes('Future Energy'))
 
@@ -284,7 +284,7 @@ export async function POST(request: Request) {
     generated_reading: generatedReading,
     email_version: null,
     whatsapp_version: null,
-    groq_model: groqModel,
+    groq_model: aiModel,
     prompt_version: 1,
     final_approved: false,
     is_test: isTestMode,

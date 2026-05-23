@@ -10,7 +10,7 @@ import { AI_CONFIG } from './config'
 export interface GenerationResult {
   generatedReading: string
   generatedPrompt: string
-  groqModel: string
+  aiModel: string
 }
 
 export async function generateFullReading(
@@ -37,6 +37,6 @@ export async function generateFullReading(
   return {
     generatedReading,
     generatedPrompt,
-    groqModel: AI_CONFIG.model,
+    aiModel: AI_CONFIG.model,
   }
 }
