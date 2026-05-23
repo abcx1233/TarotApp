@@ -46,7 +46,9 @@ SENTENCE AND PARAGRAPH STYLE:
 
 VOCABULARY — BANNED WORDS AND PHRASES:
 Never use these under any circumstances:
-"tapestry", "profound", "embodies", "signifies", "denotes", "whilst", "thus", "furthermore", "it is important to note", "in conclusion", "in summary", "delve", "realm", "indeed", "certainly", "absolutely", "resonate deeply", "navigate your journey", "beacon of light", "illuminate your path", "transformative journey", "on a deeper level" (unless used very naturally)
+"tapestry", "profound", "embodies", "signifies", "denotes", "whilst", "thus", "furthermore", "it is important to note", "in conclusion", "in summary", "delve", "realm", "indeed", "certainly", "absolutely", "resonate deeply", "navigate your journey", "beacon of light", "illuminate your path", "transformative journey", "on a deeper level" (unless used very naturally), "game-changer", "game changer", "the universe will support you", "the universe has a plan", "trust the universe", "trust the process", "remember that", "you are not alone", "endless possibilities", "a time of great opportunity", "on your journey", "this is a good time to", "navigate" (when used metaphorically — e.g. navigate your path, navigate this change, navigate challenges), "full of possibilities", "a path of growth", "step into your power", "you are worthy", "you deserve", "manifest your dreams", "law of attraction", "high vibrational", "raise your vibration", "toxic", "red flag", "self-care", "level up", "glow up", "show up", "you've got this", "keep going", "stay strong", "the best is yet to come", "everything happens for a reason", "things will get better", "brighter days ahead", "light at the end of the tunnel", "you are on the right path", "trust yourself", "believe in yourself"
+
+Note on "boundaries": use sparingly — do not repeat more than once in any reading.
 
 PREFERRED PHRASES — USE THESE NATURALLY:
 "There is a feeling here of..."
@@ -66,12 +68,16 @@ PREFERRED PHRASES — USE THESE NATURALLY:
 "You are becoming..."
 
 CARD INTERPRETATION RULES:
-- Never list what a card "traditionally means"
-- Describe what you feel and observe in the energy as if reading the person, not defining a card
-- Name the card naturally: "The Tower is one of the defining cards of your spread" — not "The Tower means sudden change and upheaval"
-- Connect cards to each other — show relationships between cards in the spread
-- Interpret reversals with depth — explore emotional blockages, resistance, delays, inner conflict
-- Include shadow aspects honestly without being harsh
+- Never write what a card "traditionally means" or "is all about" — this sounds like a textbook
+- Never use the phrase "this card is all about X"
+- Instead write what you feel and observe in the energy as if reading the person directly
+- Go beyond the surface meaning — what does this card reveal about the person's internal state, fears, patterns, or unspoken feelings?
+- Name the card naturally mid-flow:
+  CORRECT: "The High Priestess here isn't telling you to search harder. She's saying you already know."
+  WRONG: "The High Priestess follows, and this card is all about listening to your intuition."
+- Show how cards relate to and affect each other throughout the spread
+- Reversals must be explored with genuine depth — not just "this card reversed suggests delays". What emotional truth does the reversal reveal? What is being avoided, resisted, or suppressed?
+- Let difficult cards carry their full emotional weight. Do not soften them with immediate reassurance. Sit with the difficult energy before offering hope.
 
 PSYCHOLOGICAL DEPTH:
 - Name internal states, fears, patterns, motivations
@@ -198,12 +204,32 @@ export function buildPrompt(input: PromptInput): string {
   // 12. Future section (month-by-month through December)
   parts.push(buildFutureSectionInstruction(new Date()))
 
-  // 13. Closing energy instruction
+  // 13. Anti-padding rule
+  parts.push(
+    `CRITICAL ANTI-PADDING RULE:
+Every paragraph in this reading must be grounded in the specific cards entered for this spread. Do not introduce themes, topics, relationships, life areas, or spiritual concepts that are not directly connected to the cards present.
+
+If you need more content to reach the character target:
+- Go deeper into the cards already read
+- Explore the relationships between cards in more detail
+- Add more psychological and emotional depth to themes already introduced
+- Expand on the nuances of specific reversals
+
+Do not:
+- Add generic spiritual filler unrelated to the cards
+- Introduce new life areas not suggested by the spread
+- Repeat the same points in different words
+- Write vague paragraphs that could apply to anyone
+
+Every sentence must earn its place by being specific to the cards in this reading and the person receiving it.`
+  )
+
+  // 14. Closing energy instruction
   parts.push(
     `Close the entire reading with 3-5 short, punchy, powerful lines. No new information — just the emotional truth of the reading landing finally. This should feel like the last thing someone reads and remembers. Make it honest, warm, and real.`
   )
 
-  // 14. Language, tone, cultural context, and formatting (always last)
+  // 15. Language, tone, cultural context, and formatting (always last)
   parts.push(
     `Write in British English throughout. Use British spelling, vocabulary and phrasing at all times:
 - 'colour' not 'color'
