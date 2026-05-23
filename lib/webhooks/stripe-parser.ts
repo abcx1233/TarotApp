@@ -34,11 +34,14 @@ function parseFormat(raw: string): DeliveryFormat {
 export function suggestTopic(questionOrFocus: string): string {
   const text = questionOrFocus.toLowerCase()
   if (/love|relationship|partner|boyfriend|girlfriend|husband|wife|romance/.test(text))
-    return 'Love'
-  if (/career|job|work|business|money|finance|income/.test(text)) return 'Career'
+    return 'Love & Relationships'
+  if (/career|job|work|business/.test(text))
+    return 'Career & Work'
+  if (/money|finance|financial|abundance|income|wealth/.test(text))
+    return 'Finance & Abundance'
   if (/spiritual|soul|path|purpose|universe|awakening/.test(text))
     return 'Spiritual Guidance'
-  return 'General'
+  return 'General Guidance'
 }
 
 export function parseStripeMetadata(

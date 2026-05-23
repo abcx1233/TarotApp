@@ -208,11 +208,11 @@ export default function HistoryPage() {
         <div className="w-40">
           <Select value={topicFilter} onChange={(e) => setTopicFilter(e.target.value)}>
             <option value="">All topics</option>
-            <option>Love</option>
-            <option>Career</option>
-            <option>General</option>
+            <option>Love & Relationships</option>
+            <option>Career & Work</option>
+            <option>Finance & Abundance</option>
             <option>Spiritual Guidance</option>
-            <option>Custom</option>
+            <option>General Guidance</option>
           </Select>
         </div>
       </div>

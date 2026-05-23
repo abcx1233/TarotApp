@@ -45,8 +45,8 @@ function makeCelticCrossCards(existing: CardEntryForm[] = []): CardEntryForm[] {
 
 const TIER_DEFAULT_CARD_COUNT: Record<string, number> = {
   mini: 3,
-  core: 8,
-  premium: 12,
+  core: 6,
+  premium: 10,
   celtic_cross: 10,
 }
 
@@ -57,7 +57,7 @@ function initialState(): ReadingFormState {
     clientEmail: '',
     clientPhone: '',
     readingTier: 'mini',
-    topic: 'General',
+    topic: 'General Guidance',
     starSign: '',
     deliveryFormat: 'written',
     dueAt: '',
@@ -166,7 +166,7 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         starSign: client?.star_sign ?? '',
         isReturningClient: client?.is_returning ?? false,
         readingTier: (order?.reading_tier as ReadingTier) ?? 'core',
-        topic: order?.topic ?? 'General',
+        topic: order?.topic ?? 'General Guidance',
         deliveryFormat: (order?.delivery_format as DeliveryFormat) ?? 'written',
         priceTotal: order?.price_total != null ? String(order.price_total) : '',
         isRush: order?.is_rush ?? false,
@@ -741,10 +741,11 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
               <div>
                 <Label htmlFor="topic">Topic</Label>
                 <Select id="topic" value={state.topic} onChange={(e) => set('topic', e.target.value)}>
-                  <option>Love</option>
-                  <option>Career</option>
-                  <option>General</option>
+                  <option>Love & Relationships</option>
+                  <option>Career & Work</option>
+                  <option>Finance & Abundance</option>
                   <option>Spiritual Guidance</option>
+                  <option>General Guidance</option>
                 </Select>
               </div>
               <div>

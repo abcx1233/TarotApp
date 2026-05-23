@@ -61,7 +61,7 @@ export async function createOrderFromWebhook(order: ParsedInboundOrder): Promise
   }
 
   // 2. Determine topic
-  const topic = order.questionOrFocus ? suggestTopic(order.questionOrFocus) : 'General'
+  const topic = order.questionOrFocus ? suggestTopic(order.questionOrFocus) : 'General Guidance'
 
   // 3. Create order
   const { data: newOrder, error: orderError } = await supabase
