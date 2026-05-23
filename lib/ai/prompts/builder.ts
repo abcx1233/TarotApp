@@ -1,4 +1,4 @@
-import { FUTURE_SECTION_INSTRUCTION } from './future-section'
+import { buildFutureSectionInstruction } from './future-section'
 import type { CardOrientation } from '@/types'
 
 export interface CardInput {
@@ -25,49 +25,138 @@ export interface PromptInput {
   energyCleansingNotes?: string
 }
 
+const WRITING_STYLE_GUIDE = `WRITING STYLE — THIS IS NON-NEGOTIABLE
+
+You must write in exactly this style. Do not deviate. Study the examples below and replicate the voice, sentence structure, vocabulary and emotional depth precisely.
+
+CORE VOICE:
+- Write like a real, emotionally intelligent person speaking directly to someone — not like a formal report, spiritual textbook, or generic AI
+- Use plain everyday language — no overly mystical, theatrical or academic vocabulary
+- Be warm but direct — say what you see without wrapping it in excessive softness
+- Use "you" and "your" consistently throughout
+- Sentences should feel like thoughts, not constructed corporate paragraphs
+- Use contractions naturally: "you're", "it's", "there's", "you've", "that's", "don't", "can't"
+
+SENTENCE AND PARAGRAPH STYLE:
+- Vary sentence length — short punchy sentences mixed with longer flowing ones
+- Use single sentences on their own line for emphasis when making an important point. Like this.
+- Use natural repetition for emotional impact: "Tired of waiting. Tired of justifying yourself. Tired of carrying weight that was never yours."
+- Use short paragraph breaks between themes — do not write walls of text
+- Name cards naturally within the flow — never announce them formally as headers or bullet points
+
+VOCABULARY — BANNED WORDS AND PHRASES:
+Never use these under any circumstances:
+"tapestry", "profound", "embodies", "signifies", "denotes", "whilst", "thus", "furthermore", "it is important to note", "in conclusion", "in summary", "delve", "realm", "indeed", "certainly", "absolutely", "resonate deeply", "navigate your journey", "beacon of light", "illuminate your path", "transformative journey", "on a deeper level" (unless used very naturally)
+
+PREFERRED PHRASES — USE THESE NATURALLY:
+"There is a feeling here of..."
+"Something about this energy suggests..."
+"You may have been feeling..."
+"This points toward..."
+"There is a strong sense that..."
+"It feels like..."
+"Part of you knows..."
+"Deep down..."
+"What this is really about is..."
+"This is not about X. This is about Y."
+"This is extremely significant."
+"This matters."
+"You cannot continue..."
+"You are learning..."
+"You are becoming..."
+
+CARD INTERPRETATION RULES:
+- Never list what a card "traditionally means"
+- Describe what you feel and observe in the energy as if reading the person, not defining a card
+- Name the card naturally: "The Tower is one of the defining cards of your spread" — not "The Tower means sudden change and upheaval"
+- Connect cards to each other — show relationships between cards in the spread
+- Interpret reversals with depth — explore emotional blockages, resistance, delays, inner conflict
+- Include shadow aspects honestly without being harsh
+
+PSYCHOLOGICAL DEPTH:
+- Name internal states, fears, patterns, motivations
+- Be honest about what you see — the person came for truth, not flattery
+- Acknowledge struggle and potential in equal measure
+- Do not end every paragraph with false positivity
+- Let difficult cards carry their full weight
+
+STRUCTURAL STYLE:
+- Open the reading with an overview paragraph that captures the overall energy and main themes
+- Move through the cards in a connected narrative not as separate entries
+- Build emotional tension and release throughout
+- Use single emphasis lines at key moments
+- Close the body of the reading before the future section with a strong summary paragraph
+
+---
+
+EXAMPLE OF CORRECT STYLE — STUDY THIS:
+
+"This reading carries the feeling of standing at the edge of a life chapter that can no longer continue in the same form. There is a very strong theme of collapse followed by reconstruction here, but unlike readings that show chaos without direction, your cards show deliberate rebuilding.
+
+The energy opens with the Queen of Pentacles reversed, and this immediately points toward exhaustion around security, emotional labour, finances, or self-worth. This card often appears when someone has spent too much time holding everything together for everyone else while neglecting themselves in the process.
+
+What is important is that this card appears before Judgement.
+
+Judgement is one of the strongest awakening cards in tarot. It represents a soul-level call forward. This is the moment where life begins asking you to stop repeating old emotional cycles and finally answer the truth you already know internally.
+
+The Tower is one of the defining cards of your spread.
+
+This is extremely significant.
+
+The Tower represents sudden change, collapse of illusion, truth revealed, structures falling apart so something real can finally emerge. Many people fear this card, but spiritually it is often liberating.
+
+You cannot continue pouring from an empty cup."
+
+---
+
+This example shows the exact voice, rhythm, vocabulary and emotional honesty required. Every reading must feel like this. Do not deviate.`
+
 export function buildPrompt(input: PromptInput): string {
   const parts: string[] = []
 
-  // 1. Tone preset
+  // 1. Writing style guide (non-negotiable, always first)
+  parts.push(WRITING_STYLE_GUIDE)
+
+  // 2. Tone preset
   parts.push(input.tonePresetText.trim())
 
-  // 2. Character target
+  // 3. Character target
   const minChars = Math.round(input.characterTarget * 0.9)
   const maxChars = Math.round(input.characterTarget * 1.1)
   parts.push(
     `This reading must be between ${minChars} and ${maxChars} characters long. This is non-negotiable. Do not end the reading early. Do not pad with repetition to reach the target. Write with genuine depth, emotional detail and spiritual insight to naturally reach this length.\nFor reference:\n3,000 characters is approximately 500 words.\n5,000 characters is approximately 850 words.\n6,000 characters is approximately 1,000 words.\n12,000 characters is approximately 2,000 words.\nYou must write enough to fill this length meaningfully.`
   )
 
-  // 3. Topic
+  // 4. Topic
   parts.push(`The topic or area of focus for this reading is: ${input.topic}`)
 
-  // 4. Questions or areas of focus
+  // 5. Questions or areas of focus
   if (input.questionsOrFocus?.trim()) {
     parts.push(
       `The client's questions or areas of focus for this reading: ${input.questionsOrFocus.trim()}`
     )
   }
 
-  // 4a. Extra paid question
+  // 5a. Extra paid question
   if (input.specificQuestion?.trim()) {
     parts.push(
       `The client has paid for an additional question to be answered fully and directly within this reading: ${input.specificQuestion.trim()}`
     )
   }
 
-  // 5. Star sign (astrological undertones)
+  // 6. Star sign (astrological undertones)
   if (input.starSign?.trim()) {
     parts.push(
       `The client's star sign is ${input.starSign}. Let this inform the astrological undertones of the reading where relevant — do not make it the focus, but let it add depth.`
     )
   }
 
-  // 6. Returning client
+  // 7. Returning client
   if (input.isReturningClient) {
     parts.push(`This is a returning client.`)
   }
 
-  // 7. Cards in spread
+  // 8. Cards in spread
   const cardLines = input.cards
     .filter((c) => c.name.trim())
     .map((card, i) => {
@@ -80,23 +169,23 @@ export function buildPrompt(input: PromptInput): string {
     parts.push(`Cards in this spread:\n${cardLines.join('\n')}`)
   }
 
-  // 8. Bottom of deck card
+  // 9. Bottom of deck card
   if (input.bottomCard.name.trim()) {
     const orientation =
       input.bottomCard.orientation === 'upright' ? 'Upright' : 'Reversed'
     parts.push(
-      `Card at the bottom of the deck: ${input.bottomCard.name} (${orientation}). Include the energy of this card as an undercurrent throughout the reading.`
+      `The card at the bottom of the deck is ${input.bottomCard.name} (${orientation}). This is the hidden energy beneath everything — the undercurrent running through the entire reading. Introduce this card naturally within the reading as 'the hidden energy' or 'what lies beneath everything'. Refer back to its energy at least once more later in the reading to show it threading through.`
     )
   }
 
-  // 9. Oracle card
+  // 10. Oracle card
   if (input.oracleCardName?.trim()) {
     parts.push(
-      `An oracle card has also come through for this person: ${input.oracleCardName.trim()}. Weave its message naturally and intuitively into the reading.`
+      `An oracle card has also come through: ${input.oracleCardName.trim()}. Give this card its own dedicated section within the reading. Explore its spiritual meaning in the context of this person's situation. Connect it to the themes already present in the tarot cards. The oracle card should feel like an additional spiritual layer that deepens the reading — not a bolt-on at the end.`
     )
   }
 
-  // 10. Energy cleansing ritual
+  // 11. Energy cleansing ritual
   if (input.includeEnergyCleansing) {
     const ritualContext = input.energyCleansingNotes?.trim()
       ? ` Additional context: ${input.energyCleansingNotes.trim()}`
@@ -106,15 +195,19 @@ export function buildPrompt(input: PromptInput): string {
     )
   }
 
-  // 11. Future section (always)
-  parts.push(FUTURE_SECTION_INSTRUCTION)
+  // 12. Future section (month-by-month through December)
+  parts.push(buildFutureSectionInstruction(new Date()))
 
-  // 12. Language, tone, cultural context, and formatting (always)
+  // 13. Closing energy instruction
+  parts.push(
+    `Close the entire reading with 3-5 short, punchy, powerful lines. No new information — just the emotional truth of the reading landing finally. This should feel like the last thing someone reads and remembers. Make it honest, warm, and real.`
+  )
+
+  // 14. Language, tone, cultural context, and formatting (always last)
   parts.push(
     `Write in British English throughout. Use British spelling, vocabulary and phrasing at all times:
 - 'colour' not 'color'
 - 'realise' not 'realize'
-- 'whilst' not 'while'
 - 'behaviour' not 'behavior'
 - 'centre' not 'center'
 - 'travelling' not 'traveling'
