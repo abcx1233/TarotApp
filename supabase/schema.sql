@@ -308,7 +308,7 @@ $$;
 INSERT INTO tone_presets (name, description, prompt_text, is_default, default_for_tier)
 VALUES (
   'Intuitive & Personal',
-  'Soft, flowing, spiritual. Soul-to-soul conversation. Default for Mini and Core readings.',
+  'Warm, flowing and conversational. Focuses on emotional energy, intuition and soul connection. Best for Mini and Core readings.',
   'Write a deeply intuitive, emotionally intelligent tarot/psychic reading in my tone — soft, flowing, spiritual, honest and personal. The reading should feel like a conversation from soul to soul, not robotic or overly formal. Blend tarot interpretation, clairvoyant insight, energy reading and channeled emotions naturally together.
 
 My writing style is warm, comforting and emotionally immersive. Highly intuitive and reflective. Poetic without trying too hard. Honest about both light and shadow. Focused on energy shifts, emotions, timing and soul connections. Written as though I am directly tuning into someone''s energy in real time. Gentle but direct when needed. Deeply validating without sounding cliché.
@@ -326,7 +326,7 @@ Write in a way that sounds like it genuinely came from me — emotionally aware,
 INSERT INTO tone_presets (name, description, prompt_text, is_default, default_for_tier)
 VALUES (
   'Deep Dive & Psychological',
-  'Detailed, layered, immersive. Psychological depth. Default for Premium and Celtic Cross readings.',
+  'Detailed and layered. Goes deeper into subconscious patterns, shadow aspects and karmic cycles. Best for Premium and Celtic Cross readings.',
   'Write a deeply detailed tarot reading in a natural flowing style that feels intuitive, emotionally layered, immersive, and personal. Avoid short interpretations or rigid card-by-card definitions. Blend the meanings of the cards together into a connected narrative that flows naturally from beginning to end.
 
 Focus heavily on emotional depth, subconscious patterns, relationships, personal transformation, timing, fears, desires, internal conflict, healing, and spiritual lessons. Make the reading feel reflective and psychologically insightful rather than overly generic or overly positive. Include both shadow aspects and hopeful outcomes with balance and realism.

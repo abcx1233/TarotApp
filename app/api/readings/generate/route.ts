@@ -11,6 +11,19 @@ import type { PromptInput } from '@/lib/ai/prompts/builder'
 
 function trimAtSentence(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text
+  // Protect the future section and closing lines — trim only the main body
+  const futureMatch = text.match(/\n\nFuture Energy/)
+  if (futureMatch && futureMatch.index !== undefined) {
+    const splitIdx = futureMatch.index
+    const body = text.slice(0, splitIdx)
+    const tail = text.slice(splitIdx)
+    if (body.length <= maxLength) return text // body fits; preserve future section as-is
+    const sub = body.slice(0, maxLength)
+    for (let i = sub.length - 1; i >= 0; i--) {
+      if (['.', '!', '?'].includes(sub[i])) return sub.slice(0, i + 1) + tail
+    }
+    return sub + tail
+  }
   const sub = text.slice(0, maxLength)
   for (let i = sub.length - 1; i >= 0; i--) {
     if (['.', '!', '?'].includes(sub[i])) return sub.slice(0, i + 1)
@@ -78,6 +91,7 @@ export async function POST(request: Request) {
     energyCleansingNotes: f.energyCleansingNotes || undefined,
     specificQuestion: f.includeExtraQuestion && f.extraQuestionText?.trim() ? f.extraQuestionText.trim() : undefined,
     futureTimeframe: f.futureTimeframe || undefined,
+    tier: f.readingTier,
   }
 
   // Generate

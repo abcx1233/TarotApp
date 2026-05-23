@@ -265,7 +265,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
   const [businessName, setBusinessName] = useState('Deep Blue Divination')
   const [isReopenMode, setIsReopenMode] = useState(false)
   const [readingLengthOverridden, setReadingLengthOverridden] = useState(false)
-  const [isPriceAutoSet, setIsPriceAutoSet] = useState(false)
+  const [isPriceAutoSet, setIsPriceAutoSet] = useState(true)
   const { isTestMode } = useTestMode()
   const router = useRouter()
 
@@ -329,6 +329,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
   // Restore saved reading on mount
   useEffect(() => {
     if (!initialReading) return
+    setIsPriceAutoSet(false)
     const mainCards = initialReading.cards
       .filter((c) => !c.is_bottom_card)
       .sort((a, b) => a.sort_order - b.sort_order)
