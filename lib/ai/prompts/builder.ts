@@ -399,18 +399,27 @@ Before writing each paragraph, confirm the card you are discussing appears in th
 
 If you need more content to reach the character target: go deeper into the psychology of cards already in the list, explore the relationship between cards already present, add more emotional and spiritual depth to themes already introduced, or expand on specific reversals with more nuance.
 
-After writing the closing lines, STOP. Do not add more cards. Do not add more paragraphs. The reading is complete when the closing lines are written.`
+${input.includeEnergyCleansing
+      ? 'After writing the closing lines, write the "A Ritual For You" section as instructed above. That is the final content before the [END OF READING] marker.'
+      : 'After writing the closing lines, STOP. Do not add more cards. Do not add more paragraphs. The reading is complete when the closing lines are written.'}`
   )
 
   // 14. Closing energy instruction
-  parts.push(
-    `THE CLOSING LINES ARE THE LAST THING YOU WRITE.
+  const afterClosingLines = input.includeEnergyCleansing
+    ? `After the closing lines, write the "A Ritual For You" section immediately. Do not add any card revisits, summaries, or reflections between the closing lines and the ritual. The ritual is the final content.
 
-After the closing lines, you write nothing else except the sign-off which will be added separately.
+After the ritual section, write this exact text on its own line:
+[END OF READING]`
+    : `The moment you write the closing lines, stop. Add nothing after them.
+
+After the closing lines, write this exact text on its own line:
+[END OF READING]`
+  parts.push(
+    `${input.includeEnergyCleansing ? 'THE CLOSING LINES COMPLETE THE MAIN READING BODY.' : 'THE CLOSING LINES ARE THE LAST THING YOU WRITE.'}
 
 The closing lines are 3-5 short sentences that land the emotional truth of the reading. They are punchy, direct, specific to this person's situation, and impossible to put on a motivational poster.
 
-When you reach the closing lines you are signalling the end. Do not add any paragraphs, summaries, card revisits or additional insights after them.
+Do not add any paragraphs, summaries, card revisits or additional insights after the closing lines.
 
 CORRECT closing lines:
 The cards are not asking you to leap into drastic decisions. They are asking you to stop ignoring what you already know. Face it together or you will remain stuck in the same cycle.
@@ -420,10 +429,7 @@ WRONG — adding more paragraphs after closing lines:
 [then more paragraphs about the cards]
 [then more reflection]
 
-The moment you write the closing lines, stop. Add nothing after them.
-
-After the closing lines, write this exact text on its own line:
-[END OF READING]
+${afterClosingLines}
 
 This marks the absolute end of the reading. Nothing is written after [END OF READING].`
   )

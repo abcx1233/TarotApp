@@ -281,11 +281,23 @@ export async function POST(request: Request) {
     mainBodyLength > maxLength ? 'TRIMMED' : 'PASS'
   console.log(`Main body: ${mainBodyLength} chars / ${characterTarget} target — ${lengthStatus} (total: ${finalReading.length} chars)`)
 
-  // Append sign-off and disclaimer
+  // Strip any sign-off the model may have added, then always append the template sign-off.
+  const templateSignOff = defaultTemplate?.signoff_text?.trim() || 'With love and light ✨'
+  const signOffVariants = [
+    'with love and light',
+    'with love and light ✨',
+    'with love and light.',
+  ]
   let generatedReading = finalReading
-  if (defaultTemplate?.signoff_text?.trim()) {
-    generatedReading += `\n\n${defaultTemplate.signoff_text.trim()}`
+  for (const variant of signOffVariants) {
+    const idx = generatedReading.toLowerCase().lastIndexOf(variant.toLowerCase())
+    if (idx !== -1) {
+      generatedReading = generatedReading.slice(0, idx).trimEnd()
+      console.log('Removed model sign-off at:', idx)
+    }
   }
+  generatedReading = generatedReading + '\n\n' + templateSignOff
+  console.log('Template sign-off appended:', templateSignOff)
   if (defaultTemplate?.disclaimer_text?.trim()) {
     generatedReading += `\n\n${defaultTemplate.disclaimer_text.trim()}`
   }
