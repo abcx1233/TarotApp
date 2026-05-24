@@ -245,11 +245,12 @@ export async function POST(request: Request) {
     try {
       const continuationText = await chatComplete(
         'You are an expert tarot reader. Continue the reading exactly where it left off.',
-        `The reading body is currently ${currentLength} characters. It needs to reach at least ${minLength} characters. You need to write approximately ${minLength - currentLength} more characters. Continue from where the reading left off with more depth and insight into the cards already present. Do not repeat anything already written. Do not add a closing, sign-off or [END OF READING] marker.\n\nIMPORTANT: Do not repeat or summarise any card interpretation already written above. Do not go through the cards in order again. Do not restate what has already been said about any card.\n\nInstead, go deeper into ONE OR TWO of the most significant cards in this spread. Explore the relationship between two specific cards and what they reveal together, a deeper layer of psychological truth that has not been mentioned yet, what the person might be feeling that they have not admitted to themselves yet, or the shadow aspect of a card that was only touched on in the main reading.\n\nWrite new insight, not a summary of what is already there.\n\nOnly these cards exist in this spread: ${cardListForContinuation}\n\nDo not mention any other cards.\n\n...\n${tail}`,
+        `The reading body is currently ${currentLength} characters. It needs to reach at least ${minLength} characters. You need to write approximately ${minLength - currentLength} more characters. Continue from where the reading left off with more depth and insight into the cards already present. Do not repeat anything already written. Do not add a closing or sign-off.\n\nIMPORTANT: Do not repeat or summarise any card interpretation already written above. Do not go through the cards in order again. Do not restate what has already been said about any card.\n\nInstead, go deeper into ONE OR TWO of the most significant cards in this spread. Explore the relationship between two specific cards and what they reveal together, a deeper layer of psychological truth that has not been mentioned yet, what the person might be feeling that they have not admitted to themselves yet, or the shadow aspect of a card that was only touched on in the main reading.\n\nWrite new insight, not a summary of what is already there.\n\nOnly these cards exist in this spread: ${cardListForContinuation}\n\nDo not mention any other cards.\n\nWhen you have finished writing, add this on its own line:\n[END OF READING]\n\nDo not write anything after [END OF READING].\n\n...\n${tail}`,
         AI_CONFIG.maxTokens
       )
       console.log(`Continuation ${attempts} generated:`, continuationText.length, 'chars')
-      mainBody = mainBody + '\n\n' + continuationText
+      const cleanContinuation = continuationText.replace(/\[END OF READING\]/g, '').trim()
+      mainBody = mainBody + '\n\n' + cleanContinuation
       console.log('rawReading after append: main body now', mainBody.length, 'chars')
       console.log(`After continuation ${attempts}:`, mainBody.length, '/', characterTarget, 'chars')
     } catch {
@@ -266,17 +267,21 @@ export async function POST(request: Request) {
   if (ritualIdx !== -1) {
     const contentStart = rawReading.indexOf('\n', ritualIdx)
     if (contentStart !== -1) {
-      const maxRitualEnd = Math.min(contentStart + 700, rawReading.length)
-      const ritualWindow = rawReading.slice(contentStart, maxRitualEnd)
-      const lastSentenceEnd = Math.max(
-        ritualWindow.lastIndexOf('. '),
-        ritualWindow.lastIndexOf('."'),
-        ritualWindow.lastIndexOf('.')
-      )
-      if (lastSentenceEnd !== -1) {
-        const cutPoint = contentStart + lastSentenceEnd + 1
+      // Find the FIRST sentence end after at least 150 chars of ritual content.
+      // Using indexOf (not lastIndexOf) so we cut at the end of the first paragraph,
+      // not the end of a second paragraph that the model may have added.
+      let cutPoint = -1
+      for (let i = contentStart + 150; i < Math.min(contentStart + 700, rawReading.length); i++) {
+        const ch = rawReading[i]
+        if (ch === '.' || ch === '!' || ch === '?') {
+          cutPoint = i + 1
+          break
+        }
+      }
+      if (cutPoint !== -1) {
         const removed = rawReading.slice(cutPoint)
         if (removed.trim().length > 50) {
+          console.log('Ritual paragraph kept:', rawReading.slice(ritualIdx, ritualIdx + 300))
           rawReading = rawReading.slice(0, cutPoint)
           console.log('Ritual hard cut at:', cutPoint, 'removed:', removed.trim().length, 'chars')
         }
