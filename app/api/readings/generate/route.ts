@@ -12,7 +12,7 @@ import type { PromptInput } from '@/lib/ai/prompts/builder'
 function trimAtSentence(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text
   // Protect the future section and closing lines — trim only the main body
-  const futureMatch = text.match(/\n\nFuture Energy/)
+  const futureMatch = text.match(/\n\nWhat I'm Sensing/)
   if (futureMatch && futureMatch.index !== undefined) {
     const splitIdx = futureMatch.index
     const body = text.slice(0, splitIdx)
@@ -81,9 +81,16 @@ function truncateAfterClosingLines(text: string): string {
         j++
       }
       const seqLen = j - i
-      // 3+ consecutive short paragraphs followed by longer content = likely closing lines mid-reading
+      // 3+ consecutive short paragraphs followed by longer content = likely closing lines mid-reading.
+      // But if that longer content is the ritual or future section, it's legitimate — don't cut it.
       if (seqLen >= 3 && j < paragraphs.length) {
-        lastShortSeqEnd = j - 1
+        const nextPara = paragraphs[j].trim()
+        const isLegitFollower =
+          nextPara.startsWith('A Ritual For You') ||
+          nextPara.startsWith("What I'm Sensing")
+        if (!isLegitFollower) {
+          lastShortSeqEnd = j - 1
+        }
       }
       i = j
     } else {
@@ -98,8 +105,31 @@ function truncateAfterClosingLines(text: string): string {
   return text
 }
 
+function boundRitualToOneParagraph(text: string): string {
+  const headingIdx = text.indexOf('\n\nA Ritual For You')
+  if (headingIdx === -1) return text
+
+  const headingLineEnd = text.indexOf('\n', headingIdx + 2)
+  if (headingLineEnd === -1) return text
+
+  let paraStart = headingLineEnd + 1
+  while (paraStart < text.length && text[paraStart] === '\n') paraStart++
+
+  // Find the first double-newline at least 100 chars into the ritual paragraph
+  const doubleNewlineIdx = text.indexOf('\n\n', paraStart + 100)
+  if (doubleNewlineIdx === -1) return text
+
+  const after = text.slice(doubleNewlineIdx).trimStart()
+  // Nothing to remove if the only thing after the paragraph is [END OF READING] or empty
+  if (!after || after.startsWith('[END OF READING]')) return text
+
+  const removed = text.length - doubleNewlineIdx
+  console.log(`Ritual bounded to one paragraph, removed: ${removed} chars`)
+  return text.slice(0, doubleNewlineIdx)
+}
+
 function getMainBodyLength(text: string): number {
-  const markers = ['\n\nFuture Energy', '\n\nOracle Card', '\n\nA Ritual For You']
+  const markers = ["\n\nWhat I'm Sensing", '\n\nOracle Card', '\n\nA Ritual For You']
   let earliest = text.length
   for (const marker of markers) {
     const idx = text.indexOf(marker)
@@ -195,9 +225,13 @@ export async function POST(request: Request) {
     .replace(/–/g, ', ')
     .replace(/\s,\s/g, ', ')
     .replace(/,\s*,/g, ',')
-  // Restore oracle card heading format damaged by em dash removal above
-  rawReading = rawReading.replace(/^Oracle Card,\s+/gm, 'Oracle Card — ')
-  console.log('Future section included:', rawReading.includes('Future Energy'))
+  // Restore oracle card heading format damaged by em dash removal above (colon avoids dash rule)
+  rawReading = rawReading.replace(/^Oracle Card[,\s]+/gm, 'Oracle Card: ')
+  // Enforce ritual is exactly one paragraph regardless of model output
+  rawReading = boundRitualToOneParagraph(rawReading)
+  console.log('Future section included:', rawReading.includes("What I'm Sensing"))
+  console.log('END OF READING marker found:', rawReading.includes('[END OF READING]'))
+  console.log('Raw text last 200 chars:', rawReading.slice(-200))
 
   // Fetch template early so sign-off text is available for truncation
   const { data: defaultTemplate } = await supabase
@@ -225,8 +259,13 @@ export async function POST(request: Request) {
     ...(promptInput.bottomCard?.name?.trim() ? [`${promptInput.bottomCard.name} (bottom of deck)`] : []),
   ].join(', ')
 
+  const bodyLength = getMainBodyLength(finalReading)
+  const needsContinuation = bodyLength < minLength
+  console.log('Body length for continuation check:', bodyLength, '/', characterTarget)
+  console.log('Continuation needed:', needsContinuation)
+
   let attempts = 0
-  while (getMainBodyLength(finalReading) < minLength && attempts < 2) {
+  while (needsContinuation && getMainBodyLength(finalReading) < minLength && attempts < 2) {
     attempts++
     const currentLength = getMainBodyLength(finalReading)
     const tail = finalReading.slice(-2000)

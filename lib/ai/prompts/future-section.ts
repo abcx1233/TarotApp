@@ -1,9 +1,8 @@
-const FUTURE_STYLE_RULES = `FUTURE SECTION STYLE — NON-NEGOTIABLE
+const FUTURE_STYLE_RULES = `FUTURE SECTION STYLE
 
-FORMATTING — CRITICAL:
-Do not use any markdown formatting in the future section. No ###, no **, no *, no #, no headers. Write the title as plain text on its own line, followed by a blank line, then begin the prose. Like this:
+Write the title as plain text on its own line, followed by a blank line, then begin the prose. No markdown, no headers, no symbols. Like this:
 
-What I'm Sensing — The Next 6 Months
+What I'm Sensing: The Next 6 Months
 
 In the first part of this period...
 
@@ -45,7 +44,7 @@ They ask you to keep moving.
 That's enough."
 
 EXAMPLE OF WRONG STYLE — DO NOT DO THIS:
-"### What I'm Sensing — The Next 6 Months
+"### What I'm Sensing: The Next 6 Months
 
 **June**
 The Emperor's presence is strong, calling for decisive actions and boundaries.
@@ -125,7 +124,7 @@ export function buildFutureSectionInstruction(
   if (futureTimeframe === 'Next 3 months') {
     return tierInstruction(
       tc,
-      'What I\'m Sensing — The Next 3 Months',
+      'What I\'m Sensing: The Next 3 Months',
       'Cover the arc of the next 3 months in flowing prose: the early weeks, a mid-period shift, and the closing energy.'
     )
   }
@@ -133,7 +132,7 @@ export function buildFutureSectionInstruction(
   if (futureTimeframe === 'Next 6 months') {
     return tierInstruction(
       tc,
-      'What I\'m Sensing — The Next 6 Months',
+      'What I\'m Sensing: The Next 6 Months',
       'Cover the arc of the next 6 months in flowing prose: early period energy, a meaningful mid-period shift, and the energy as the period closes.'
     )
   }
@@ -141,7 +140,7 @@ export function buildFutureSectionInstruction(
   if (futureTimeframe === 'Rest of the year') {
     return tierInstruction(
       tc,
-      'What I\'m Sensing — The Rest of Your Year',
+      'What I\'m Sensing: The Rest of Your Year',
       'Cover the remaining months of this year as a flowing narrative — how the energy builds, where it shifts, and how it resolves as the year closes.'
     )
   }
@@ -149,7 +148,7 @@ export function buildFutureSectionInstruction(
   if (futureTimeframe === 'Full 12 months') {
     return tierInstruction(
       tc,
-      'What I\'m Sensing — The Year Ahead',
+      'What I\'m Sensing: The Year Ahead',
       'Cover the full year in flowing prose across four natural phases: the early months, the spring-into-summer energy, the autumn shift, and the year\'s end. Show the overall arc and transformation.'
     )
   }
@@ -157,7 +156,7 @@ export function buildFutureSectionInstruction(
   if (futureTimeframe === '24 months') {
     return tierInstruction(
       tc,
-      'What I\'m Sensing — The Next Two Years',
+      'What I\'m Sensing: The Next Two Years',
       'Write Year 1 as a detailed flowing narrative — early period, mid-period shift, and closing energy — with specific card references throughout. Write Year 2 as a broader sense of direction and themes rather than detailed prediction.'
     )
   }
