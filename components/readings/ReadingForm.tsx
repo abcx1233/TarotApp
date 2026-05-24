@@ -535,10 +535,6 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
     }
 
     try {
-      console.log('Regenerate payload add-ons:', {
-        includeEnergyCleansing: state.includeEnergyCleansing,
-        includeOracleCard: state.includeOracleCard,
-      })
       const response = await fetch('/api/readings/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

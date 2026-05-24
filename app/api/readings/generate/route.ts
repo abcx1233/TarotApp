@@ -34,7 +34,6 @@ function trimAtSentence(text: string, maxLength: number): string {
 function truncateAtEndMarker(text: string): string {
   const idx = text.indexOf('[END OF READING]')
   if (idx === -1) return text
-  console.log('END OF READING marker found and removed')
   return text.slice(0, idx).trimEnd()
 }
 
@@ -63,16 +62,9 @@ function truncateAfterSignOff(text: string, templateSignOff?: string): string {
   }
 
   if (truncateAt !== -1) {
-    const trimmed = text.slice(0, truncateAt).trimEnd()
-    console.log('Truncated at sign-off position:', truncateAt)
-    const charsRemoved = text.trimEnd().length - trimmed.length
-    if (charsRemoved > 0) {
-      console.log('Content after sign-off removed:', charsRemoved, 'chars')
-    }
-    return trimmed
+    return text.slice(0, truncateAt).trimEnd()
   }
 
-  console.log('Sign-off not found in generated text')
   return text
 }
 
@@ -100,10 +92,7 @@ function truncateAfterClosingLines(text: string): string {
   }
 
   if (lastShortSeqEnd !== -1) {
-    const keptText = paragraphs.slice(0, lastShortSeqEnd + 1).join('\n\n')
-    const charsRemoved = text.length - keptText.length
-    console.log(`Detected closing lines at paragraph ${lastShortSeqEnd}, truncated ${charsRemoved} chars of content after them`)
-    return keptText
+    return paragraphs.slice(0, lastShortSeqEnd + 1).join('\n\n')
   }
 
   return text
@@ -162,10 +151,6 @@ export async function POST(request: Request) {
   const characterTarget =
     f.readingLength || READING_CHARACTER_TARGETS[f.readingTier] || 6000
 
-  console.log('API received energy cleansing:', {
-    includeEnergyCleansing: f.includeEnergyCleansing,
-  })
-
   const promptInput: PromptInput = {
     tonePresetText,
     characterTarget,
@@ -212,9 +197,6 @@ export async function POST(request: Request) {
     .replace(/,\s*,/g, ',')
   // Restore oracle card heading format damaged by em dash removal above
   rawReading = rawReading.replace(/^Oracle Card,\s+/gm, 'Oracle Card — ')
-  console.log('Dash removal applied')
-
-  console.log('Raw generated text (last 500 chars):', rawReading.slice(-500))
   console.log('Future section included:', rawReading.includes('Future Energy'))
 
   // Fetch template early so sign-off text is available for truncation
@@ -225,16 +207,11 @@ export async function POST(request: Request) {
     .limit(1)
     .single()
 
-  console.log('Template sign-off text:', JSON.stringify(defaultTemplate?.signoff_text))
-
   const minLength = Math.floor(characterTarget * 0.85)
   const maxLength = Math.ceil(characterTarget * 1.15)
 
   // Truncate at [END OF READING] marker first (primary mechanism), then fall back to
   // sign-off detection. Both run before the length check so it measures clean body content.
-  console.log('Searching for END OF READING marker')
-  console.log('Marker found:', rawReading.includes('[END OF READING]'))
-  console.log('Raw text sample (chars 3000-3500):', rawReading.slice(3000, 3500))
   let finalReading = truncateAtEndMarker(rawReading)
   finalReading = truncateAfterSignOff(finalReading, defaultTemplate?.signoff_text)
 
@@ -293,11 +270,9 @@ export async function POST(request: Request) {
     const idx = generatedReading.toLowerCase().lastIndexOf(variant.toLowerCase())
     if (idx !== -1) {
       generatedReading = generatedReading.slice(0, idx).trimEnd()
-      console.log('Removed model sign-off at:', idx)
     }
   }
   generatedReading = generatedReading + '\n\n' + templateSignOff
-  console.log('Template sign-off appended:', templateSignOff)
   if (defaultTemplate?.disclaimer_text?.trim()) {
     generatedReading += `\n\n${defaultTemplate.disclaimer_text.trim()}`
   }

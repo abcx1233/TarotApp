@@ -83,7 +83,7 @@ export function AddOnsSection({
         description="Include a personalised ritual suggestion at the end"
         price="8"
         checked={includeEnergyCleansing}
-        onChange={(v) => { console.log('includeEnergyCleansing:', v); onToggleEnergyCleansing(v) }}
+        onChange={onToggleEnergyCleansing}
       />
     </div>
   )
