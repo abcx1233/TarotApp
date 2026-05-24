@@ -87,7 +87,8 @@ function truncateAfterClosingLines(text: string): string {
         const nextPara = paragraphs[j].trim()
         const isLegitFollower =
           nextPara.startsWith('A Ritual For You') ||
-          nextPara.startsWith("What I'm Sensing")
+          nextPara.startsWith("What I'm Sensing") ||
+          nextPara.startsWith('Oracle Card')
         if (!isLegitFollower) {
           lastShortSeqEnd = j - 1
         }
