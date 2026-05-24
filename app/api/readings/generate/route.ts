@@ -105,28 +105,6 @@ function truncateAfterClosingLines(text: string): string {
   return text
 }
 
-function boundRitualToOneParagraph(text: string): string {
-  const headingIdx = text.indexOf('\n\nA Ritual For You')
-  if (headingIdx === -1) return text
-
-  const headingLineEnd = text.indexOf('\n', headingIdx + 2)
-  if (headingLineEnd === -1) return text
-
-  let paraStart = headingLineEnd + 1
-  while (paraStart < text.length && text[paraStart] === '\n') paraStart++
-
-  // Find the first double-newline at least 100 chars into the ritual paragraph
-  const doubleNewlineIdx = text.indexOf('\n\n', paraStart + 100)
-  if (doubleNewlineIdx === -1) return text
-
-  const after = text.slice(doubleNewlineIdx).trimStart()
-  // Nothing to remove if the only thing after the paragraph is [END OF READING] or empty
-  if (!after || after.startsWith('[END OF READING]')) return text
-
-  const removed = text.length - doubleNewlineIdx
-  console.log(`Ritual bounded to one paragraph, removed: ${removed} chars`)
-  return text.slice(0, doubleNewlineIdx)
-}
 
 function getMainBodyLength(text: string): number {
   const markers = ["\n\nWhat I'm Sensing", '\n\nOracle Card', '\n\nA Ritual For You']
@@ -227,8 +205,23 @@ export async function POST(request: Request) {
     .replace(/,\s*,/g, ',')
   // Restore oracle card heading format damaged by em dash removal above (colon avoids dash rule)
   rawReading = rawReading.replace(/^Oracle Card[,\s]+/gm, 'Oracle Card: ')
-  // Enforce ritual is exactly one paragraph regardless of model output
-  rawReading = boundRitualToOneParagraph(rawReading)
+  // Bound ritual to one paragraph: first \n\n after heading = end of heading line,
+  // second \n\n = end of ritual paragraph. Everything after the second is padding.
+  const ritualIdx = rawReading.indexOf('A Ritual For You')
+  if (ritualIdx !== -1) {
+    const afterHeading = rawReading.indexOf('\n\n', ritualIdx)
+    if (afterHeading !== -1) {
+      const afterRitual = rawReading.indexOf('\n\n', afterHeading + 2)
+      if (afterRitual !== -1) {
+        console.log('Ritual section bounded at char:', afterRitual)
+        const removed = rawReading.slice(afterRitual)
+        if (removed.trim().length > 20) {
+          rawReading = rawReading.slice(0, afterRitual)
+          console.log('Post-ritual content removed:', removed.trim().length, 'chars')
+        }
+      }
+    }
+  }
   console.log('Future section included:', rawReading.includes("What I'm Sensing"))
   console.log('END OF READING marker found:', rawReading.includes('[END OF READING]'))
   console.log('Raw text last 200 chars:', rawReading.slice(-200))
