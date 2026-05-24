@@ -205,8 +205,63 @@ export async function POST(request: Request) {
     .replace(/,\s*,/g, ',')
   // Restore oracle card heading format damaged by em dash removal above (colon avoids dash rule)
   rawReading = rawReading.replace(/^Oracle Card[,\s]+/gm, 'Oracle Card: ')
+  // Fetch template early so sign-off text is available for truncation
+  const { data: defaultTemplate } = await supabase
+    .from('reading_templates')
+    .select('signoff_text, disclaimer_text')
+    .eq('is_default', true)
+    .limit(1)
+    .single()
+
+  const minLength = Math.floor(characterTarget * 0.85)
+  const maxLength = Math.ceil(characterTarget * 1.15)
+
+  // Card list for continuation prompt — must match what was given to the model
+  const cardListForContinuation = [
+    ...validCards.map((c: CardEntryForm) => c.name).filter(Boolean),
+    ...(promptInput.bottomCard?.name?.trim() ? [`${promptInput.bottomCard.name} (bottom of deck)`] : []),
+  ].join(', ')
+
+  // Split rawReading into main body and add-on sections (oracle, ritual, future).
+  // Continuations must be appended to the main body only — not after the ritual —
+  // otherwise getMainBodyLength() never grows and the loop runs without effect.
+  const addonMarkers = ["\n\nWhat I'm Sensing", '\n\nOracle Card', '\n\nA Ritual For You']
+  let addonStart = rawReading.length
+  for (const marker of addonMarkers) {
+    const idx = rawReading.indexOf(marker)
+    if (idx !== -1 && idx < addonStart) addonStart = idx
+  }
+  let mainBody = rawReading.slice(0, addonStart)
+  const addons = rawReading.slice(addonStart)
+
+  console.log('Continuation check:', mainBody.length, '/', characterTarget, 'needs:', mainBody.length < characterTarget * 0.85)
+
+  const maxAttempts = characterTarget >= 10000 ? 4 : 2
+  let attempts = 0
+  while (mainBody.length < minLength && attempts < maxAttempts) {
+    attempts++
+    const currentLength = mainBody.length
+    const tail = mainBody.slice(-2000)
+    try {
+      const continuationText = await chatComplete(
+        'You are an expert tarot reader. Continue the reading exactly where it left off.',
+        `The reading body is currently ${currentLength} characters. It needs to reach at least ${minLength} characters. You need to write approximately ${minLength - currentLength} more characters. Continue from where the reading left off with more depth and insight into the cards already present. Do not repeat anything already written. Do not add a closing, sign-off or [END OF READING] marker.\n\nIMPORTANT: Do not repeat or summarise any card interpretation already written above. Do not go through the cards in order again. Do not restate what has already been said about any card.\n\nInstead, go deeper into ONE OR TWO of the most significant cards in this spread. Explore the relationship between two specific cards and what they reveal together, a deeper layer of psychological truth that has not been mentioned yet, what the person might be feeling that they have not admitted to themselves yet, or the shadow aspect of a card that was only touched on in the main reading.\n\nWrite new insight, not a summary of what is already there.\n\nOnly these cards exist in this spread: ${cardListForContinuation}\n\nDo not mention any other cards.\n\n...\n${tail}`,
+        AI_CONFIG.maxTokens
+      )
+      console.log(`Continuation ${attempts} generated:`, continuationText.length, 'chars')
+      mainBody = mainBody + '\n\n' + continuationText
+      console.log('rawReading after append: main body now', mainBody.length, 'chars')
+      console.log(`After continuation ${attempts}:`, mainBody.length, '/', characterTarget, 'chars')
+    } catch {
+      break
+    }
+  }
+
+  // Reassemble with add-ons now that the main body is at target length
+  rawReading = mainBody + addons
+
   // Hard-cut ritual to at most 700 chars of content after the heading.
-  // Find the last complete sentence within that window and cut there.
+  // Runs once after all continuations are complete.
   const ritualIdx = rawReading.indexOf('A Ritual For You')
   if (ritualIdx !== -1) {
     const contentStart = rawReading.indexOf('\n', ritualIdx)
@@ -228,60 +283,17 @@ export async function POST(request: Request) {
       }
     }
   }
+
   console.log('Future section included:', rawReading.includes("What I'm Sensing"))
   console.log('END OF READING marker found:', rawReading.includes('[END OF READING]'))
   console.log('Raw text last 200 chars:', rawReading.slice(-200))
 
-  // Fetch template early so sign-off text is available for truncation
-  const { data: defaultTemplate } = await supabase
-    .from('reading_templates')
-    .select('signoff_text, disclaimer_text')
-    .eq('is_default', true)
-    .limit(1)
-    .single()
-
-  const minLength = Math.floor(characterTarget * 0.85)
-  const maxLength = Math.ceil(characterTarget * 1.15)
-
-  // Truncate at [END OF READING] marker first (primary mechanism), then fall back to
-  // sign-off detection. Both run before the length check so it measures clean body content.
+  // Truncate at [END OF READING] marker (primary mechanism), then sign-off detection
   let finalReading = truncateAtEndMarker(rawReading)
   finalReading = truncateAfterSignOff(finalReading, defaultTemplate?.signoff_text)
 
   if (finalReading.length > maxLength) {
     finalReading = trimAtSentence(finalReading, maxLength)
-  }
-
-  // Card list for continuation prompt — must match what was given to the model
-  const cardListForContinuation = [
-    ...validCards.map((c: CardEntryForm) => c.name).filter(Boolean),
-    ...(promptInput.bottomCard?.name?.trim() ? [`${promptInput.bottomCard.name} (bottom of deck)`] : []),
-  ].join(', ')
-
-  const bodyLength = getMainBodyLength(finalReading)
-  const needsContinuation = bodyLength < minLength
-  console.log('Continuation check:', bodyLength, '/', characterTarget, 'needs:', bodyLength < characterTarget * 0.85)
-
-  const maxAttempts = characterTarget >= 10000 ? 4 : 2
-  let attempts = 0
-  while (needsContinuation && getMainBodyLength(finalReading) < minLength && attempts < maxAttempts) {
-    attempts++
-    const currentLength = getMainBodyLength(finalReading)
-    const tail = finalReading.slice(-2000)
-    try {
-      const continuation = await chatComplete(
-        'You are an expert tarot reader. Continue the reading exactly where it left off.',
-        `The reading body is currently ${currentLength} characters. It needs to reach at least ${minLength} characters. You need to write approximately ${minLength - currentLength} more characters. Continue from where the reading left off with more depth and insight into the cards already present. Do not repeat anything already written. Do not add a closing, sign-off or [END OF READING] marker.\n\nIMPORTANT: Do not repeat or summarise any card interpretation already written above. Do not go through the cards in order again. Do not restate what has already been said about any card.\n\nInstead, go deeper into ONE OR TWO of the most significant cards in this spread. Explore the relationship between two specific cards and what they reveal together, a deeper layer of psychological truth that has not been mentioned yet, what the person might be feeling that they have not admitted to themselves yet, or the shadow aspect of a card that was only touched on in the main reading.\n\nWrite new insight, not a summary of what is already there.\n\nOnly these cards exist in this spread: ${cardListForContinuation}\n\nDo not mention any other cards.\n\n...\n${tail}`,
-        AI_CONFIG.maxTokens
-      )
-      finalReading = finalReading + '\n\n' + continuation
-      finalReading = truncateAtEndMarker(finalReading)
-      finalReading = truncateAfterSignOff(finalReading, defaultTemplate?.signoff_text)
-      if (finalReading.length > maxLength) finalReading = trimAtSentence(finalReading, maxLength)
-      console.log(`After continuation ${attempts}:`, getMainBodyLength(finalReading), '/', characterTarget, 'chars')
-    } catch {
-      break
-    }
   }
 
   // Heuristic closing-lines detection (catches cases where marker was not used)
