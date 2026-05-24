@@ -205,19 +205,25 @@ export async function POST(request: Request) {
     .replace(/,\s*,/g, ',')
   // Restore oracle card heading format damaged by em dash removal above (colon avoids dash rule)
   rawReading = rawReading.replace(/^Oracle Card[,\s]+/gm, 'Oracle Card: ')
-  // Bound ritual to one paragraph: first \n\n after heading = end of heading line,
-  // second \n\n = end of ritual paragraph. Everything after the second is padding.
+  // Hard-cut ritual to at most 700 chars of content after the heading.
+  // Find the last complete sentence within that window and cut there.
   const ritualIdx = rawReading.indexOf('A Ritual For You')
   if (ritualIdx !== -1) {
-    const afterHeading = rawReading.indexOf('\n\n', ritualIdx)
-    if (afterHeading !== -1) {
-      const afterRitual = rawReading.indexOf('\n\n', afterHeading + 2)
-      if (afterRitual !== -1) {
-        console.log('Ritual section bounded at char:', afterRitual)
-        const removed = rawReading.slice(afterRitual)
-        if (removed.trim().length > 20) {
-          rawReading = rawReading.slice(0, afterRitual)
-          console.log('Post-ritual content removed:', removed.trim().length, 'chars')
+    const contentStart = rawReading.indexOf('\n', ritualIdx)
+    if (contentStart !== -1) {
+      const maxRitualEnd = Math.min(contentStart + 700, rawReading.length)
+      const ritualWindow = rawReading.slice(contentStart, maxRitualEnd)
+      const lastSentenceEnd = Math.max(
+        ritualWindow.lastIndexOf('. '),
+        ritualWindow.lastIndexOf('."'),
+        ritualWindow.lastIndexOf('.')
+      )
+      if (lastSentenceEnd !== -1) {
+        const cutPoint = contentStart + lastSentenceEnd + 1
+        const removed = rawReading.slice(cutPoint)
+        if (removed.trim().length > 50) {
+          rawReading = rawReading.slice(0, cutPoint)
+          console.log('Ritual hard cut at:', cutPoint, 'removed:', removed.trim().length, 'chars')
         }
       }
     }
@@ -254,24 +260,25 @@ export async function POST(request: Request) {
 
   const bodyLength = getMainBodyLength(finalReading)
   const needsContinuation = bodyLength < minLength
-  console.log('Body length for continuation check:', bodyLength, '/', characterTarget)
-  console.log('Continuation needed:', needsContinuation)
+  console.log('Continuation check:', bodyLength, '/', characterTarget, 'needs:', bodyLength < characterTarget * 0.85)
 
+  const maxAttempts = characterTarget >= 10000 ? 4 : 2
   let attempts = 0
-  while (needsContinuation && getMainBodyLength(finalReading) < minLength && attempts < 2) {
+  while (needsContinuation && getMainBodyLength(finalReading) < minLength && attempts < maxAttempts) {
     attempts++
     const currentLength = getMainBodyLength(finalReading)
     const tail = finalReading.slice(-2000)
     try {
       const continuation = await chatComplete(
         'You are an expert tarot reader. Continue the reading exactly where it left off.',
-        `The reading so far is ${currentLength} characters but needs to be at least ${minLength} characters. Write approximately ${minLength - currentLength} more characters of reading body.\n\nIMPORTANT: Do not repeat or summarise any card interpretation already written above. Do not go through the cards in order again. Do not restate what has already been said about any card.\n\nInstead, go deeper into ONE OR TWO of the most significant cards in this spread. Explore the relationship between two specific cards and what they reveal together, a deeper layer of psychological truth that has not been mentioned yet, what the person might be feeling that they have not admitted to themselves yet, or the shadow aspect of a card that was only touched on in the main reading.\n\nWrite new insight, not a summary of what is already there. Do not add any closing lines, sign-off, or farewell.\n\nOnly these cards exist in this spread: ${cardListForContinuation}\n\nDo not mention any other cards.\n\nAfter you finish writing, add this exact text on its own line:\n[END OF READING]\n\nDo not write anything after [END OF READING].\n\n...\n${tail}`,
+        `The reading body is currently ${currentLength} characters. It needs to reach at least ${minLength} characters. You need to write approximately ${minLength - currentLength} more characters. Continue from where the reading left off with more depth and insight into the cards already present. Do not repeat anything already written. Do not add a closing, sign-off or [END OF READING] marker.\n\nIMPORTANT: Do not repeat or summarise any card interpretation already written above. Do not go through the cards in order again. Do not restate what has already been said about any card.\n\nInstead, go deeper into ONE OR TWO of the most significant cards in this spread. Explore the relationship between two specific cards and what they reveal together, a deeper layer of psychological truth that has not been mentioned yet, what the person might be feeling that they have not admitted to themselves yet, or the shadow aspect of a card that was only touched on in the main reading.\n\nWrite new insight, not a summary of what is already there.\n\nOnly these cards exist in this spread: ${cardListForContinuation}\n\nDo not mention any other cards.\n\n...\n${tail}`,
         AI_CONFIG.maxTokens
       )
       finalReading = finalReading + '\n\n' + continuation
       finalReading = truncateAtEndMarker(finalReading)
       finalReading = truncateAfterSignOff(finalReading, defaultTemplate?.signoff_text)
       if (finalReading.length > maxLength) finalReading = trimAtSentence(finalReading, maxLength)
+      console.log(`After continuation ${attempts}:`, getMainBodyLength(finalReading), '/', characterTarget, 'chars')
     } catch {
       break
     }
