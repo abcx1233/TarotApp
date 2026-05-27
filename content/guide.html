@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manifest Your Dream Life — Rhiannon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Cormorant+SC:wght@300;400;500&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0A1628;--navy-mid:#0F2040;--navy-light:#162B52;
+  --gold:#C8A84B;--gold-light:#E2CC88;--gold-pale:#F5EDD0;
+  --cream:#FAF7F2;--cream-dark:#F0EAE0;
+  --text-dark:#1C1208;--text-body:#2E2416;--text-light:#6B5D4A;
+}
+@page{size:A4;margin:0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{margin:0;background:#06101E;font-family:'Cormorant Garamond',Georgia,serif;color:var(--text-body);
+  text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+.outer-wrap{position:relative;z-index:1;max-width:820px;margin:0 auto;padding:40px 20px 80px}
+.page{background:var(--cream);border-radius:2px;margin-bottom:6px;position:relative;overflow:hidden;
+  box-shadow:inset 0 0 0 1px rgba(200,168,75,.18);page-break-after:always;break-after:page;
+  display:flex;flex-direction:column;min-height:1100px}
+.page:last-of-type{page-break-after:avoid;break-after:avoid}
+.page::before{content:'';position:absolute;left:0;top:0;bottom:0;width:24px;
+  background:linear-gradient(to right,rgba(0,0,0,.08),transparent);z-index:2}
+
+/* COVER */
+.cover{background:var(--navy);color:var(--gold-pale);flex:1;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  padding:60px;position:relative;overflow:hidden}
+.cover::after{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 55% at 50% 28%,rgba(200,168,75,.08) 0%,transparent 70%);
+  pointer-events:none}
+.cover-corner{position:absolute;width:60px;height:60px;opacity:.2;z-index:1}
+.cover-corner.tl{top:24px;left:24px;border-top:1px solid var(--gold);border-left:1px solid var(--gold)}
+.cover-corner.tr{top:24px;right:24px;border-top:1px solid var(--gold);border-right:1px solid var(--gold)}
+.cover-corner.bl{bottom:24px;left:24px;border-bottom:1px solid var(--gold);border-left:1px solid var(--gold)}
+.cover-corner.br{bottom:24px;right:24px;border-bottom:1px solid var(--gold);border-right:1px solid var(--gold)}
+.cover-ornament{font-size:11px;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);
+  font-family:'Cormorant SC',serif;font-weight:400;margin-bottom:32px;position:relative;z-index:1}
+.cover-ornament::before,.cover-ornament::after{content:'✦';margin:0 12px;opacity:.6}
+.cover-moon{font-size:42px;margin-bottom:20px;position:relative;z-index:1}
+.cover-title{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:54px;line-height:1.1;
+  letter-spacing:.02em;color:var(--gold-pale);position:relative;z-index:1;margin-bottom:14px}
+.cover-divider{width:80px;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent);
+  margin:18px auto;position:relative;z-index:1}
+.cover-subtitle{font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;
+  font-size:18px;letter-spacing:.05em;color:var(--gold-light);opacity:.9;
+  position:relative;z-index:1;margin-bottom:6px}
+.cover-tagline{font-size:11px;font-family:'Lato',sans-serif;font-weight:300;letter-spacing:.3em;
+  text-transform:uppercase;color:rgba(200,168,75,.5);position:relative;z-index:1;margin-top:40px}
+.cover-author{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:20px;
+  color:var(--gold);position:relative;z-index:1;margin-top:6px}
+
+/* TOC */
+.toc-page{background:var(--navy-mid);color:var(--cream);padding:60px 70px;flex:1;position:relative;display:flex;flex-direction:column}
+.toc-header{text-align:center;margin-bottom:40px;padding-bottom:20px;
+  border-bottom:1px solid rgba(200,168,75,.25)}
+.toc-label{font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);
+  font-family:'Lato',sans-serif;font-weight:300;display:block;margin-bottom:12px}
+.toc-title{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:36px;color:var(--gold-pale)}
+.toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 40px}
+.toc-item{display:flex;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(200,168,75,.1)}
+.toc-num{font-family:'Cormorant Garamond',serif;font-size:11px;color:var(--gold);
+  letter-spacing:.1em;min-width:28px;font-style:italic}
+.toc-text{font-family:'Cormorant Garamond',serif;font-size:14px;color:rgba(245,237,208,.8);letter-spacing:.02em}
+.toc-new{font-family:'Lato',sans-serif;font-size:8px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--gold);opacity:.6;margin-left:8px}
+
+/* SHARED PAGE */
+.pg{padding:60px 70px 70px;position:relative;flex:1}
+.pg-dark{background:var(--navy-mid);padding:60px 70px 70px;position:relative;overflow:hidden;flex:1}
+.pg-cream{background:var(--cream-dark);padding:60px 70px 70px;position:relative;flex:1}
+.pg-white{background:#fff;padding:60px 80px 70px;position:relative;flex:1}
+
+/* TYPOGRAPHY */
+.eyebrow{font-family:'Lato',sans-serif;font-weight:300;font-size:9.5px;letter-spacing:.45em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:16px;display:block}
+.eyebrow.light{color:rgba(200,168,75,.7)}
+.h1{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:42px;line-height:1.1;
+  color:var(--navy);margin-bottom:8px;letter-spacing:-.01em}
+.h1 em{font-style:italic;color:#8B6914}
+.h1-light{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:38px;line-height:1.1;
+  color:var(--gold-pale);margin-bottom:8px}
+.h2{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;
+  color:var(--navy);margin:28px 0 12px;letter-spacing:.01em}
+.h2-light{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;
+  color:var(--gold-light);margin:24px 0 10px}
+.body{font-family:'Cormorant Garamond',serif;font-size:17px;line-height:1.8;
+  color:var(--text-body);margin-bottom:18px}
+.body strong{font-weight:600;color:var(--text-dark)}
+.body-light{font-family:'Cormorant Garamond',serif;font-size:17px;line-height:1.8;
+  color:rgba(250,247,240,.8);margin-bottom:18px;font-weight:300}
+.div{display:flex;align-items:center;gap:12px;margin:20px 0 28px}
+.div .l{flex:1;height:1px;background:linear-gradient(to right,var(--gold),transparent);opacity:.4}
+.div .lr{flex:1;height:1px;background:linear-gradient(to left,var(--gold),transparent);opacity:.4}
+.div .g{color:var(--gold);font-size:14px;opacity:.6}
+.pq{border-left:2px solid var(--gold);padding:16px 28px;margin:28px 0;
+  background:linear-gradient(to right,rgba(200,168,75,.06),transparent);border-radius:0 2px 2px 0}
+.pq p{font-family:'Cormorant Garamond',serif;font-size:21px;font-style:italic;font-weight:300;
+  line-height:1.5;color:var(--navy);letter-spacing:.01em}
+.pq-dark{border-left:2px solid rgba(200,168,75,.5);padding:16px 28px;margin:28px 0;
+  background:rgba(200,168,75,.04)}
+.pq-dark p{font-family:'Cormorant Garamond',serif;font-size:19px;font-style:italic;font-weight:300;
+  line-height:1.5;color:var(--gold-pale)}
+.pnum{position:absolute;bottom:28px;right:50px;font-family:'Cormorant Garamond',serif;
+  font-size:12px;font-style:italic;color:var(--gold);opacity:.6;letter-spacing:.1em}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;
+  padding-bottom:14px;border-bottom:1px solid rgba(200,168,75,.2)}
+.ph span{font-family:'Lato',sans-serif;font-weight:300;font-size:9px;letter-spacing:.4em;
+  text-transform:uppercase;color:var(--gold);opacity:.7}
+.ph .icon{font-size:13px;color:var(--gold);opacity:.5}
+
+/* PROMPT BOX */
+.pbox{background:var(--navy);border-radius:2px;padding:28px 34px;margin:28px 0;border-left:2px solid rgba(200,168,75,.3)}
+.pbox-lbl{font-family:'Lato',sans-serif;font-weight:300;font-size:9px;letter-spacing:.5em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:18px;display:block;position:relative}
+.pbox-lbl::after{content:'';display:block;width:28px;height:1px;background:var(--gold);opacity:.4;margin-top:7px}
+.pi{display:flex;gap:14px;margin-bottom:13px;position:relative}
+.pi-g{color:var(--gold);font-size:12px;margin-top:4px;flex-shrink:0;opacity:.7}
+.pi-t{font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;
+  line-height:1.6;color:var(--gold-pale);font-weight:300}
+
+/* WRITE LINES */
+.wl{margin:22px 0 8px}
+.wl-line{border-bottom:1px solid rgba(200,168,75,.2);height:36px}
+.wl-label{font-family:'Cormorant Garamond';font-size:12px;font-style:italic;color:var(--gold);
+  letter-spacing:.1em;margin-bottom:10px;opacity:.7;display:block}
+
+/* STEP LIST */
+.step{display:flex;gap:20px;margin-bottom:20px;padding-bottom:20px;
+  border-bottom:1px solid rgba(200,168,75,.12);position:relative}
+.step:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.step-n{font-family:'Cormorant SC',serif;font-size:13px;color:var(--gold);
+  letter-spacing:.1em;min-width:28px;padding-top:3px;opacity:.8}
+.step-c{flex:1}
+.step-h{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;
+  color:var(--gold-light);margin-bottom:4px;letter-spacing:.02em}
+.step-b{font-family:'Cormorant Garamond',serif;font-size:15px;line-height:1.7;
+  color:rgba(250,247,240,.7);font-weight:300}
+
+/* MOON BANNER */
+.mbn{background:var(--navy);padding:40px 70px;display:flex;align-items:center;
+  gap:30px;position:relative;overflow:hidden}
+.mbn::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;
+  border-radius:50%;border:1px solid rgba(200,168,75,.15)}
+.mbn::after{content:'';position:absolute;top:-30px;right:-30px;width:140px;height:140px;
+  border-radius:50%;border:1px solid rgba(200,168,75,.1)}
+.mbn-icon{font-size:52px;flex-shrink:0;position:relative;z-index:1}
+.mbn-txt{position:relative;z-index:1}
+.mbn-lbl{font-family:'Lato',sans-serif;font-size:9px;letter-spacing:.45em;
+  text-transform:uppercase;color:var(--gold);font-weight:300;display:block;margin-bottom:8px}
+.mbn-title{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:34px;color:var(--gold-pale);line-height:1.1}
+.mbn-sub{font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;
+  color:rgba(200,168,75,.7);margin-top:8px;font-weight:300}
+
+/* PORTAL GRID */
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0}
+.pcard{border:1px solid rgba(200,168,75,.2);padding:20px 16px;text-align:center;position:relative;overflow:hidden}
+.pcard::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(200,168,75,.04),transparent)}
+.pcard-d{font-family:'Cormorant SC',serif;font-size:22px;color:var(--gold);display:block;margin-bottom:6px;position:relative}
+.pcard-t{font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;
+  color:rgba(250,247,240,.6);font-weight:300;position:relative;line-height:1.5}
+
+/* MOON PHASE GRID */
+.phase-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}
+.phase-card{border:1px solid rgba(200,168,75,.2);padding:22px 14px;text-align:center;position:relative;overflow:hidden}
+.phase-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(200,168,75,.03),transparent)}
+.phase-icon{font-size:30px;display:block;margin-bottom:10px;position:relative}
+.phase-name{font-family:'Cormorant SC',serif;font-size:12px;color:var(--gold);display:block;margin-bottom:6px;letter-spacing:.08em;position:relative}
+.phase-body{font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;color:rgba(250,247,240,.6);font-weight:300;line-height:1.5;position:relative}
+
+/* AFFIRMATION CARDS */
+.aff-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+.aff-card{background:#fff;border:1px solid rgba(200,168,75,.25);border-top:2px solid var(--gold);padding:18px 20px}
+.aff-cat{font-family:'Lato',sans-serif;font-size:8.5px;letter-spacing:.45em;text-transform:uppercase;
+  color:var(--gold);font-weight:400;margin-bottom:10px;display:block}
+.aff-txt{font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;
+  line-height:1.6;color:var(--text-dark);font-weight:300;margin-bottom:10px}
+.aff-wl{border-bottom:1px solid rgba(200,168,75,.25);height:26px;position:relative}
+.aff-wl::after{content:'write yours \2192';position:absolute;right:0;bottom:5px;
+  font-family:'Cormorant Garamond',serif;font-size:10px;font-style:italic;color:rgba(200,168,75,.4)}
+
+/* CRYSTAL CARDS */
+.cry-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:20px 0}
+.cry-card{border:1px solid rgba(200,168,75,.2);padding:16px 12px;text-align:center}
+.cry-icon{font-size:22px;display:block;margin-bottom:8px}
+.cry-name{font-family:'Cormorant SC',serif;font-size:12px;color:var(--gold);
+  display:block;margin-bottom:4px;letter-spacing:.05em}
+.cry-use{font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;
+  color:rgba(250,247,240,.6);font-weight:300}
+
+/* DAY CARDS */
+.day-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+.day-card{border:1px solid rgba(200,168,75,.2);padding:18px 20px;position:relative;overflow:hidden}
+.day-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(200,168,75,.03),transparent)}
+.day-n{font-family:'Cormorant SC',serif;font-size:11px;color:var(--gold);
+  letter-spacing:.2em;display:block;margin-bottom:6px;opacity:.8;position:relative}
+.day-title{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;
+  color:var(--gold-light);margin-bottom:6px;position:relative}
+.day-body{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:300;
+  line-height:1.6;color:rgba(250,247,240,.65);position:relative}
+.day-prompts{margin-top:8px;position:relative}
+.day-p{font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;
+  color:rgba(200,168,75,.7);line-height:1.5}
+
+/* BELIEF LIST */
+.blist{display:grid;grid-template-columns:1fr 1fr;gap:0 30px;margin:18px 0}
+.bitem{font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;
+  color:var(--text-body);padding:7px 0;border-bottom:1px solid rgba(200,168,75,.15);line-height:1.5}
+.bitem::before{content:'\25C7  ';color:var(--gold);font-style:normal;font-size:10px}
+
+/* TRACKER GRID */
+.track-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin:18px 0}
+.track-cell{border:1px solid rgba(200,168,75,.2);padding:8px 4px;text-align:center}
+.track-day{font-family:'Cormorant SC',serif;font-size:11px;color:var(--gold);
+  display:block;margin-bottom:4px;letter-spacing:.1em}
+.track-dot{width:6px;height:6px;border-radius:50%;border:1px solid rgba(200,168,75,.4);margin:0 auto 4px}
+.track-line{border-bottom:1px solid rgba(200,168,75,.2);height:16px}
+
+/* LETTER */
+.ltr-open{font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;
+  font-weight:300;color:var(--text-dark);margin-bottom:20px}
+.ltr-body{font-family:'Cormorant Garamond',serif;font-size:17px;line-height:1.9;
+  color:var(--text-body);margin-bottom:20px}
+.ltr-sig{margin-top:30px}
+.ltr-off{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;
+  color:var(--text-light);display:block;margin-bottom:6px}
+.ltr-name{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;
+  color:var(--navy);letter-spacing:.03em}
+
+/* MISC */
+.mistake-item{display:flex;gap:16px;margin-bottom:18px;padding-bottom:18px;
+  border-bottom:1px solid rgba(200,168,75,.15)}
+.mistake-item:last-child{border-bottom:none}
+.m-num{font-family:'Cormorant SC',serif;font-size:18px;color:var(--gold);
+  min-width:30px;opacity:.7;padding-top:2px}
+.m-txt{flex:1}
+.m-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;
+  color:var(--text-dark);margin-bottom:4px}
+.m-sub{font-family:'Lato',sans-serif;font-size:9px;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--gold);opacity:.6;margin-bottom:5px;display:block}
+.m-body{font-family:'Cormorant Garamond',serif;font-size:15px;line-height:1.7;color:var(--text-body)}
+
+.sign-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
+.sign-card{background:white;border-left:2px solid var(--gold);padding:16px 18px}
+.sign-title{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;
+  color:var(--navy);margin-bottom:6px}
+.sign-body{font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;
+  font-weight:300;color:var(--text-light);line-height:1.6}
+
+.morning-step{display:flex;gap:0;margin-bottom:16px;align-items:flex-start;
+  padding-bottom:16px;border-bottom:1px solid rgba(200,168,75,.12)}
+.morning-step:last-child{border-bottom:none}
+.ms-time{font-family:'Cormorant SC',serif;font-size:11px;color:var(--gold);
+  min-width:80px;letter-spacing:.1em;padding-top:4px}
+.ms-content{flex:1}
+.ms-title{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--text-dark);margin-bottom:4px}
+.ms-body{font-family:'Cormorant Garamond',serif;font-size:15px;line-height:1.7;color:var(--text-body)}
+
+/* JOURNAL TEMPLATE */
+.journal-row{margin-bottom:22px}
+.journal-row-lbl{font-family:'Lato',sans-serif;font-size:9px;letter-spacing:.4em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:10px;display:block}
+.journal-line{border-bottom:1px solid rgba(200,168,75,.2);height:34px;margin-bottom:4px}
+.journal-close{font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;
+  color:var(--text-light);margin-top:24px;text-align:center}
+
+/* WORK GRID */
+.work-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
+.work-card{border:1px solid rgba(200,168,75,.2);padding:18px 20px;position:relative}
+.work-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(to right,var(--gold),transparent)}
+.work-cat{font-family:'Lato',sans-serif;font-size:8.5px;letter-spacing:.4em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:8px;display:block}
+.work-body{font-family:'Cormorant Garamond',serif;font-size:15px;line-height:1.7;
+  color:var(--text-body);font-style:italic}
+
+@media print{
+  html,body{
+    width:210mm;margin:0;padding:0;background:#06101E;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+    font-size:100%
+  }
+  .outer-wrap{width:210mm;max-width:none;margin:0;padding:0}
+  .page{
+    width:210mm;height:297mm;margin:0;border-radius:0;box-shadow:none;
+    page-break-after:always;break-after:page;
+    overflow:hidden;display:flex;flex-direction:column
+  }
+  .page:last-of-type{page-break-after:auto;break-after:auto}
+  .pg,.pg-dark,.pg-cream,.pg-white{flex:1;padding:13mm 16mm;min-height:0;overflow:hidden}
+  .toc-page{flex:1;padding:13mm 16mm;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+  .cover{flex:1;padding:18mm;min-height:0}
+  .mbn{flex:0 0 auto;padding:8mm 16mm}
+  /* keep atomic elements together at page breaks */
+  .pbox,.step,.pcard,.phase-card,.aff-card,.day-card,.mistake-item,.journal-row,
+  .track-cell,.work-card,.sign-card,.morning-step,.cry-card,.wl,.bitem{
+    break-inside:avoid;page-break-inside:avoid
+  }
+  /* ensure page header never orphans */
+  .ph{break-after:avoid;page-break-after:avoid}
+  .h1,.h1-light,.h2,.h2-light{break-after:avoid;page-break-after:avoid}
+}
+
+</style>
+</head>
+<body>
+<div class="outer-wrap">
+
+<!-- COVER -->
+<div class="page">
+<div class="cover">
+  <div class="cover-corner tl"></div><div class="cover-corner tr"></div>
+  <div class="cover-corner bl"></div><div class="cover-corner br"></div>
+  <span class="cover-ornament">A Manifestation Guide</span>
+  <div class="cover-moon">🌙</div>
+  <h1 class="cover-title">Manifest Your<br>Dream Life</h1>
+  <div class="cover-divider"></div>
+  <p class="cover-subtitle">Become Magnetic to Love, Money &amp; Opportunities</p>
+  <p class="cover-tagline">A Self-Concept &amp; Manifestation Guide</p>
+  <p class="cover-author">Rhiannon 🌙</p>
+  <p style="font-family:'Lato',sans-serif;font-size:9px;letter-spacing:.2em;color:rgba(200,168,75,.55);margin-top:32px;position:relative;z-index:1">© 2026 Rhiannon · deepbluedivination.co.uk · All rights reserved</p>
+</div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="page">
+<div class="toc-page">
+  <div class="toc-header"><span class="toc-label">Inside This Guide</span><h2 class="toc-title">Contents</h2></div>
+  <div class="toc-grid">
+    <div class="toc-item"><span class="toc-num">3</span><span class="toc-text">Welcome Letter</span></div>
+    <div class="toc-item"><span class="toc-num">4</span><span class="toc-text">How to Use This Guide</span></div>
+    <div class="toc-item"><span class="toc-num">5</span><span class="toc-text">What Manifestation Really Is</span></div>
+    <div class="toc-item"><span class="toc-num">7</span><span class="toc-text">Self-Concept Glow Up</span></div>
+    <div class="toc-item"><span class="toc-num">10</span><span class="toc-text">Raise Your Frequency Daily</span></div>
+    <div class="toc-item"><span class="toc-num">12</span><span class="toc-text">The Gratitude Practice</span></div>
+    <div class="toc-item"><span class="toc-num">13</span><span class="toc-text">Limiting Beliefs to Release</span></div>
+    <div class="toc-item"><span class="toc-num">15</span><span class="toc-text">Energy Protection Basics</span></div>
+    <div class="toc-item"><span class="toc-num">17</span><span class="toc-text">The Scripting Method</span></div>
+    <div class="toc-item"><span class="toc-num">19</span><span class="toc-text">Vision Board &amp; Mood Board</span></div>
+    <div class="toc-item"><span class="toc-num">21</span><span class="toc-text">5-Min Magnetic Morning</span></div>
+    <div class="toc-item"><span class="toc-num">23</span><span class="toc-text">Working with the Moon</span></div>
+    <div class="toc-item"><span class="toc-num">24</span><span class="toc-text">Full Moon Ritual</span></div>
+    <div class="toc-item"><span class="toc-num">26</span><span class="toc-text">New Moon Ritual</span></div>
+    <div class="toc-item"><span class="toc-num">29</span><span class="toc-text">Sacred Portals &amp; Dates</span></div>
+    <div class="toc-item"><span class="toc-num">31</span><span class="toc-text">How to Use Any Portal Day</span></div>
+    <div class="toc-item"><span class="toc-num">33</span><span class="toc-text">Manifesting Love</span></div>
+    <div class="toc-item"><span class="toc-num">36</span><span class="toc-text">Manifesting Money</span></div>
+    <div class="toc-item"><span class="toc-num">39</span><span class="toc-text">Manifesting Work &amp; Career</span></div>
+    <div class="toc-item"><span class="toc-num">41</span><span class="toc-text">Manifesting Opportunities</span></div>
+    <div class="toc-item"><span class="toc-num">43</span><span class="toc-text">Crystal Suggestions</span></div>
+    <div class="toc-item"><span class="toc-num">45</span><span class="toc-text">Common Manifestation Mistakes</span></div>
+    <div class="toc-item"><span class="toc-num">47</span><span class="toc-text">Signs Your Manifestation Is Working</span></div>
+    <div class="toc-item"><span class="toc-num">49</span><span class="toc-text">Journal Prompt Section</span></div>
+    <div class="toc-item"><span class="toc-num">51</span><span class="toc-text">Powerful Affirmations</span></div>
+    <div class="toc-item"><span class="toc-num">53</span><span class="toc-text">7-Day Manifestation Challenge</span></div>
+    <div class="toc-item"><span class="toc-num">57</span><span class="toc-text">30-Day Manifestation Tracker</span></div>
+    <div class="toc-item"><span class="toc-num">59</span><span class="toc-text">Final Message</span></div>
+  </div>
+  <div style="margin-top:auto;padding-top:32px;border-top:1px solid rgba(200,168,75,.18);text-align:center">
+    <span style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(200,168,75,.45);letter-spacing:.04em">Begin anywhere. Return often.</span>
+    <div style="margin-top:12px;color:rgba(200,168,75,.25);font-size:14px;letter-spacing:.4em">✦ &nbsp; 🌙 &nbsp; ✦</div>
+  </div>
+</div>
+</div>
+
+<!-- S1: WELCOME LETTER -->
+<div class="page">
+<div class="pg-white">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">🌙</span></div>
+  <span class="eyebrow">A Note From Rhiannon</span>
+  <h2 class="h1">Welcome,<br><em>love</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="ltr-open">Hi love, I'm so glad you're here.</p>
+  <p class="ltr-body">If you've made it to this page, something inside you is asking for more. Not in a greedy, never-enough way. In that quiet, persistent way that whispers to you late at night when the world has gone soft and your real thoughts finally have room to breathe. You know the voice I mean. The one that's been tugging on your sleeve for months, maybe years, asking you to finally listen.</p>
+  <p class="ltr-body">I wrote this for the person who's done the vision boards and the affirmations and felt a little silly, a little frustrated. For the one who suspects, somewhere underneath all the noise, that you've been the one in your own way the whole time, and is finally ready to do something about it.</p>
+  <div class="pq"><p>This isn't a guide about begging the universe for a parking spot. We're going deeper than that.</p></div>
+  <div class="ltr-sig">
+    <span class="ltr-off">All my love,</span>
+    <span class="ltr-name">Rhiannon <span style="color:var(--gold);font-size:18px">🌙</span></span>
+  </div>
+  <div class="wl" style="margin-top:28px">
+    <span class="wl-label">Before you begin, write your intention for this guide:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:18px">One thing I'm finally ready to stop standing in the way of:</span>
+    <div class="wl-line"></div>
+  </div>
+  <div class="pnum">3</div>
+</div>
+</div>
+
+<!-- S2: HOW TO USE THIS GUIDE (NEW) -->
+<div class="page">
+<div class="pg-cream">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 02</span>
+  <h2 class="h1">How to Use<br><em>This Guide</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body">This is a guide, not a textbook. You don't have to read it in one go, or do every exercise, or do them in order. You're allowed to skim a section, return to it three weeks later, and find something you couldn't see the first time. That's not failure. That's how this kind of work lands.</p>
+  <h3 class="h2">Write here, or write somewhere else</h3>
+  <p class="body">Throughout the guide you'll find prompts, exercises, and reflection questions. Pick one of two options, and both are good.</p>
+  <div class="step">
+    <span class="step-n" style="color:var(--navy);opacity:.4">01</span>
+    <div class="step-c"><div class="step-h" style="color:var(--navy)">Write on the pages</div><div class="step-b" style="color:var(--text-body)">Use the space provided. Let the guide itself become a record of where you were when you started.</div></div>
+  </div>
+  <div class="step">
+    <span class="step-n" style="color:var(--navy);opacity:.4">02</span>
+    <div class="step-c"><div class="step-h" style="color:var(--navy)">Use your own notebook</div><div class="step-b" style="color:var(--text-body)">Pick one that feels good to hold. Use the guide as your prompt source and let your notebook hold the actual work. If you run out of space on any page, that's always the invitation.</div></div>
+  </div>
+  <h3 class="h2">Pacing</h3>
+  <p class="body">Read the first few sections in one sitting to ground yourself in the foundations. After that, slow down. One section every few days is plenty. Some sections, particularly Self-Concept and the Limiting Beliefs chapter, will reward you for sitting with them for a week or more before moving on.</p>
+  <div class="wl" style="margin-top:14px">
+    <span class="wl-label">What am I hoping to find in this guide?</span>
+    <div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:8px">The section I most want to start with:</span>
+    <div class="wl-line"></div>
+  </div>
+  <div class="pnum">4</div>
+</div>
+</div>
+
+<!-- S3: WHAT MANIFESTATION REALLY IS -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 03</span>
+  <h2 class="h1">What Manifestation<br><em>Really Is</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body">Manifestation is not magical thinking. It's not <em>"if I just believe hard enough, things will appear."</em> It's the practice of becoming the kind of person to whom those things naturally come. Four ingredients. Miss one and the whole thing wobbles.</p>
+  <div class="pq"><p><strong>Energy + Belief + Identity + Action.</strong> Miss one and everything collapses.</p></div>
+  <p class="body"><strong>Energy</strong> is your frequency. Your emotional baseline. Frequency-matching is the thing nobody quite explains: the life you want has a certain emotional texture. To call that life in, you have to practise that texture <em>now</em>, before the external circumstances arrive. <strong>Belief</strong> is what you actually, secretly, in your gut, think is possible for you. <strong>Identity</strong> is the deepest layer. <strong>Action</strong> is what most people forget. The universe is not Amazon Prime. Movement plus trust, not panic plus waiting.</p>
+  <h3 class="h2">Why it doesn't work for most people</h3>
+  <p class="body">People manifest from the wrong identity. They give up too early. They take no action. They don't actually believe it underneath the affirmations. Or they're inconsistent. None of this makes anyone bad at manifestation. It means the system was never set up for success. By the end of this guide, yours will be.</p>
+  <div class="pnum">5</div>
+</div>
+</div>
+
+<!-- S3b: WHAT MANIFESTATION REALLY IS — NOTEBOOK PROMPTS -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>What Manifestation Really Is</span><span class="icon">✦</span></div>
+  <h3 class="h2">Notebook prompts</h3>
+  <div class="pbox" style="margin-top:8px">
+    <span class="pbox-lbl">Notebook Prompts</span>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Of the four ingredients, which one have I been skipping?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What's the gap between what I say I believe and what I actually believe?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Where in my life have I been waiting instead of moving?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">If manifestation is becoming, not asking, who am I becoming?</span></div>
+  </div>
+  <div class="wl" style="margin-top:24px">
+    <span class="wl-label">The ingredient I've been neglecting most, and what that looks like:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">Where I've been waiting instead of moving:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">Who I am becoming, in my own words:</span>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">6</div>
+</div>
+</div>
+
+<!-- S4: SELF-CONCEPT -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">⭐</span></div>
+  <span class="eyebrow">Section 04: The Foundation</span>
+  <h2 class="h1">Self-Concept<br><em>Glow Up</em></h2>
+  <div class="div"><div class="l"></div><div class="g">🌙</div><div class="lr"></div></div>
+  <p class="body">Self-concept is the quiet, sub-verbal answer your mind gives whenever you encounter something new. The instant, gut-level <em>of course</em> or <em>not for me</em>. It is, without exaggeration, the single most important thing in your manifestation practice.</p>
+  <div class="pq"><p>You only ever receive what you believe you are.</p></div>
+  <p class="body">Every other practice in this guide, scripting, vision boards, moon work, affirmations, will only ever take you as far as your self-concept allows. Two people with the same starting point can end up in radically different lives. One believes they're the kind of person who succeeds. The other believes they almost succeed. Both are correct. Both receive exactly what they believe.</p>
+  <h3 class="h2">The Daily Question</h3>
+  <p class="body">The single most useful manifestation practice in this guide:</p>
+  <div class="pq"><p><strong>How would your future self act?</strong></p></div>
+  <p class="body">Ask it constantly. Ask it when you're about to send a text you'll regret. Ask it when someone disappoints you. Ask it when you're deciding whether to push through or close the laptop. You don't have to always do what your future self would do. Start with just asking. The asking alone starts to rewire something.</p>
+  <div class="wl" style="margin-top:10px">
+    <span class="wl-label">How would my future self act in one situation I'm facing right now?</span>
+    <div class="wl-line"></div>
+  </div>
+  <div class="pnum">7</div>
+</div>
+</div>
+
+<!-- S4-cont: SELF-CONCEPT — BECOMING THEM NOW -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Self-Concept Glow Up</span><span class="icon">⭐</span></div>
+  <h3 class="h2">Becoming them now, not later</h3>
+  <p class="body">Your future self doesn't show up to the version of you still acting like your old self. They show up to the person who's already living, in tiny ways, like they're here. The Tuesday olive oil. Walking through Tesco like you own the place. Going to bed at a reasonable hour. Saying no to a draining invitation without justifying it. That's the actual practice.</p>
+  <p class="body" style="font-size:14px;font-style:italic;color:var(--text-light);text-align:center;margin:20px 0 16px">If you only do one thing from this section: ask yourself <em>"how would my future self act?"</em> at one real choice point today. Just the asking starts to rewire something.</p>
+  <div class="wl" style="margin-top:8px">
+    <span class="wl-label">One small way I can live like my future self today:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">What does my future self believe about themselves that I'm still catching up to?</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">Keep asking: how would my future self act?</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">8</div>
+</div>
+</div>
+
+<!-- S4b: SELF-CONCEPT — DAY IN THE LIFE + AFFIRMATIONS PAGE -->
+<div class="page">
+<div class="pg-cream">
+  <div class="ph"><span>Self-Concept Glow Up</span><span class="icon">✦</span></div>
+  <h3 class="h2">Exercise: A Day in the Life of Your Future Self</h3>
+  <p class="body" style="font-size:15px">Close your eyes. Picture yourself one year from now, living the version of your life you're calling in. Then open your eyes and write, hour by hour, in present tense, with sensory detail. Push past the surface answers.</p>
+  <div class="wl" style="margin-top:14px">
+    <span class="wl-label">What time does your future self wake up? What does the morning feel like?</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">What does the middle of the day look like?</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">What do they believe about themselves that they didn't believe a year ago?</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <h3 class="h2" style="margin-top:10px">Your Identity Affirmations</h3>
+  <p class="body" style="font-size:15px">Write five in your own voice. Read them aloud for seven consecutive mornings. Notice how the flinch softens.</p>
+  <div class="aff-grid" style="grid-template-columns:1fr;gap:10px">
+    <div class="aff-card"><span class="aff-cat">Identity</span><div class="aff-txt">I'm becoming the version of me who handles money with calm.</div><div class="aff-wl"></div></div>
+    <div class="aff-card"><span class="aff-cat">Identity</span><div class="aff-txt">I'm someone who allows good things in without flinching.</div><div class="aff-wl"></div></div>
+    <div class="aff-card"><span class="aff-cat">Identity</span><div class="aff-txt">I'm safe to be seen.</div><div class="aff-wl"></div></div>
+  </div>
+  <div class="pnum">9</div>
+</div>
+</div>
+
+<!-- S5: RAISE YOUR FREQUENCY -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 05</span>
+  <h2 class="h1">Raise Your<br><em>Frequency Daily</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body">If self-concept is the soil, your frequency is the weather. Raising it isn't about being relentlessly happy. The goal is to develop the <em>muscle</em> of returning to a calmer, more receptive emotional baseline, more often, more quickly, with more self-compassion. Frequency-matching is the real mechanism: the life you want already has an emotional texture. You practise that texture now, before the circumstances arrive.</p>
+  <h3 class="h2">What "frequency" looks like in daily life</h3>
+  <p class="body">Catching yourself spiralling on the train and breathing your way out before you arrive somewhere. Choosing not to engage with a draining group chat. Stepping outside for five minutes instead of pushing through the dip. Speaking to yourself gently when something goes wrong. None of it is glamorous. All of it shifts the texture of the day.</p>
+  <h3 class="h2">Simple Daily Alignment Practices</h3>
+  <p class="body" style="font-size:15px">Pick two or three. Not all of them. Trying to do all of them is how you burn out by Wednesday.</p>
+  <div class="blist" style="grid-template-columns:1fr;margin:10px 0 4px">
+    <div class="bitem">Five minutes of stillness. No phone. Eyes closed or soft-focused on something.</div>
+    <div class="bitem">A gratitude pause. Not a list. A pause. Notice one thing you're genuinely glad about right now.</div>
+    <div class="bitem">A walk without a podcast. Just you, the air, the sound of your own thoughts.</div>
+    <div class="bitem">A song that always lifts you. Play it loud. Sing badly. This counts.</div>
+    <div class="bitem">A creative micro-act. Write a paragraph. Cook a meal slowly. Let that part of you out for a moment.</div>
+    <div class="bitem">Two minutes outside. At the back door with a tea. Watching nothing in particular.</div>
+  </div>
+  <div class="pq" style="margin-top:6px;margin-bottom:0"><p>Three minutes of genuine return to yourself, done daily, with love. That's higher frequency than any 5am routine done out of obligation.</p></div>
+  <div class="pnum">10</div>
+</div>
+</div>
+
+<!-- S5b: 7-DAY FREQUENCY LOG -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Raise Your Frequency Daily</span><span class="icon">✦</span></div>
+  <h3 class="h2">7-Day Frequency Log</h3>
+  <p class="body" style="font-size:15px;margin:8px 0 4px">Use this log to track your dominant emotional frequency each evening. Don't analyse, just notice. After seven days the data will tell you what's eating your frequency.</p>
+  <div class="wl" style="margin-top:8px">
+    <span class="wl-label">Day 1: Dominant emotion + when I felt it most:</span>
+    <div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:10px">Day 2:</span>
+    <div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:10px">Day 3:</span>
+    <div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:10px">Day 4:</span>
+    <div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:10px">Day 5:</span>
+    <div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:10px">Day 6:</span>
+    <div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:10px">Day 7:</span>
+    <div class="wl-line"></div>
+  </div>
+  <div class="wl" style="margin-top:14px">
+    <span class="wl-label">After seven days, what pattern do I notice most?</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">11</div>
+</div>
+</div>
+
+<!-- S6: THE GRATITUDE PRACTICE (NEW) -->
+<div class="page">
+<div class="pg-cream">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 06</span>
+  <h2 class="h1">The Gratitude<br><em>Practice</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body">Gratitude is the fastest, most underrated frequency-raiser in this entire guide. It works in minutes. It doesn't require any equipment, any belief system, or any teacher. And almost no one does it consistently, because it sounds too simple to take seriously. It is exactly that simple, and it absolutely works.</p>
+  <h3 class="h2">Why it matters for manifestation</h3>
+  <p class="body">Gratitude retrains the brain's filter from scanning for what's missing to noticing what's already here. More importantly, it signals to the universe that you can receive what's already arrived. If everything you have is treated as not-enough, that's the energy you're broadcasting. Gratitude breaks that loop. It tells the universe: <em>I see what's here. I'm receiving it. I'm ready for more.</em></p>
+  <h3 class="h2">How to actually do it</h3>
+  <p class="body">Bring to mind one specific thing. Not <em>"my health"</em> but <em>"the fact that my back didn't hurt this morning."</em> Let the feeling land in your chest, even for three seconds. Move to the next. Three to five things is plenty. Close with: <em>thank you. I receive this fully.</em></p>
+  <div class="pbox" style="margin:16px 0 10px">
+    <span class="pbox-lbl">Your Gratitude Practice: Right Now</span>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Three things I'm grateful for from yesterday, specifically:</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Three things already here in my life that I receive fully:</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Three things on their way to me that I'm grateful for in advance:</span></div>
+  </div>
+  <div class="pnum">12</div>
+</div>
+</div>
+
+<!-- S7: LIMITING BELIEFS -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 07</span>
+  <h2 class="h1">Limiting Beliefs<br><em>to Release</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body">A limiting belief is just a thought you've thought so many times it's started to feel like a fact. It isn't. It's a thought with a lot of mileage on it. And it isn't just an uncomfortable idea. Every time the belief plays, even quietly in the background, your nervous system reacts. Your body tightens. Your energy contracts. That contraction is the frequency you're broadcasting.</p>
+  <h3 class="h2">Common beliefs to recognise</h3>
+  <div class="blist">
+    <div class="bitem">I'm just not good with money.</div>
+    <div class="bitem">All the good ones are taken.</div>
+    <div class="bitem">I have to work really hard for every penny.</div>
+    <div class="bitem">I'm too much. Or not enough.</div>
+    <div class="bitem">I always pick the wrong ones.</div>
+    <div class="bitem">I always self-sabotage.</div>
+    <div class="bitem">I missed my chance.</div>
+    <div class="bitem">People like me don't get to do that.</div>
+  </div>
+  <div class="pq"><p>If any of those felt like <em>"yeah, that's just true though,"</em> congratulations. You've found a belief, not a fact.</p></div>
+  <div class="wl" style="margin-top:18px">
+    <span class="wl-label">The belief I most recognise in that list:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">One piece of evidence that it isn't actually true:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">13</div>
+</div>
+</div>
+
+<!-- S7b: LIMITING BELIEFS — THE REWRITE EXERCISE -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Limiting Beliefs to Release</span><span class="icon">✦</span></div>
+  <h3 class="h2">The Rewrite Exercise</h3>
+  <p class="body" style="font-size:15px;margin:8px 0 16px">Don't rush this. Sit with one belief at a time. The goal isn't to replace a negative thought with a positive one. The goal is to open a door.</p>
+  <div class="pbox">
+    <span class="pbox-lbl">The Rewrite Exercise</span>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Write the belief, word for word, exactly as it sounds in your head.</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Ask: is this 100% true, always, in every case? Find one contradiction.</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Write the new belief. Not the opposite. Something that opens a door.</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Whose voice is the old belief in? Often it's not even yours.</span></div>
+  </div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">My belief (exactly as it sounds in my head):</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">One piece of evidence that contradicts it:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">A new belief that opens a door (not the opposite, an opening):</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="wl" style="margin-top:16px">
+    <span class="wl-label">A second belief ready for rewriting:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:12px">Its contradiction: one piece of evidence it isn't the whole truth:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">14</div>
+</div>
+</div>
+
+<!-- S8: ENERGY PROTECTION -->
+<div class="page">
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">Manifest Your Dream Life</span><span class="icon" style="opacity:.4">⭐</span></div>
+  <span class="eyebrow light">Section 08</span>
+  <h2 class="h1-light">Energy Protection<br><em style="color:var(--gold-light)">Basics</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body-light">Doing manifestation work from a leaky, drained nervous system is like trying to fill a bathtub with the plug pulled. Energy protection isn't about building walls. It's about making sure that when you do the work, the person doing the work is actually <em>you</em>.</p>
+  <h3 class="h2-light">Grounding techniques</h3>
+  <div class="step"><span class="step-n">01</span><div class="step-c"><div class="step-h">Breath</div><div class="step-b">Four counts in through the nose, six counts out through the mouth. The longer exhale signals safety to your nervous system. Two minutes.</div></div></div>
+  <div class="step"><span class="step-n">02</span><div class="step-c"><div class="step-h">Feet on the floor</div><div class="step-b">Shoes off if you can. Press your feet into the ground. Imagine roots growing down. It sounds silly until you do it. It is not silly.</div></div></div>
+  <div class="step"><span class="step-n">03</span><div class="step-c"><div class="step-h">Cold water</div><div class="step-b">A splash on the face or wrists. An instant reset for an overheated nervous system. Useful when you're spiralling and can't think.</div></div></div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">Which of these do I already use, and what stops me from doing them more:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">15</div>
+</div>
+</div>
+
+<!-- S8b: ENERGY PROTECTION — RELEASING WHAT ISN'T YOURS -->
+<div class="page">
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">Energy Protection Basics</span><span class="icon" style="opacity:.4">⭐</span></div>
+  <h3 class="h2-light">Releasing what isn't yours</h3>
+  <div class="step"><span class="step-n">04</span><div class="step-c"><div class="step-h">Nature, even briefly</div><div class="step-b">Five minutes outside, no phone, looking at something green or alive. The body recognises nature as home and softens.</div></div></div>
+  <div class="step"><span class="step-n">05</span><div class="step-c"><div class="step-h">Cord-cutting visualisation</div><div class="step-b">Picture whoever you're carrying. Notice where the cord feels attached. Imagine it gently dissolving, like sugar in warm water. Send love both ways. Breathe.</div></div></div>
+  <p class="body-light" style="margin-top:16px;font-style:italic;opacity:.7;font-size:15px">Optional tools: sage, palo santo, or incense can be lovely sensory anchors for your practice. None are required. The breath is always enough.</p>
+  <div class="wl" style="margin-top:24px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">Who or what am I carrying that isn't mine to carry:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">The grounding technique I will use this week:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">How my energy feels before and after grounding:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">My energy protection commitment for this week: one specific practice, one specific time:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">16</div>
+</div>
+</div>
+
+<!-- S9: SCRIPTING -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 09</span>
+  <h2 class="h1">The Scripting<br><em>Method</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body">Scripting is sitting down with a notebook and writing about your desired reality in the present tense, with specificity, with sensory detail, and with the emotional state you'd be in if it were already true. You're not writing a wish list. You're writing a memoir from the future. The brain doesn't fully distinguish between vividly imagined experiences and real ones. The neural pathways for that reality strengthen. Your subconscious starts treating it as plausible, then likely, then inevitable.</p>
+  <h3 class="h2">The key ingredients</h3>
+  <div class="step">
+    <span class="step-n" style="color:var(--navy);opacity:.4">01</span>
+    <div class="step-c"><div class="step-h" style="color:var(--navy)">Present tense</div><div class="step-b" style="color:var(--text-body)">Not "I will have." Not "I want." Just <em>I have. I am. It's here.</em> Speak as your future self.</div></div>
+  </div>
+  <div class="step">
+    <span class="step-n" style="color:var(--navy);opacity:.4">02</span>
+    <div class="step-c"><div class="step-h" style="color:var(--navy)">Be sensory and specific</div><div class="step-b" style="color:var(--text-body)">What's in your wardrobe? Who texts you? What does your bank balance feel like to look at? What does the kitchen smell like on a Sunday morning?</div></div>
+  </div>
+  <div class="step">
+    <span class="step-n" style="color:var(--navy);opacity:.4">03</span>
+    <div class="step-c"><div class="step-h" style="color:var(--navy)">Drop into the emotion</div><div class="step-b" style="color:var(--text-body)">Pause halfway. Close your eyes. Let your body actually have the feeling, even for 30 seconds. Then keep writing from inside that feeling. The body is what the universe responds to, not the mind.</div></div>
+  </div>
+  <div class="step">
+    <span class="step-n" style="color:var(--navy);opacity:.4">04</span>
+    <div class="step-c"><div class="step-h" style="color:var(--navy)">Close with gratitude</div><div class="step-b" style="color:var(--text-body)">Not performative. Real. <em>Thank you</em> to whatever you believe is on the receiving end.</div></div>
+  </div>
+  <div class="pnum">17</div>
+</div>
+</div>
+
+<!-- S9b: SCRIPTING — EMBODIMENT & PROMPTS -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>The Scripting Method</span><span class="icon">✦</span></div>
+  <h3 class="h2">Embodiment &amp; the Practice</h3>
+  <p class="body" style="font-size:14px;color:var(--text-light);margin:4px 0 16px">If embodiment feels uncomfortable, if inhabiting the feeling before the thing has arrived feels presumptuous or strange, that discomfort is the sign you're doing it right. Embodiment asks you to feel something your body doesn't yet believe is yours to feel. Every time you let it happen, even for thirty seconds, you gently expand what your nervous system believes is possible. The strange feeling is the new feeling. Practise it.</p>
+  <div class="pq"><p>Writing without embodiment is just journaling about a fantasy. Writing with embodiment is the actual work.</p></div>
+  <p class="body" style="font-size:14px;font-style:italic;color:var(--text-light);text-align:center;margin:4px 0 16px">If you only do one thing from this section: add thirty seconds of closed-eye embodiment to whatever journalling you already do: pause, feel it in your body, then keep writing.</p>
+  <div class="pbox">
+    <span class="pbox-lbl">Scripting Prompts to Try</span>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Describe a single perfect day in your dream life, hour by hour.</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Describe the moment you realised it had all worked.</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Describe an ordinary Tuesday in your future life, and notice what's different about it.</span></div>
+  </div>
+  <div class="wl" style="margin-top:18px">
+    <span class="wl-label">Try one prompt now, at least three sentences, present tense, in your body:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">18</div>
+</div>
+</div>
+
+<!-- S10: VISION BOARD & MOOD BOARD -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 10</span>
+  <h2 class="h1">Vision Board &amp;<br><em>Mood Board Method</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body">A real vision board is a working tool. It's a daily anchor. It's something you return to, allow to shape your subconscious over weeks and months. What you see repeatedly, your mind starts to treat as familiar. What's familiar feels possible. What feels possible, you start to move toward, often without realising it.</p>
+  <h3 class="h2">Vision board or mood board?</h3>
+  <p class="body">A <strong>vision board</strong> is more literal: images of the things you want, the house, the career, the relationship, the number. A <strong>mood board</strong> is more atmospheric: the feeling and identity of the life you want. The light in a kitchen. A calm face. A colour palette. A word in a particular font. In my experience, mood boards land more deeply for people doing identity-level work, which is most of what this guide is.</p>
+  <h3 class="h2">Physical, digital, or both</h3>
+  <p class="body">Both work. Physical boards are unavoidable. They're in your room, working constantly, even when you're not actively thinking about it. Digital boards are portable and easy to update. A particularly powerful trick: set your board as your phone <strong>lock screen and wallpaper</strong>. Every screen unlock becomes a small impression on your subconscious. Over weeks, that adds up to hundreds of micro-exposures daily.</p>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">The feeling and identity my board needs to represent:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">What I'm afraid to put on a board (but should):</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">19</div>
+</div>
+</div>
+
+<!-- S10b: VISION BOARD — MULTIPLE BOARDS & PROMPTS -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Vision Board &amp; Mood Board Method</span><span class="icon">✦</span></div>
+  <h3 class="h2">Multiple boards for multiple purposes</h3>
+  <p class="body">A main vision board for the big picture. A daily habits board for the identity you're embodying right now. An affirmations board of words instead of images. A specific project board. You don't need all of these, but know the option is there.</p>
+  <div class="pbox">
+    <span class="pbox-lbl">Before You Make It</span>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What does my dream life feel like, not look. Feel.</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What am I afraid to put on a vision board?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What's currently on my board that I've outgrown?</span></div>
+  </div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">The boards I want to create (and what each one is for):</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">One board I will make or update this week:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">Three words that describe the feeling of my dream life:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div>
+  </div>
+  <div class="pnum">20</div>
+</div>
+</div>
+
+<!-- S11: MORNING ROUTINE -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 11</span>
+  <h2 class="h1">5-Minute Magnetic<br><em>Morning Routine</em></h2>
+  <div class="div"><div class="l"></div><div class="g">🌙</div><div class="lr"></div></div>
+  <p class="body">If you do nothing else from this guide, do this. Five minutes. Done daily. Will change your life. The first few minutes of your day set the tone for everything that follows. Your nervous system is at its most impressionable right after waking. Whatever you feed it first, it absorbs.</p>
+  <div class="morning-step">
+    <div class="ms-time">Minute 1</div>
+    <div class="ms-content"><div class="ms-title">Gratitude</div><div class="ms-body">Before touching your phone, hand on heart. Bring to mind three specific things you're grateful for. Let the feeling land in your chest. Not a list. A feeling.</div></div>
+  </div>
+  <div class="morning-step">
+    <div class="ms-time">Minute 2</div>
+    <div class="ms-content"><div class="ms-title">Mirror affirmation</div><div class="ms-body">Walk to a mirror. Look yourself in the eye and say one identity affirmation, out loud, three times. Eye contact the whole time. It will feel strange for about a week. Then it won't.</div></div>
+  </div>
+  <div class="morning-step">
+    <div class="ms-time">Minute 3</div>
+    <div class="ms-content"><div class="ms-title">Visualisation</div><div class="ms-body">Sit down. Close your eyes. Picture one moment from your dream life. Inhabit it for 60 full seconds. Not as something you're wishing for. As something you're remembering from the future.</div></div>
+  </div>
+  <div class="pq" style="margin-top:24px"><p>The morning is the most impressionable moment of your day. What you feed your nervous system first is what it carries.</p></div>
+  <div class="wl" style="margin-top:16px">
+    <span class="wl-label">The one practice I'm committing to every morning this week:</span>
+    <div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">My morning affirmation for this week:</span>
+    <div class="wl-line"></div>
+  </div>
+  <div class="pnum">21</div>
+</div>
+</div>
+
+<!-- S11b: MORNING ROUTINE — STEPS 4 & 5 -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>5-Minute Magnetic Morning Routine</span><span class="icon">✦</span></div>
+  <div class="morning-step">
+    <div class="ms-time">Minute 4</div>
+    <div class="ms-content"><div class="ms-title">Set your intention</div><div class="ms-body">Write one sentence: <em>Today, I am the kind of person who...</em> One specific thing. That's your contract with the day.</div></div>
+  </div>
+  <div class="morning-step">
+    <div class="ms-time">Minute 5</div>
+    <div class="ms-content"><div class="ms-title">Embodiment</div><div class="ms-body">Put on the song that makes you feel like your future self. Move to it, even subtly. Sixty seconds of music. Then go on with your day.</div></div>
+  </div>
+  <p class="body" style="font-size:14px;font-style:italic;color:var(--text-light);margin-top:4px">I have short morning audios available at deepbluedivination.co.uk if you'd like extra support in the early days.</p>
+  <div class="wl" style="margin-top:22px">
+    <span class="wl-label">Today, I am the kind of person who: (write one now):</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">The song I'll use for my Minute 5 embodiment:</span>
+    <div class="wl-line"></div>
+  </div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">Use this space for your next 7 mornings. Write one "Today I am the kind of person who…" sentence each day:</span>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div>
+  </div>
+  <div class="wl" style="margin-top:18px">
+    <span class="wl-label">Notes from today's embodiment: what did you feel in your body?</span>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">22</div>
+</div>
+</div>
+
+<!-- S12: WORKING WITH THE MOON (NEW) -->
+<div class="page">
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">Manifest Your Dream Life</span><span class="icon" style="opacity:.4">🌙</span></div>
+  <span class="eyebrow light">Section 12</span>
+  <h2 class="h1-light">Working with<br><em style="color:var(--gold-light)">the Moon</em></h2>
+  <div class="div"><div class="l"></div><div class="g">🌙</div><div class="lr"></div></div>
+  <p class="body-light">At its simplest, the lunar cycle is a rhythm. A calendar within the calendar. A repeating container for intention, reflection, and release that gives your manifestation practice natural start points and natural pauses. You don't have to believe in anything mystical. Just use the structure. It works because consistency works.</p>
+  <div class="phase-grid">
+    <div class="phase-card">
+      <span class="phase-icon">🌑</span>
+      <span class="phase-name">New Moon</span>
+      <div class="phase-body">The blank page. Set fresh intentions. Plant seeds. Begin new things. The quietest, most inward energy of the cycle.</div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-icon">🌓</span>
+      <span class="phase-name">Waxing</span>
+      <div class="phase-body">The building phase. Take aligned action. Stay consistent. Feed what you planted. Build momentum.</div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-icon">🌕</span>
+      <span class="phase-name">Full Moon</span>
+      <div class="phase-body">Harvest and release. What's been building peaks. Release what no longer serves. Celebrate what's arrived.</div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-icon">🌗</span>
+      <span class="phase-name">Waning</span>
+      <div class="phase-body">Rest and integrate. Slow down. Reflect on what's shifted. Clear space. Prepare for the next cycle.</div>
+    </div>
+  </div>
+  <h3 class="h2-light">Going outside</h3>
+  <p class="body-light">One of the simplest things you can do as part of your moon practice is step outside. Not formally. Just into the air. Feel the ground under your feet. Look up if the sky is clear. Feel your body in the world. Even five minutes before a ritual grounds your nervous system in a way that makes everything that follows more effective.</p>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">My current moon phase, and how I plan to use it:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">What I want to plant this cycle:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">What I want to release this cycle:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <p class="body-light" style="font-size:13px;font-style:italic;opacity:.5;text-align:center;margin-top:4px;margin-bottom:4px">Consistency works. The rhythm will hold you.</p>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">23</div>
+</div>
+</div>
+
+<!-- S13: FULL MOON RITUAL -->
+<div class="page">
+<div class="mbn">
+  <div class="mbn-icon">🌕</div>
+  <div class="mbn-txt">
+    <span class="mbn-lbl">Section 13</span>
+    <div class="mbn-title">Full Moon Ritual</div>
+    <div class="mbn-sub">Release. Let go. Make space.</div>
+  </div>
+</div>
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">Manifest Your Dream Life</span><span class="icon" style="opacity:.4">🌕</span></div>
+  <p class="body-light">You can't receive with full hands. The Full Moon is a regular, built-in invitation to empty what needs emptying. Every time you release, you make room. And the universe fills the room.</p>
+  <div class="step"><span class="step-n">01</span><div class="step-c"><div class="step-h">Cleanse the space</div><div class="step-b">Open a window. Let air move through the room. Light a candle. You're signalling to your nervous system that this is a different kind of time.</div></div></div>
+  <div class="step"><span class="step-n">02</span><div class="step-c"><div class="step-h">Ground</div><div class="step-b">Three slow breaths. Feet on the floor. Settle. <em>You can't release from a frazzled state. The calmer you arrive, the deeper the letting go.</em></div></div></div>
+  <div class="step"><span class="step-n">03</span><div class="step-c"><div class="step-h">Set the intention</div><div class="step-b">Out loud or silently: <em>I'm here to release what I no longer need.</em> The spoken word sets a container your subconscious registers.</div></div></div>
+  <div class="step"><span class="step-n">04</span><div class="step-c"><div class="step-h">Journal your release list</div><div class="step-b">Don't edit. Get it out. Beliefs. Stories. Names. Patterns. Habits. Whatever you're ready to lay down. Putting it on paper gets it out of your head, where it loops.</div></div></div>
+  <div class="wl" style="margin-top:18px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">Begin your release list here: what are you ready to let go of this Full Moon:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">24</div>
+</div>
+</div>
+
+<!-- S13b: FULL MOON RITUAL — RELEASE & CLOSE -->
+<div class="page">
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">Full Moon Ritual</span><span class="icon" style="opacity:.4">🌕</span></div>
+  <div class="step"><span class="step-n">05</span><div class="step-c"><div class="step-h">Release the list</div><div class="step-b">Safely tear, burn, or bury it. The physical act creates a felt sense of finality the body understands. The act of destruction matters.</div></div></div>
+  <div class="step"><span class="step-n">06</span><div class="step-c"><div class="step-h">Clear your body</div><div class="step-b">Stand up. Shake your body out. Wash your face with cold water. Discharge the energy physically. <em>The body stores emotion. If you don't move it out physically, it tends to settle back in.</em></div></div></div>
+  <div class="step"><span class="step-n">07</span><div class="step-c"><div class="step-h">Close</div><div class="step-b">Hand on heart. <em>Thank you. I'm lighter now.</em> Blow out the candle.</div></div></div>
+  <p class="body-light" style="font-size:14px;font-style:italic;opacity:.7;text-align:center;margin:20px 0 4px">If you only do one thing from this section: write the release list. Get it out of your head and onto paper. That alone moves something.</p>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">How I feel after completing the ritual:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">What I want to call in now that I've made space:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">25</div>
+</div>
+</div>
+
+<!-- S14: NEW MOON RITUAL -->
+<div class="page">
+<div class="mbn" style="background:#0D1E38">
+  <div class="mbn-icon">🌑</div>
+  <div class="mbn-txt">
+    <span class="mbn-lbl">Section 14</span>
+    <div class="mbn-title">New Moon Ritual</div>
+    <div class="mbn-sub">Plant. Intend. Begin again.</div>
+  </div>
+</div>
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">Manifest Your Dream Life</span><span class="icon" style="opacity:.4">🌑</span></div>
+  <p class="body-light">If the Full Moon is the harvest, the New Moon is the seed. The New Moon is permission to begin again. It doesn't matter if last month was messy. The slate clears. Use it.</p>
+  <div class="step"><span class="step-n">01</span><div class="step-c"><div class="step-h">Cleanse the space</div><div class="step-b">Window open. Candle lit. Tidy enough to feel calm. You're marking this as a different kind of time.</div></div></div>
+  <div class="step"><span class="step-n">02</span><div class="step-c"><div class="step-h">Ground</div><div class="step-b">A few slow breaths. Arrive in your body. <em>Intentions set from a calm, present state land differently, in the body, not just on the page.</em></div></div></div>
+  <div class="step"><span class="step-n">03</span><div class="step-c"><div class="step-h">Journal what you're calling in</div><div class="step-b">Describe the feeling, not just the outcome. Not <em>I want to earn £5,000</em> but <em>I want to feel abundant and calm in my finances.</em> The universe handles the form.</div></div></div>
+  <div class="wl" style="margin-top:18px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">Begin here: what I am calling in this New Moon cycle:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">The feeling I want to embody this cycle:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">26</div>
+</div>
+</div>
+
+<!-- S14-cont: NEW MOON RITUAL — SCRIPTING & CLOSE -->
+<div class="page">
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">New Moon Ritual</span><span class="icon" style="opacity:.4">🌑</span></div>
+  <div class="step"><span class="step-n">04</span><div class="step-c"><div class="step-h">Write your future reality</div><div class="step-b">A short scripting passage. Who you're becoming. What's arriving. Present tense. With feeling. Let your body have a preview of it.</div></div></div>
+  <div class="step"><span class="step-n">05</span><div class="step-c"><div class="step-h">Speak it aloud</div><div class="step-b">Read what you've written out loud. Your own voice saying these things in a quiet room is different from thinking them. Sound is vibration.</div></div></div>
+  <div class="step"><span class="step-n">06</span><div class="step-c"><div class="step-h">Close</div><div class="step-b">Hand on heart. <em>Thank you. It is done.</em> Blow out the candle. <em>The close matters, it signals to your subconscious that the intention has been handed over and the work is complete.</em></div></div></div>
+  <div class="pq-dark" style="margin-top:20px"><p>Whatever you put your focus on around the New Moon tends to grow over the following two weeks.</p></div>
+  <div class="wl" style="margin-top:18px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">My scripting passage for this cycle, present tense, with feeling:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">27</div>
+</div>
+</div>
+
+<!-- S14b: NEW MOON — PROMPTS & ALIGNMENT CARD -->
+<div class="page">
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">New Moon Ritual</span><span class="icon" style="opacity:.4">🌑</span></div>
+  <h3 class="h2-light">Journal Prompts</h3>
+  <div class="pbox" style="margin-top:8px">
+    <span class="pbox-lbl">New Moon Prompts</span>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What am I planting this cycle?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What identity am I stepping into?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What's one commitment I'm willing to make until the next New Moon?</span></div>
+  </div>
+  <h3 class="h2-light" style="margin-top:24px">Your Alignment Card</h3>
+  <p class="body-light" style="font-size:14px;margin-top:8px">After the ritual, write three things on a small card: <strong style="color:var(--gold-light)">the identity you're stepping into, the dominant feeling you want for this cycle, and one commitment you'll keep until the next New Moon.</strong> Keep it somewhere you'll see it daily: beside the bed, on the bathroom mirror, in your bag. Let it gently steer you back when you drift.</p>
+  <div class="wl" style="margin-top:18px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">My new moon intention for this cycle:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">The identity I am stepping into:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">My one commitment until the next New Moon:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">The dominant feeling I want for this cycle:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">My future reality, written in present tense:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <p class="body-light" style="font-size:14px;font-style:italic;opacity:.7;text-align:center;margin:10px 0 4px">If you only do one thing from this section: write the three things on the card. The ritual is lovely, but the card is what changes the month.</p>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">28</div>
+</div>
+</div>
+
+<!-- S15: SACRED PORTALS -->
+<div class="page">
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">Manifest Your Dream Life</span><span class="icon" style="opacity:.4">✦</span></div>
+  <span class="eyebrow light">Section 15</span>
+  <h2 class="h1-light">Sacred Portals &amp;<br><em style="color:var(--gold-light)">Manifestation Dates</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body-light">Certain dates, used as anchors across spiritual traditions for centuries, offer energetically potent moments for deliberate inner work. These are invitations, not deadlines. You don't fail at manifestation if you miss one. But when you use them, you get a built-in rhythm for the year.</p>
+  <div class="pgrid">
+    <div class="pcard">
+      <span class="pcard-d">2/2</span>
+      <div class="pcard-t">Love, harmony &amp; union. Tend your relationship with yourself and what you're calling in.<br><br><strong style="color:var(--gold);font-style:normal;font-weight:500">Write what you're calling into your love life, and what you're calling into your relationship with yourself. Read both lists aloud.</strong><br><em>Where am I giving without receiving?</em></div>
+    </div>
+    <div class="pcard">
+      <span class="pcard-d">3/3</span>
+      <div class="pcard-t">Creativity &amp; momentum. Start the thing. Take the brave first step.<br><br><strong style="color:var(--gold);font-style:normal;font-weight:500">Write the thing you'd start with no fear. Then take one small action toward it today.</strong><br><em>What would I begin if I stopped waiting to feel ready?</em></div>
+    </div>
+    <div class="pcard">
+      <span class="pcard-d">4/4</span>
+      <div class="pcard-t">Stability &amp; foundations. Ground your dreams in real, practical form.<br><br><strong style="color:var(--gold);font-style:normal;font-weight:500">Name three foundations in your life. Write one practical action to strengthen each this month.</strong><br><em>Where have I been dreaming without building?</em></div>
+    </div>
+  </div>
+  <div class="wl" style="margin-top:18px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">The next portal date I will work with:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">What I am calling in for that portal:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">29</div>
+</div>
+</div>
+
+<!-- S15b: SACRED PORTALS — 8/8, 10/10, 11/11 -->
+<div class="page">
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">Sacred Portals &amp; Manifestation Dates</span><span class="icon" style="opacity:.4">✦</span></div>
+  <div class="pgrid" style="margin-top:8px">
+    <div class="pcard">
+      <span class="pcard-d">8/8</span>
+      <div class="pcard-t">Lion's Gate. Abundance, confidence &amp; power. Claim what is yours.<br><br><strong style="color:var(--gold);font-style:normal;font-weight:500">Script for 20 minutes as the version of you who has claimed their abundance. Let it feel bold.</strong><br><em>Where in my life am I still playing small?</em></div>
+    </div>
+    <div class="pcard">
+      <span class="pcard-d">10/10</span>
+      <div class="pcard-t">Completion &amp; rebirth. Honour what's closing. Open the door to what's next.<br><br><strong style="color:var(--gold);font-style:normal;font-weight:500">Write a letter to the version of you who started this cycle, then one to the version now emerging.</strong><br><em>What chapter is closing, and what am I stepping into?</em></div>
+    </div>
+    <div class="pcard">
+      <span class="pcard-d">11/11</span>
+      <div class="pcard-t">Alignment, destiny &amp; love. Close the gap between your inner and outer worlds.<br><br><strong style="color:var(--gold);font-style:normal;font-weight:500">Do the full portal ritual. Set three intentions for the rest of the year in present tense. Speak them aloud.</strong><br><em>Where am I most out of alignment right now?</em></div>
+    </div>
+  </div>
+  <p class="body-light" style="font-size:14px;font-style:italic;margin-top:12px;opacity:.6">Solstices, equinoxes, and your birthday are also powerful personal portals. Use any of them as you would a New Moon.</p>
+  <div class="wl" style="margin-top:18px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">The portals I want to work with this year:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">The intention I am taking into the next portal:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">What I want to feel and embody by year's end:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <p class="body-light" style="font-size:13px;font-style:italic;opacity:.5;margin-top:14px">Use your birthday, the solstices, any date that calls to you. Ritual works because <em>you</em> decide it is sacred, not because a date says so.</p>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">30</div>
+</div>
+</div>
+
+<!-- S16: HOW TO USE A PORTAL -->
+<div class="page">
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">Manifest Your Dream Life</span><span class="icon" style="opacity:.4">✦</span></div>
+  <span class="eyebrow light">Section 16</span>
+  <h2 class="h1-light">How to Use<br><em style="color:var(--gold-light)">Any Portal Day</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body-light" style="font-size:15px">Ritual works because it takes what you'd otherwise do casually and makes it deliberate. The candle isn't magic. The act of treating something as <em>sacred</em> is the magic. Every step below exists for a reason.</p>
+  <div class="step"><span class="step-n">01</span><div class="step-c"><div class="step-h">Cleanse your space</div><div class="step-b">Open a window. Light a candle. Signal to yourself that this is a sacred kind of time. Different from emailing.</div></div></div>
+  <div class="step"><span class="step-n">02</span><div class="step-c"><div class="step-h">Candle ritual</div><div class="step-b">Light deliberately. Set your intention aloud as you do. The flame becomes the focal point. Don't blow it out until you're done.</div></div></div>
+  <div class="step"><span class="step-n">03</span><div class="step-c"><div class="step-h">Journal your intentions</div><div class="step-b">Write aligned with the portal's energy. Present tense, with feeling. You're giving your subconscious a clear, emotionally-charged direction.</div></div></div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">The portal I am working with, and the energy I am aligning to:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">My intention for this portal, present tense, with feeling:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">31</div>
+</div>
+</div>
+
+<!-- S16b: HOW TO USE A PORTAL — VISUALISE, RELEASE & TRUST -->
+<div class="page">
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">How to Use Any Portal Day</span><span class="icon" style="opacity:.4">✦</span></div>
+  <div class="step"><span class="step-n">04</span><div class="step-c"><div class="step-h">Release writing</div><div class="step-b">What's standing between you and what you're calling in? Write it. Then safely destroy it. You can't receive with full hands.</div></div></div>
+  <div class="step"><span class="step-n">05</span><div class="step-c"><div class="step-h">Visualise (11 minutes)</div><div class="step-b">Close your eyes. Inhabit the life. Don't just think it. <em>Feel</em> it. The deeper you go, the more it lands. Most people give up at three minutes. Stay.</div></div></div>
+  <div class="step"><span class="step-n">06</span><div class="step-c"><div class="step-h">Detach and trust</div><div class="step-b">Hand on heart. <em>I release this to the universe. I trust the timing. I am open to receive in forms I can't yet imagine.</em> The grip is the enemy of manifestation. This step releases it.</div></div></div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">What I released on this portal day:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">What I called in:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">How I felt after the full ritual:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <div class="wl" style="margin-top:14px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">What I noticed in my body during the visualisation:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:12px;color:rgba(200,168,75,.7)">The one thing I know is mine. I'm claiming it now:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <p class="body-light" style="font-size:13px;font-style:italic;opacity:.5;text-align:center;margin-top:12px">Treat yourself as sacred. The ritual works because you decide it does.</p>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">32</div>
+</div>
+</div>
+
+<!-- S17: MANIFESTING LOVE -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 17</span>
+  <h2 class="h1">Manifesting<br><em>Love</em></h2>
+  <div class="div"><div class="l"></div><div class="g">🌙</div><div class="lr"></div></div>
+  <p class="body">Real love manifestation doesn't start by trying to attract a specific person. It starts with your relationship to yourself. Self-love is the foundation, not a footnote.</p>
+  <div class="pq"><p>You will never call in a love that exceeds the love you have for yourself. The universe will not deliver a partner who treats you better than you treat yourself. The frequency doesn't match.</p></div>
+  <p class="body">Self-love in real daily life: keeping a promise you made to yourself. Speaking to yourself the way you'd speak to a good friend. Setting a boundary you've been avoiding. Letting someone help you. Saying no to a draining invitation without justifying it. Each of these is a vote for the version of you who is ready for deep love.</p>
+  <h3 class="h2">Standards and non-negotiables</h3>
+  <p class="body">If you do not know what you want, you will accept whatever shows up. Write two lists: your <strong>non-negotiables</strong> (emotional availability, kindness, commitment, safety) and your <strong>standards</strong> (preferences you could flex on). Be ruthless with the first list.</p>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">My non-negotiables in love, the things I will not flex on:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">My standards: preferences I could flex on:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">33</div>
+</div>
+</div>
+
+<!-- S17-cont: MANIFESTING LOVE — CALLING IN ALIGNED LOVE -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifesting Love</span><span class="icon">✦</span></div>
+  <h3 class="h2">Calling in aligned love</h3>
+  <p class="body">Don't manifest a specific person. Manifest a quality of love. Describe how it <em>feels</em>, not what it looks like. Safe. Reciprocated. Easy in the small ways. Like being chosen, every day, with no doubt. Like both people are growing. Let the universe handle the form.</p>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">How aligned love feels in my body:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">The quality of love I am calling in: describe the feeling, not the person:</span>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">Where I am already practising self-love this week:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">One boundary I am ready to hold:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">How would aligned love make me feel on an ordinary Tuesday? Describe it specifically:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">One way I am already choosing myself this week:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">34</div>
+</div>
+</div>
+
+<!-- S17b: MANIFESTING LOVE — EMOTIONAL AVAILABILITY -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifesting Love</span><span class="icon">✦</span></div>
+  <h3 class="h2">Emotional availability: yours</h3>
+  <p class="body">Before asking who you want to attract, ask: can you actually receive love when it shows up? When someone offers a compliment, do you deflect? When someone offers help, do you say yes? Many of us who say we want love are quietly, honestly, a little terrified of it, not because love is bad, but because the past version of it hurt, and the body is still trying to keep you safe. The work is proving to your nervous system, gently and gradually, that being fully received is safe again. Practise receiving small things. The person who can take in a compliment, a kind word, an offer of help, will eventually be able to take in the big love.</p>
+  <p class="body" style="font-size:14px;font-style:italic;border-left:2px solid rgba(200,168,75,.3);padding-left:16px;color:var(--text-light)">A note if you're reading this with someone specific in mind: I'm not going to lecture you. I will say this: if the relationship is genuinely aligned with where you're going, doing this inner work will bring it closer, not further. You don't lose anything by stopping the obsessing. You only gain.</p>
+  <div class="pbox">
+    <span class="pbox-lbl">Prompts</span>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What does aligned love feel like, in my body?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Where am I still accepting less than my non-negotiables?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What's one act of self-love I can commit to this week?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">How emotionally available am I, honestly?</span></div>
+  </div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">One act of self-love I'm committing to this week:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">Where I am learning to receive more fully:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <p class="body" style="font-size:13px;font-style:italic;color:var(--text-light);text-align:center;margin-top:12px">The person who can receive a compliment will eventually be able to receive the big love.</p>
+  <div class="pnum">35</div>
+</div>
+</div>
+
+<!-- S18: MANIFESTING MONEY -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 18</span>
+  <h2 class="h1">Manifesting<br><em>Money</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body">Money is one of the cleanest mirrors of self-concept. What you believe you deserve, you tend to receive. What you believe is "too much" for you, you tend to never quite reach. And no manifestation practice can override a money story that's running in the background, undisturbed.</p>
+  <div class="pq"><p>Money flows toward calm, toward clarity, toward people who trust they are worthy of it. It doesn't flow toward fear or grip.</p></div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">My current money story, one honest sentence:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">The dominant emotion when I think about money right now:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">What I most need to shift in my relationship with money:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div>
+  </div>
+  <div class="pnum">36</div>
+</div>
+</div>
+
+<!-- S18-cont: MANIFESTING MONEY — FROM SURVIVAL TO RECEIVING -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifesting Money</span><span class="icon">✦</span></div>
+  <h3 class="h2">From survival to receiving</h3>
+  <p class="body">Survival mode is a tight, gripping, scarcity-flavoured frequency that attracts more of the same. Shifting out of it isn't about pretending you have more than you do. It's about beginning to <em>receive</em>, even small amounts, with calm instead of relief. Next time money arrives in any form, pause. Hand on heart. <em>Thank you. I receive this. There is more where this came from.</em> That's rewiring. It feels strange at first. Do it anyway.</p>
+  <div class="blist" style="grid-template-columns:1fr;margin:12px 0 8px">
+    <div class="bitem" style="font-size:14px">This week: accept a coffee someone offers to buy you. Receive it without immediately offering something back.</div>
+    <div class="bitem" style="font-size:14px">Let someone hold the door without rushing to balance the scales.</div>
+    <div class="bitem" style="font-size:14px">When someone gives you a compliment, say <em>thank you</em>, and nothing else after it.</div>
+    <div class="bitem" style="font-size:14px">If someone offers help, say yes.</div>
+    <div class="bitem" style="font-size:14px">When money arrives in any form (a refund, a gift, unexpected income) pause. Hand on heart. Receive it calmly, not with relief-anxiety. The universe notices whether you can receive.</div>
+  </div>
+  <div class="wl" style="margin-top:18px">
+    <span class="wl-label">This week, I will practise receiving by:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">What comes up in my body when I receive:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">What receiving calmly would look like for me:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">37</div>
+</div>
+</div>
+
+<!-- S18b: MANIFESTING MONEY — WEALTH IDENTITY -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifesting Money</span><span class="icon">✦</span></div>
+  <h3 class="h2">Wealth identity</h3>
+  <p class="body">The version of you you're becoming has a different relationship to money. They don't grip. They don't fear. They hold money with calm and use it with care. Step into that version, small choice by small choice. The energy does more than the amount.</p>
+  <div class="pbox">
+    <span class="pbox-lbl">Money Prompts</span>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What's the dominant emotion when I think about money?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What did money mean in the home I grew up in?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What does "enough" feel like in my body, not as a number?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What is my "more" actually in service of?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What inspired action have I been putting off this week?</span></div>
+  </div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">My current money story (one honest sentence):</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">The wealth identity I am stepping into:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">This week's one inspired money action:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div>
+  </div>
+  <p class="body" style="font-size:13px;font-style:italic;color:var(--text-light);text-align:center;margin-top:12px">The energy does more than the amount. Receive calmly.</p>
+  <div class="pnum">38</div>
+</div>
+</div>
+
+<!-- S19: MANIFESTING WORK & CAREER (NEW) -->
+<div class="page">
+<div class="pg-cream">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 19</span>
+  <h2 class="h1">Manifesting Work<br><em>&amp; Career</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body">Work is not separate from your spiritual practice. It's one of the most powerful arenas for self-concept to play out. The boundaries you set at work, the value you place on your time, the courage you bring to asking for what you deserve: all of it is manifestation in action.</p>
+  <div class="pq"><p>You're allowed to manifest a career that matches who you're becoming. That permission is yours to take.</p></div>
+  <div class="work-grid">
+    <div class="work-card">
+      <span class="work-cat">If you're employed</span>
+      <div class="work-body">Stop telling the story <em>I'm stuck.</em> You're in a role that no longer fits and you're in the process of moving. Script the job you want. Prepare the promotion conversation. Set the date and do it. If it's time to leave, becoming the person who trusts themselves enough to go is the work.</div>
+    </div>
+    <div class="work-card">
+      <span class="work-cat">If you're self-employed</span>
+      <div class="work-body">Script aligned clients, people who value what you do and pay gladly. Raise your prices. This is one of the most revealing self-concept exercises there is. If raising them makes your stomach clench, there's a belief running underneath. Find it. Rewrite it. Then raise the price.</div>
+    </div>
+  </div>
+  <h3 class="h2">Visibility and stepping up</h3>
+  <p class="body">Posting. Speaking. Being seen. Asking for the rise. Applying for the role. If you've been hiding behind your work instead of showing your face, this is identity work too. The version of you you're becoming doesn't hide.</p>
+  <div class="pq"><p>The version of you you're becoming asks for what they're worth, shows up fully, and trusts that the right people will respond.</p></div>
+  <div class="pnum">39</div>
+</div>
+</div>
+
+<!-- S19b: MANIFESTING WORK & CAREER — CAREER PROMPTS -->
+<div class="page">
+<div class="pg-cream">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <div class="pbox">
+    <span class="pbox-lbl">Career Prompts</span>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What does my dream career feel like, in my body?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What kind of work lights me up, and am I doing it?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Where am I playing small in my professional life?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What's one aligned action I can take this week?</span></div>
+  </div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">My aligned career vision in two or three sentences:</span>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">One aligned action I will take this week:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">I am scripting myself as someone who:</span>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">What would my future self do this week, professionally?</span>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <p class="body" style="font-size:13px;font-style:italic;color:var(--text-body);text-align:center;margin-top:12px">The version of you you're becoming asks for what they're worth. Start there.</p>
+  <div class="pnum">40</div>
+</div>
+</div>
+
+<!-- S20: MANIFESTING OPPORTUNITIES -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 20</span>
+  <h2 class="h1">Manifesting<br><em>Opportunities</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body">Opportunities are usually less about attracting them dramatically and more about <em>recognising</em> them when they arrive. They come dressed as a strange email. A random conversation. A small idea that won't go away. A nudge to reach out to someone. Most of us miss most of our opportunities not because they don't show up, but because we're not paying attention, or we doubt ourselves out of acting on them.</p>
+  <div class="pq"><p>The universe is always offering something. Whether you reach for it is up to you.</p></div>
+  <h3 class="h2">Acting on intuition</h3>
+  <p class="body">Intuition is the quiet voice that says <em>reach out to that person, take that meeting, send that pitch.</em> It rarely shouts. When you get the nudge, act within 24 hours. Don't overthink. Don't wait for it to make perfect sense. Just move. Most of the opportunities that change your life arrive because you followed a nudge that looked irrational in the moment.</p>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">An intuitive nudge I've been receiving lately:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">What stops me from acting on it, and what would happen if I just moved:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">The one action I could take within 24 hours:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">41</div>
+</div>
+</div>
+
+<!-- S20b: MANIFESTING OPPORTUNITIES — SPOTTING THE NUDGES -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifesting Opportunities</span><span class="icon">✦</span></div>
+  <h3 class="h2">Spotting the nudges</h3>
+  <p class="body">A recurring thought you keep dismissing. A name that keeps coming up. A "what if" that won't go away. The same book or idea appearing from three different sources. Write these down. They're maps. The thing that keeps tapping you on the shoulder is usually pointing at the door.</p>
+  <div class="pbox">
+    <span class="pbox-lbl">Prompts</span>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What nudge have I been ignoring lately?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What am I afraid of that might actually be an invitation?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Where am I waiting instead of moving?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What small action could I take in the next 48 hours?</span></div>
+  </div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">The nudge I am ready to act on now:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">The small action I will take in the next 48 hours:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">What I am afraid of, and what the invitation actually is:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">If I trusted intuition completely, what would I do first:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">42</div>
+</div>
+</div>
+
+<!-- S21: CRYSTALS -->
+<div class="page">
+<div class="pg-cream">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 21</span>
+  <h2 class="h1">Crystal Suggestions<br><em>for Manifestation</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body">Crystals are not magic. A crystal will not summon your soulmate. What they are is beautiful, tactile, focal anchors for your intentions. They make abstract work feel more concrete. Use them if you love them. Leave them if you don't. Manifestation works fine without them.</p>
+  <div class="cry-grid">
+    <div class="cry-card"><span class="cry-icon">💛</span><span class="cry-name">Citrine</span><div class="cry-use">Abundance &amp; prosperity</div></div>
+    <div class="cry-card"><span class="cry-icon">🌸</span><span class="cry-name">Rose Quartz</span><div class="cry-use">Love &amp; self-love</div></div>
+    <div class="cry-card"><span class="cry-icon">🔮</span><span class="cry-name">Clear Quartz</span><div class="cry-use">Amplification</div></div>
+    <div class="cry-card"><span class="cry-icon">💜</span><span class="cry-name">Amethyst</span><div class="cry-use">Intuition &amp; calm</div></div>
+    <div class="cry-card"><span class="cry-icon">💚</span><span class="cry-name">Aventurine</span><div class="cry-use">Luck &amp; opportunity</div></div>
+  </div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">The crystal I feel drawn to right now, and why:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">The intention I want to work with this crystal:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">Where I will place it so I see it daily:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">43</div>
+</div>
+</div>
+
+<!-- S21b: CRYSTALS — HOW TO USE THEM DAILY -->
+<div class="page">
+<div class="pg-cream">
+  <div class="ph"><span>Crystal Suggestions for Manifestation</span><span class="icon">✦</span></div>
+  <h3 class="h2">How to use them daily</h3>
+  <div class="blist" style="grid-template-columns:1fr">
+    <div class="bitem">Carry one in your pocket. Each time your hand brushes it, reconnect with your intention.</div>
+    <div class="bitem">Hold one while scripting or journaling. The physical weight helps you drop in.</div>
+    <div class="bitem">Place one in your space: citrine near your workspace for money work, rose quartz by the bed for love work.</div>
+    <div class="bitem">Set intentions with one in your palm. Speak the intention clearly, then place it somewhere visible.</div>
+    <div class="bitem">Cleanse them regularly: moonlight overnight, running water (if water-safe), or set the intention to clear them.</div>
+  </div>
+  <p class="body" style="font-size:14px;font-style:italic;color:var(--text-light);margin-top:12px">A guided crystal intention audio is available at deepbluedivination.co.uk if you'd like a walkthrough. You and your intention are the magic. The stone is just a beautiful place to rest your hand.</p>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">The crystal I am working with, and my intention for it:</span>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">How I will use it in my daily practice:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">What shifts when I work with it consistently:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">The intention I will speak aloud the next time I hold it:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div>
+  </div>
+  <div class="pnum">44</div>
+</div>
+</div>
+
+<!-- S22: COMMON MISTAKES -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 22</span>
+  <h2 class="h1">Common Manifestation<br><em>Mistakes</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <div class="mistake-item">
+    <div class="m-num">01</div>
+    <div class="m-txt"><div class="m-title">Obsession and grip</div><span class="m-sub">Why it happens: the desire is tied to a deeper need that starts screaming</span><div class="m-body">Wanting something so badly you grip it. Obsession is the opposite of receiving, energetically. Hold your desires loosely. You can want this and also live fully without it, while it's on its way.</div></div>
+  </div>
+  <div class="mistake-item">
+    <div class="m-num">02</div>
+    <div class="m-txt"><div class="m-title">No aligned action</div><span class="m-sub">Why it happens: fear, disguised as "waiting for a sign"</span><div class="m-body">You can affirm and visualise all you want. If you're not sending the email, going on the dates, or making the call, manifestation can't do its work. Movement plus trust.</div></div>
+  </div>
+  <div class="mistake-item">
+    <div class="m-num">03</div>
+    <div class="m-txt"><div class="m-title">Inconsistency</div><span class="m-sub">Why it happens: initial enthusiasm fades without structure</span><div class="m-body">Three brilliant days, then disappearing for three weeks. Small consistent practices beat enormous occasional rituals every single time. The compound interest is real.</div></div>
+  </div>
+  <div class="mistake-item">
+    <div class="m-num">04</div>
+    <div class="m-txt"><div class="m-title">Performing rather than feeling</div><span class="m-sub">Why it happens: feeling is vulnerable; performing feels safer</span><div class="m-body">Going through the motions without emotional engagement. Slow down. Do less with full presence. The universe responds to frequency, not performance.</div></div>
+  </div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">The mistake I recognise in myself most, and what I will do differently:</span>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">45</div>
+</div>
+</div>
+
+<!-- S22b: COMMON MISTAKES — 05 TO 08 -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Common Manifestation Mistakes</span><span class="icon">✦</span></div>
+  <div class="mistake-item">
+    <div class="m-num">05</div>
+    <div class="m-txt"><div class="m-title">Manifesting from lack</div><span class="m-sub">Why it happens: life is hard and the desire for escape is real</span><div class="m-body">Wanting something because your current life is unbearable broadcasts urgency and scarcity. As much as possible, manifest from <em>I'm already okay and I'm calling in more.</em></div></div>
+  </div>
+  <div class="mistake-item">
+    <div class="m-num">06</div>
+    <div class="m-txt"><div class="m-title">The doubt-and-checking cycle</div><span class="m-sub">Why it happens: we've been conditioned to expect instant results</span><div class="m-body">You manifest. Nothing immediate. Doubt arrives. Doubt makes you check more obsessively. Checking makes doubt worse. Interrupt the loop: notice it (<em>oh, there's the doubt</em>) then return to trust. <em>I've done my part. The timing isn't mine to manage.</em> Repeat as many times as needed.</div></div>
+  </div>
+  <div class="mistake-item">
+    <div class="m-num">07</div>
+    <div class="m-txt"><div class="m-title">Trying too many methods at once</div><span class="m-sub">Why it happens: novelty feels like progress, but excitement isn't depth</span><div class="m-body">Three books, ten accounts, every method at once, done none of them properly. This is paralysis dressed as effort. Pick two or three practices and commit to them for a season. Mastery comes from depth, not breadth. Don't keep switching.</div></div>
+  </div>
+  <div class="mistake-item">
+    <div class="m-num">08</div>
+    <div class="m-txt"><div class="m-title">Impatience</div><span class="m-sub">Why it happens: social media makes it look like everyone manifested theirs last Tuesday</span><div class="m-body">Manifestation runs on its own timeline. You don't get to set it. If you've been doing the work for a month and feel like nothing is happening, something almost certainly is, you just can't see it yet. Extend your timeline. Stop quitting in month three of what was always going to be a year-long process.</div></div>
+  </div>
+  <div class="pq" style="margin-top:20px"><p>Small consistent practices beat enormous occasional rituals every time. The compound interest is real.</p></div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">Notes on what I'm working through:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">46</div>
+</div>
+</div>
+
+<!-- S23: SIGNS WORKING -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 23</span>
+  <h2 class="h1">Signs Your Manifestation<br><em>Is Working</em></h2>
+  <div class="div"><div class="l"></div><div class="g">🌙</div><div class="lr"></div></div>
+  <p class="body">Most people mistake the absence of obvious external evidence for evidence that it isn't working. It almost always is. You just haven't yet been trained to see the early signs. Learning to read them isn't just comforting. It's practically useful. Recognition of progress is manifestation fuel.</p>
+  <div class="sign-grid">
+    <div class="sign-card"><div class="sign-title">Synchronicities</div><div class="sign-body">The same idea in three conversations. Names appearing repeatedly. Books landing on exactly the right page. When they cluster, the universe is whispering: <em>keep going.</em></div></div>
+    <div class="sign-card"><div class="sign-title">Emotional shifts</div><div class="sign-body">You feel calmer about the thing you used to spiral about. The desperate edge goes out of the wanting. This inner shift is the manifestation working from the inside out.</div></div>
+    <div class="sign-card"><div class="sign-title">Unexpected nudges</div><div class="sign-body">Invitations. A friend mentions something relevant. A stranger says something that lands like a message. These are doors. Your job is to notice and walk through them.</div></div>
+    <div class="sign-card"><div class="sign-title">Small previews</div><div class="sign-body">A weekend that feels like the life you want. A person who has many of the qualities you're calling in. A small windfall. Don't dismiss these. They're tasters of what's coming.</div></div>
+    <div class="sign-card"><div class="sign-title">Inner calm</div><div class="sign-body">The gripping has gone out of you. When you think about it, there's a quiet <em>I know this is coming.</em> That's trust. That's the deepest sign. You're close.</div></div>
+    <div class="sign-card"><div class="sign-title">The "when did this happen?" moment</div><div class="sign-body">You realise, weeks in, that you're already living what you were working toward. No dramatic arrival. It just became your life. That's the deepest manifestation.</div></div>
+  </div>
+  <div class="pnum">47</div>
+</div>
+</div>
+
+<!-- S23b: SIGNS YOUR MANIFESTATION IS WORKING — YOUR SIGNS -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Signs Your Manifestation Is Working</span><span class="icon">🌙</span></div>
+  <div class="pq" style="margin-top:8px"><p>Manifestation usually doesn't arrive with fireworks. It arrives in the texture of your days, slowly, until one morning you realise you're already living it.</p></div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">Signs I have noticed lately:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">The inner shift I can already feel:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">Notes, keep going:</span>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">48</div>
+</div>
+</div>
+
+<!-- S24: JOURNAL PROMPTS -->
+<div class="page">
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">Manifest Your Dream Life</span><span class="icon" style="opacity:.4">✦</span></div>
+  <span class="eyebrow light">Section 24</span>
+  <h2 class="h1-light">Journal Prompt<br><em style="color:var(--gold-light)">Section</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body-light" style="font-size:15px">Return to these again and again throughout your practice. Pick the ones that pull at you. Don't do them all. Don't do them in order. If any open up something big, keep going in your notebook.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px">
+    <div>
+      <div style="font-family:'Lato',sans-serif;font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;opacity:.8">Self-Concept</div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Who am I when no one is watching?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Who am I becoming?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What would my future self believe?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Where am I still performing the old version of me?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What identity am I quietly outgrowing?</span></div>
+    </div>
+    <div>
+      <div style="font-family:'Lato',sans-serif;font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;opacity:.8">Love</div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What kind of love am I finally willing to receive?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Where am I still earning love instead of receiving it?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What would I do tomorrow if I knew I was deeply loved?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Where am I still hiding from being fully seen?</span></div>
+    </div>
+    <div>
+      <div style="font-family:'Lato',sans-serif;font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;opacity:.8">Money</div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What does money mean to me, underneath everything?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What does "enough" feel like in my body?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What would change if I trusted money to flow?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What inspired action have I been avoiding?</span></div>
+    </div>
+    <div>
+      <div style="font-family:'Lato',sans-serif;font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;opacity:.8">Opportunities</div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What nudge have I been ignoring?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What am I afraid of that might actually be an invitation?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What's been tapping me on the shoulder lately?</span></div>
+    </div>
+  </div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">A prompt that opened something, keep going:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">49</div>
+</div>
+</div>
+
+<!-- S24b: JOURNAL PROMPTS — WORK, ENERGY & GRATITUDE -->
+<div class="page">
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">Journal Prompt Section</span><span class="icon" style="opacity:.4">✦</span></div>
+  <h3 class="h2-light" style="margin-top:0">More Prompts</h3>
+  <p class="body-light" style="font-size:14px;margin:4px 0 16px;opacity:.7">Pick the ones that pull at you. Don't do them all. If any open up something big, keep going in your notebook.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px">
+    <div>
+      <div style="font-family:'Lato',sans-serif;font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;opacity:.8">Work &amp; Career</div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What work lights me up, and am I doing it?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Where am I playing small professionally?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What would I do if I knew I couldn't fail?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What's the conversation I've been avoiding?</span></div>
+    </div>
+    <div>
+      <div style="font-family:'Lato',sans-serif;font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;opacity:.8">Energy</div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Where am I leaking energy right now?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Whose feelings have I been carrying?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What does it feel like when I'm in full power?</span></div>
+    </div>
+    <div>
+      <div style="font-family:'Lato',sans-serif;font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;opacity:.8">Gratitude &amp; Release</div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What am I grateful for right now that I almost never say out loud?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What story about myself am I done telling?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What am I holding onto out of habit, not love?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Who am I becoming in the wake of letting this go?</span></div>
+    </div>
+    <div>
+      <div style="font-family:'Lato',sans-serif;font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;opacity:.8">The Big One</div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">If I woke up tomorrow as my future self, what would be the first thing I'd notice?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What do I secretly know is already working?</span></div>
+      <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What becomes possible when I stop believing I'm behind?</span></div>
+    </div>
+  </div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">Notes:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">50</div>
+</div>
+</div>
+
+<!-- S25: AFFIRMATIONS -->
+<div class="page">
+<div class="pg-cream">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 25</span>
+  <h2 class="h1">Powerful<br><em>Affirmations</em></h2>
+  <div class="div"><div class="l"></div><div class="g">🌙</div><div class="lr"></div></div>
+  <p class="body" style="font-size:15px">Affirmations work when they're believable to the body. Read slowly. Notice which ones make your chest soften (those are aligned) and which make you flinch (those need most work). Rewrite each one in your own voice on the line below.</p>
+  <div class="aff-grid">
+    <div class="aff-card"><span class="aff-cat">Love</span><div class="aff-txt">I am safe to be loved, fully and visibly.</div><div class="aff-wl"></div></div>
+    <div class="aff-card"><span class="aff-cat">Money</span><div class="aff-txt">Money flows to me with ease. I am a money magnet.</div><div class="aff-wl"></div></div>
+    <div class="aff-card"><span class="aff-cat">Work</span><div class="aff-txt">I deserve work that lights me up. I am worthy of being paid well.</div><div class="aff-wl"></div></div>
+    <div class="aff-card"><span class="aff-cat">Confidence</span><div class="aff-txt">I take up space without apology.</div><div class="aff-wl"></div></div>
+    <div class="aff-card"><span class="aff-cat">Self-Worth</span><div class="aff-txt">My worth is not up for negotiation.</div><div class="aff-wl"></div></div>
+    <div class="aff-card"><span class="aff-cat">Money</span><div class="aff-txt">I receive money calmly and gratefully. There is always more.</div><div class="aff-wl"></div></div>
+    <div class="aff-card"><span class="aff-cat">Alignment</span><div class="aff-txt">I am becoming the person whose life this is.</div><div class="aff-wl"></div></div>
+    <div class="aff-card"><span class="aff-cat">Trust</span><div class="aff-txt">What's mine cannot pass me by. I trust my own timing.</div><div class="aff-wl"></div></div>
+  </div>
+  <div class="pnum">51</div>
+</div>
+</div>
+
+<!-- S25b: AFFIRMATIONS — WRITE YOUR OWN -->
+<div class="page">
+<div class="pg-cream">
+  <div class="ph"><span>Powerful Affirmations</span><span class="icon">🌙</span></div>
+  <div class="aff-grid" style="margin-top:8px">
+    <div class="aff-card"><span class="aff-cat">Love</span><div class="aff-txt">I attract love by being myself, not by performing.</div><div class="aff-wl"></div></div>
+    <div class="aff-card"><span class="aff-cat">Identity</span><div class="aff-txt">I am not behind. I am exactly where I'm meant to be.</div><div class="aff-wl"></div></div>
+  </div>
+  <h3 class="h2">Write Your Own</h3>
+  <p class="body" style="font-size:15px;margin:4px 0 16px">Now write your own, in your own voice. Read them aloud. Notice which ones make your chest soften (those are aligned). Notice which ones make you flinch (those need the most work).</p>
+  <div class="aff-grid">
+    <div class="aff-card"><span class="aff-cat">Write your own</span><div class="aff-txt" style="color:var(--text-light);font-style:italic;font-size:13px">The affirmation I most need to believe right now:</div><div class="aff-wl"></div></div>
+    <div class="aff-card"><span class="aff-cat">Write your own</span><div class="aff-txt" style="color:var(--text-light);font-style:italic;font-size:13px">The one that makes me flinch, and needs the most work:</div><div class="aff-wl"></div></div>
+    <div class="aff-card"><span class="aff-cat">Write your own</span><div class="aff-txt" style="color:var(--text-light);font-style:italic;font-size:13px">The identity I am claiming:</div><div class="aff-wl"></div></div>
+    <div class="aff-card"><span class="aff-cat">Write your own</span><div class="aff-txt" style="color:var(--text-light);font-style:italic;font-size:13px">The affirmation that felt impossible six months ago:</div><div class="aff-wl"></div></div>
+  </div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">The one affirmation I will say every morning this week:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">How it feels in my body when I say the one that fits:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div>
+  </div>
+  <p class="body" style="font-size:13px;font-style:italic;color:var(--text-light);text-align:center;margin-top:14px">Read slowly. Bring feeling to each one. The body is what changes, not just the mind.</p>
+  <div class="pnum">52</div>
+</div>
+</div>
+
+<!-- S26: 7-DAY CHALLENGE -->
+<div class="page">
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">Manifest Your Dream Life</span><span class="icon" style="opacity:.4">✦</span></div>
+  <span class="eyebrow light">Section 26</span>
+  <h2 class="h1-light">7-Day Manifestation<br><em style="color:var(--gold-light)">Challenge</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body-light" style="font-size:15px">Seven days. One focus per day. 15–20 minutes each. Start any day. Grab your notebook. Let's go.</p>
+  <div class="day-grid">
+    <div class="day-card">
+      <span class="day-n">Day 01</span>
+      <div class="day-title">Self-Concept Awareness</div>
+      <div class="day-body">Watch yourself today. Notice where you act from your old identity. Collect data without judgement. In the evening, write what you observed.</div>
+      <div class="day-prompts"><div class="day-p">◇ Who do I, deep down, currently believe I am?</div><div class="day-p" style="font-size:11px;opacity:.45;margin-top:8px;font-style:normal;letter-spacing:.04em">→ See Section 4: Self-Concept Glow Up</div></div>
+    </div>
+    <div class="day-card">
+      <span class="day-n">Day 02</span>
+      <div class="day-title">Energy Protection</div>
+      <div class="day-body">Ground before the day begins. Throughout the day ask: <em>whose feeling is this?</em> Hand back what isn't yours. End with a cord-cutting visualisation.</div>
+      <div class="day-prompts"><div class="day-p">◇ What does coming home to myself feel like?</div><div class="day-p" style="font-size:11px;opacity:.45;margin-top:8px;font-style:normal;letter-spacing:.04em">→ See Section 8: Energy Protection Basics</div></div>
+    </div>
+    <div class="day-card">
+      <span class="day-n">Day 03</span>
+      <div class="day-title">Scripting</div>
+      <div class="day-body">20 minutes. Pick one desire. Write in present tense, with full embodiment. Close your eyes and inhabit it halfway through. Read it back aloud.</div>
+      <div class="day-prompts"><div class="day-p">◇ What does my future Tuesday feel like?</div><div class="day-p" style="font-size:11px;opacity:.45;margin-top:8px;font-style:normal;letter-spacing:.04em">→ See Section 9: The Scripting Method</div></div>
+    </div>
+    <div class="day-card">
+      <span class="day-n">Day 04</span>
+      <div class="day-title">Vision Board Connection</div>
+      <div class="day-body">Create or refresh your vision board. Do the 5-minute activation routine. Consider setting it as your phone wallpaper. Place it where you'll see it daily.</div>
+      <div class="day-prompts"><div class="day-p">◇ What does my dream life feel like in three words?</div><div class="day-p" style="font-size:11px;opacity:.45;margin-top:8px;font-style:normal;letter-spacing:.04em">→ See Section 10: Vision Board &amp; Mood Board</div></div>
+    </div>
+  </div>
+  <div class="wl" style="margin-top:18px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">This evening, I noticed:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">53</div>
+</div>
+</div>
+
+<!-- S26b: 7-DAY CHALLENGE — DAYS 05–07 -->
+<div class="page">
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">7-Day Manifestation Challenge</span><span class="icon" style="opacity:.4">✦</span></div>
+  <div class="day-grid">
+    <div class="day-card">
+      <span class="day-n">Day 05</span>
+      <div class="day-title">Love &amp; Self-Worth</div>
+      <div class="day-body">One concrete act of self-love. Write your non-negotiables. Write a paragraph about how aligned love <em>feels</em>, not what it looks like.</div>
+      <div class="day-prompts"><div class="day-p">◇ Who do I need to become to be ready for this?</div></div>
+    </div>
+    <div class="day-card">
+      <span class="day-n">Day 06</span>
+      <div class="day-title">Money, Work &amp; Opportunity</div>
+      <div class="day-body">Take one inspired action you've been putting off. The email, the rate increase, the application, the conversation. Not perfectly. Just done.</div>
+      <div class="day-prompts"><div class="day-p">◇ What would my future self do this week?</div></div>
+    </div>
+  </div>
+  <div class="day-card" style="border:1px solid rgba(200,168,75,.25);padding:18px 20px;margin-top:12px;background:rgba(200,168,75,.05)">
+    <span class="day-n">Day 07</span>
+    <div class="day-title" style="color:var(--gold)">Reflection &amp; Gratitude</div>
+    <div class="day-body">Don't do new work. Honour what you've done. Read back over the week. Write a gratitude letter, to yourself, your life, whatever you believe in. Then make one promise to yourself for what comes next.</div>
+  </div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">After seven days, what shifted?</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:14px;color:rgba(200,168,75,.7)">My promise to myself for what comes next:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <div class="wl" style="margin-top:14px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">The day that surprised me most, and what it opened up:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <span class="wl-label" style="margin-top:12px;color:rgba(200,168,75,.7)">The one practice from this week I am carrying forward permanently:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <p class="body-light" style="font-size:13px;font-style:italic;opacity:.5;text-align:center;margin-top:12px">Whatever happens next, you showed up. That is the whole practice.</p>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">54</div>
+</div>
+</div>
+
+<!-- S26b: DAILY JOURNAL TEMPLATE -->
+<div class="page">
+<div class="pg-white">
+  <div class="ph"><span>7-Day Challenge</span><span class="icon">🌙</span></div>
+  <span class="eyebrow">My Daily Journal Template</span>
+  <h2 class="h1">Rhiannon's<br><em>Daily Practice</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="ltr-body">This is how I personally start every morning. It takes about five minutes. You're welcome to borrow it, adapt it, or use it exactly as it is. At the top of a fresh page, write the date. Then:</p>
+  <div class="journal-row">
+    <span class="journal-row-lbl">Three things I am grateful for</span>
+    <div class="journal-line"></div>
+    <div class="journal-line"></div>
+    <div class="journal-line"></div>
+    <div class="journal-line"></div>
+  </div>
+  <div class="journal-row">
+    <span class="journal-row-lbl">Three things I am ready to release</span>
+    <div class="journal-line"></div>
+    <div class="journal-line"></div>
+    <div class="journal-line"></div>
+    <div class="journal-line"></div>
+  </div>
+  <div class="journal-row">
+    <span class="journal-row-lbl">Three manifestations or intentions I am calling in</span>
+    <div class="journal-line"></div>
+    <div class="journal-line"></div>
+    <div class="journal-line"></div>
+    <div class="journal-line"></div>
+  </div>
+  <div class="journal-close">
+    <p style="font-family:'Cormorant Garamond';font-size:22px;font-style:italic;color:var(--text-light);margin-bottom:6px">Thank you, universe.</p>
+    <div style="width:60px;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent);margin:0 auto 20px"></div>
+  </div>
+  <div class="pnum">55</div>
+</div>
+</div>
+
+<!-- S26c: DAILY PRACTICE — REFLECTION SPACE -->
+<div class="page">
+<div class="pg-white">
+  <div class="ph"><span>Daily Practice</span><span class="icon">🌙</span></div>
+  <h3 class="h2">Your Practice Journal</h3>
+  <p class="ltr-body" style="font-size:15px;color:var(--text-light)">Three minutes of gratitude. One minute of release. One minute of intention. Done with feeling, not speed. If you do this every morning for a month, you'll have 90 gratitudes, 90 releases, and 90 intentions on paper. That's a powerful record of who you've been becoming.</p>
+  <div class="wl" style="margin-top:16px">
+    <span class="wl-label">After your first week of practice, what did you notice?</span>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">What shifted in the first month?</span>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+    <span class="wl-label" style="margin-top:14px">Free notes:</span>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div>
+  </div>
+  <p class="ltr-body" style="font-size:13px;color:var(--text-light);font-style:italic;text-align:center;margin-top:14px">Three minutes, done with feeling, not speed. That's the whole practice.</p>
+  <div class="pnum">56</div>
+</div>
+</div>
+
+<!-- S27: 30-DAY TRACKER -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>Manifest Your Dream Life</span><span class="icon">✦</span></div>
+  <span class="eyebrow">Section 27</span>
+  <h2 class="h1">30-Day Manifestation<br><em>Tracker</em></h2>
+  <div class="div"><div class="l"></div><div class="g">✦</div><div class="lr"></div></div>
+  <p class="body">One full lunar cycle. For each day: an alignment word, mood and energy (1–10), one action taken, one gratitude, and any synchronicities. By day 30, you'll have a detailed record of who you were becoming this month.</p>
+  <div class="track-grid">
+    <div class="track-cell"><span class="track-day">01</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">02</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">03</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">04</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">05</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">06</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">07</span><div class="track-dot"></div><div class="track-line"></div></div>
+  </div>
+  <div class="track-grid">
+    <div class="track-cell"><span class="track-day">08</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">09</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">10</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">11</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">12</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">13</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">14</span><div class="track-dot"></div><div class="track-line"></div></div>
+  </div>
+  <div class="track-grid">
+    <div class="track-cell"><span class="track-day">15</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">16</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">17</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">18</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">19</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">20</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">21</span><div class="track-dot"></div><div class="track-line"></div></div>
+  </div>
+  <div class="track-grid">
+    <div class="track-cell"><span class="track-day">22</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">23</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">24</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">25</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">26</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">27</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day">28</span><div class="track-dot"></div><div class="track-line"></div></div>
+  </div>
+  <div class="track-grid" style="grid-template-columns:repeat(2,1fr)">
+    <div class="track-cell"><span class="track-day">29</span><div class="track-dot"></div><div class="track-line"></div></div>
+    <div class="track-cell"><span class="track-day" style="color:var(--gold-light)">30 ✦</span><div class="track-dot" style="border-color:rgba(200,168,75,.6)"></div><div class="track-line"></div></div>
+  </div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">Each day: note one alignment word, one action taken, and one thing you're grateful for:</span>
+    <div class="wl-line"></div><div class="wl-line"></div><div class="wl-line"></div>
+  </div>
+  <div class="pnum">57</div>
+</div>
+</div>
+
+<!-- S27b: 30-DAY TRACKER — END-OF-CYCLE REFLECTION -->
+<div class="page">
+<div class="pg">
+  <div class="ph"><span>30-Day Manifestation Tracker</span><span class="icon">✦</span></div>
+  <h3 class="h2">End-of-Cycle Reflection</h3>
+  <p class="body" style="font-size:15px;margin:4px 0 16px">Thirty days of showing up. That is the practice. Don't rush past this moment. Sit with it.</p>
+  <div class="pbox">
+    <span class="pbox-lbl">Reflection Prompts</span>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What patterns did I notice over the 30 days?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">Who am I becoming?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What's the most important thing I've learned about myself this month?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What do I want to carry into the next cycle?</span></div>
+    <div class="pi"><span class="pi-g">◇</span><span class="pi-t">What am I releasing that served me this cycle but has run its course?</span></div>
+  </div>
+  <div class="wl" style="margin-top:20px">
+    <span class="wl-label">My reflections, in my own words:</span>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div><div class="wl-line"></div>
+    <div class="wl-line"></div>
+  </div>
+  <div class="pq" style="margin-top:10px;margin-bottom:4px"><p>You've shown up. Thirty days. That is the whole practice.</p></div>
+  <div class="pnum">58</div>
+</div>
+</div>
+
+<!-- S28: FINAL MESSAGE -->
+<div class="page">
+<div class="pg-dark">
+  <div class="ph"><span style="color:rgba(200,168,75,.5)">Manifest Your Dream Life</span><span class="icon" style="opacity:.4">🌙</span></div>
+  <span class="eyebrow light">Section 28</span>
+  <h2 class="h1-light">A Final<br><em style="color:var(--gold-light)">Message</em></h2>
+  <div class="div"><div class="l"></div><div class="g">🌙</div><div class="lr"></div></div>
+  <p class="body-light">So we've reached the end. Or maybe the beginning. With this work it's never entirely clear which.</p>
+  <p class="body-light">None of it will work if you put this guide down and go back to who you were yesterday. Knowledge doesn't change a life. <em>Practice</em> changes a life. And practice is just showing up, day after unremarkable day, in tiny, quiet acts of becoming. You will fall off your morning routine. You will revert to old beliefs. You will spiral. That's all fine. That's the path. The point isn't perfection. The point is <em>return</em>.</p>
+  <div class="pq-dark" style="margin:10px 0 8px"><p>You are already in motion. The moment you opened this guide, something shifted.</p></div>
+  <p class="body-light">The version of you you're becoming is on their way. They're in your morning choices. They're in the boundaries you're starting to hold. They're in the dream life you no longer feel embarrassed about wanting. They're closer than you think.</p>
+  <p class="body-light">Come find me on Instagram <strong style="color:var(--gold-light)">@deepbluedivination</strong> and share the shifts as they happen. And if you'd ever like a deeper look at what's moving for you, a personal tarot reading at <strong style="color:var(--gold-light)">deepbluedivination.co.uk</strong> is one of my favourite ways to mirror it all back.</p>
+  <div class="wl" style="margin-top:16px">
+    <span class="wl-label" style="color:rgba(200,168,75,.7)">My commitment from today, and the version of me I am stepping into:</span>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+    <div class="wl-line" style="border-color:rgba(200,168,75,.2)"></div>
+  </div>
+  <p class="body-light" style="margin-top:20px;font-size:19px">Go become them.</p>
+  <div style="margin-top:16px">
+    <span style="font-family:'Cormorant Garamond';font-style:italic;font-size:17px;color:rgba(200,168,75,.6);display:block;margin-bottom:6px">With love and light, always,</span>
+    <span style="font-family:'Cormorant Garamond';font-size:32px;font-weight:300;color:var(--gold-pale)">Rhiannon <span style="color:var(--gold)">🌙</span></span>
+  </div>
+  <div class="pnum" style="color:rgba(200,168,75,.5)">59</div>
+</div>
+</div>
+
+</div>
+</body>
+</html>

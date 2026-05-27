@@ -147,6 +147,9 @@ CREATE TABLE readings (
   email_version              TEXT,
   whatsapp_version           TEXT,
   pdf_url                    TEXT,
+  media_file_path            TEXT,
+  media_signed_url           TEXT,
+  media_url_expires_at       TIMESTAMPTZ,
   groq_model                 TEXT,
   prompt_version             INTEGER NOT NULL DEFAULT 1,
   regenerated_count          INTEGER NOT NULL DEFAULT 0,
@@ -213,6 +216,8 @@ CREATE TABLE app_settings (
   default_tone_preset_id  UUID REFERENCES tone_presets (id) ON DELETE SET NULL,
   default_delivery_format delivery_format DEFAULT 'written',
   groq_model              TEXT DEFAULT 'llama-3.3-70b-versatile',
+  business_name           TEXT,
+  default_topic           TEXT,
   test_mode_enabled       BOOLEAN NOT NULL DEFAULT false,
   created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -301,6 +306,11 @@ $$;
 -- CREATE INDEX IF NOT EXISTS idx_clients_is_test ON clients (is_test) WHERE is_test = true;
 -- CREATE INDEX IF NOT EXISTS idx_orders_is_test ON orders (is_test) WHERE is_test = true;
 -- CREATE INDEX IF NOT EXISTS idx_readings_is_test ON readings (is_test) WHERE is_test = true;
+-- ALTER TABLE readings ADD COLUMN IF NOT EXISTS media_file_path TEXT;
+-- ALTER TABLE readings ADD COLUMN IF NOT EXISTS media_signed_url TEXT;
+-- ALTER TABLE readings ADD COLUMN IF NOT EXISTS media_url_expires_at TIMESTAMPTZ;
+-- ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS business_name TEXT;
+-- ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS default_topic TEXT;
 
 -- ─── Seed Data ────────────────────────────────────────────────────────────────
 

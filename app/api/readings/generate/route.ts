@@ -11,13 +11,17 @@ import type { PromptInput } from '@/lib/ai/prompts/builder'
 
 function trimAtSentence(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text
-  // Protect the future section and closing lines — trim only the main body
-  const futureMatch = text.match(/\n\nWhat I'm Sensing/)
-  if (futureMatch && futureMatch.index !== undefined) {
-    const splitIdx = futureMatch.index
+  // Protect the future section and ritual — trim only the main body up to the earliest protected marker
+  const protectedMarkers = ["\n\nWhat I'm Sensing", '\n\nA Ritual For You']
+  let splitIdx = -1
+  for (const marker of protectedMarkers) {
+    const idx = text.indexOf(marker)
+    if (idx !== -1 && (splitIdx === -1 || idx < splitIdx)) splitIdx = idx
+  }
+  if (splitIdx !== -1) {
     const body = text.slice(0, splitIdx)
     const tail = text.slice(splitIdx)
-    if (body.length <= maxLength) return text // body fits; preserve future section as-is
+    if (body.length <= maxLength) return text // body fits; preserve protected sections as-is
     const sub = body.slice(0, maxLength)
     for (let i = sub.length - 1; i >= 0; i--) {
       if (['.', '!', '?'].includes(sub[i])) return sub.slice(0, i + 1) + tail
@@ -413,16 +417,31 @@ export async function POST(request: Request) {
     orderId = newOrder?.id ?? ''
   }
 
-  // Save order addons (follow-up)
+  // Save order addons
   if (orderId) {
     await supabase.from('order_addons').delete().eq('order_id', orderId).eq('addon_type', 'follow_up')
     if (f.includeFollowUp) {
-      await supabase.from('order_addons').insert({
-        order_id: orderId,
-        addon_type: 'follow_up',
-        addon_price: ADDON_PRICES.follow_up,
-        addon_notes: null,
-      })
+      await supabase.from('order_addons').insert({ order_id: orderId, addon_type: 'follow_up', addon_price: ADDON_PRICES.follow_up, addon_notes: null })
+    }
+
+    await supabase.from('order_addons').delete().eq('order_id', orderId).eq('addon_type', 'oracle_card')
+    if (f.includeOracleCard) {
+      await supabase.from('order_addons').insert({ order_id: orderId, addon_type: 'oracle_card', addon_price: ADDON_PRICES.oracle_card, addon_notes: null })
+    }
+
+    await supabase.from('order_addons').delete().eq('order_id', orderId).eq('addon_type', 'energy_cleansing')
+    if (f.includeEnergyCleansing) {
+      await supabase.from('order_addons').insert({ order_id: orderId, addon_type: 'energy_cleansing', addon_price: ADDON_PRICES.energy_cleansing, addon_notes: null })
+    }
+
+    await supabase.from('order_addons').delete().eq('order_id', orderId).eq('addon_type', 'extra_question')
+    if (f.includeExtraQuestion) {
+      await supabase.from('order_addons').insert({ order_id: orderId, addon_type: 'extra_question', addon_price: ADDON_PRICES.extra_question, addon_notes: null })
+    }
+
+    await supabase.from('order_addons').delete().eq('order_id', orderId).eq('addon_type', 'rush_24h')
+    if (f.isRush) {
+      await supabase.from('order_addons').insert({ order_id: orderId, addon_type: 'rush_24h', addon_price: ADDON_PRICES.rush_24h, addon_notes: null })
     }
   }
 
