@@ -25,18 +25,19 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // Refresh session — do not remove this line
+  // Refresh session — do not remove this line.
+  // getSession() reads the JWT from cookies without a network call, which is
+  // appropriate here: middleware only needs to know whether a session exists
+  // for routing. Server Components and API routes call getUser() for
+  // cryptographic validation where it matters.
   let user = null
   try {
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('getUser timeout')), 5000)
-    )
     const {
-      data: { user: sessionUser },
-    } = await Promise.race([supabase.auth.getUser(), timeout])
-    user = sessionUser
+      data: { session },
+    } = await supabase.auth.getSession()
+    user = session?.user ?? null
   } catch (err) {
-    console.error('[middleware] getUser failed:', err)
+    console.error('[middleware] getSession failed:', err)
   }
 
   const { pathname } = request.nextUrl
