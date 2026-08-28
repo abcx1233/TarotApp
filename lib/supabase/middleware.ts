@@ -26,9 +26,18 @@ export async function updateSession(request: NextRequest) {
   )
 
   // Refresh session — do not remove this line
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let user = null
+  try {
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('getUser timeout')), 5000)
+    )
+    const {
+      data: { user: sessionUser },
+    } = await Promise.race([supabase.auth.getUser(), timeout])
+    user = sessionUser
+  } catch (err) {
+    console.error('[middleware] getUser failed:', err)
+  }
 
   const { pathname } = request.nextUrl
 
