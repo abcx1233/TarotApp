@@ -40,14 +40,19 @@ export async function updateSession(request: NextRequest) {
     console.error('[middleware] getSession failed:', err)
   }
 
-  const { pathname } = request.nextUrl
+  const { pathname, searchParams } = request.nextUrl
 
-  // Routes that don't require auth
+  // Routes that are always accessible — including the invite/recovery landing page.
   const isPublic =
     pathname.startsWith('/login') ||
+    pathname.startsWith('/auth/set-password') ||
     pathname.startsWith('/api/webhooks') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon')
+
+  // Supabase appends ?type=invite or ?type=recovery to email links.
+  const authType = searchParams.get('type')
+  const isInviteOrRecovery = authType === 'invite' || authType === 'recovery'
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone()
@@ -55,10 +60,25 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (user && pathname === '/login') {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
+  if (user) {
+    // Invite/recovery: always land on set-password, never dashboard.
+    // Guard: skip if already there to prevent /auth/set-password → /auth/set-password loop.
+    if (isInviteOrRecovery && pathname !== '/auth/set-password') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/set-password'
+      // Preserve the type param so the set-password page knows why it's there.
+      url.searchParams.set('type', authType!)
+      return NextResponse.redirect(url)
+    }
+
+    // Normal logged-in user on /login: send to dashboard.
+    // Skip for invite/recovery flows (handled above) and /auth/set-password
+    // (already where they need to be) — both guards prevent looping.
+    if (pathname === '/login' && !isInviteOrRecovery) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse

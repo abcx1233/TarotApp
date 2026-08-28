@@ -9,10 +9,13 @@ export default async function DashboardRootLayout({
 }) {
   const supabase = createClient()
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
 
-  if (!user) {
+  // Use getSession() here (not getUser()) so a transient Supabase network
+  // failure can't kick an authenticated user to /login and trigger a redirect
+  // loop with the middleware's /login→/dashboard guard.
+  if (!session) {
     redirect('/login')
   }
 
