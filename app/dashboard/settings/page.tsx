@@ -248,7 +248,7 @@ export default function SettingsPage() {
             Connect Gmail account
           </Button>
           <p className="text-xs text-slate-400">
-            You'll be redirected to Google to authorise access. After connecting, set{' '}
+            You&apos;ll be redirected to Google to authorise access. After connecting, set{' '}
             <code className="bg-slate-100 px-1 rounded">GMAIL_REFRESH_TOKEN</code> in your
             environment.
           </p>

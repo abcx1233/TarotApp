@@ -245,7 +245,7 @@ export function CardEntry({
           />
         </div>
         <p className="mt-2 text-xs text-indigo-500/80">
-          This card's energy weaves through the entire reading as an undercurrent.
+          This card&apos;s energy weaves through the entire reading as an undercurrent.
         </p>
       </div>
     </div>

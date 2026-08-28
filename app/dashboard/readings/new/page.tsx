@@ -87,7 +87,6 @@ async function fetchReadingByOrderId(orderId: string): Promise<RestoredReadingDa
 
   if (!order) return null
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const orderAny = order as any
 
   return {

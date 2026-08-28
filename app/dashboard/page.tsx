@@ -186,7 +186,7 @@ export default async function DashboardPage() {
       {/* Today's queue */}
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-900">Today's queue</h2>
+          <h2 className="text-sm font-semibold text-slate-900">Today&apos;s queue</h2>
           <Link href="/dashboard/orders" className="text-xs text-brand-600 hover:underline flex items-center gap-1">
             View all <ArrowRight size={11} />
           </Link>
@@ -194,7 +194,7 @@ export default async function DashboardPage() {
 
         {todayQueue.length === 0 ? (
           <div className="rounded-xl border border-slate-200 bg-white px-6 py-10 text-center">
-            <p className="text-sm font-medium text-slate-700">You're all caught up ✨</p>
+            <p className="text-sm font-medium text-slate-700">You&apos;re all caught up ✨</p>
             <p className="mt-1 text-sm text-slate-400">
               No active orders right now — enjoy the quiet or start a new reading.
             </p>
