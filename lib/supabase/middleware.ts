@@ -26,18 +26,22 @@ export async function updateSession(request: NextRequest) {
   )
 
   // Refresh session — do not remove this line.
-  // getSession() reads the JWT from cookies without a network call, which is
-  // appropriate here: middleware only needs to know whether a session exists
-  // for routing. Server Components and API routes call getUser() for
-  // cryptographic validation where it matters.
+  // getUser() re-validates the token against Supabase Auth on every request.
+  // getSession() only decodes the cookie locally and does NOT verify the
+  // signature, so it must not be used to gate access here. The prior 5s
+  // Promise.race timeout was mis-diagnosing normal cross-region latency
+  // (Vercel <-> Supabase) as failure and forcing users to be treated as
+  // logged out — if this call is slow in production, fix it by moving the
+  // Vercel deployment region closer to the Supabase project region rather
+  // than reintroducing a short client-side timeout.
   let user = null
   try {
     const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    user = session?.user ?? null
+      data: { user: authUser },
+    } = await supabase.auth.getUser()
+    user = authUser
   } catch (err) {
-    console.error('[middleware] getSession failed:', err)
+    console.error('[middleware] getUser failed:', err)
   }
 
   const { pathname, searchParams } = request.nextUrl
