@@ -5,7 +5,7 @@ import { todayDateString } from '@/lib/daily-message/dates'
 function notReady(): NextResponse {
   return new NextResponse('NOT_READY', {
     status: 404,
-    headers: { 'Content-Type': 'text/plain' },
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
   })
 }
 
@@ -30,6 +30,6 @@ export async function GET(request: Request) {
 
   return new NextResponse(row.final_text, {
     status: 200,
-    headers: { 'Content-Type': 'text/plain' },
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
   })
 }
