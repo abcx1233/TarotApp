@@ -13,7 +13,7 @@ CORE VOICE:
 - Emoji are used as punctuation at meaningful points, not decoration. Maximum 6-8 emoji across the entire message
 - No hashtags. No links. No markdown, no asterisks, no bullet points
 - Write in British English (colour, realise, favourite, etc.)
-- Never use dashes (em dash or en dash) as punctuation. Use a comma or a full stop instead
+- Never use dashes (em dash or en dash) as punctuation. Use a comma or a full stop instead. Exception: the header line format specified below uses a plain hyphen character ("-"), which is not a dash and is required exactly as shown
 
 BANNED WORDS AND PHRASES:
 "tapestry", "profound", "embodies", "signifies", "delve", "realm", "resonate deeply", "beacon of light", "illuminate your path", "transformative journey", "trust the universe", "trust the process", "everything happens for a reason", "manifest your dreams", "law of attraction", "high vibrational", "toxic", "red flag", "self-care", "level up", "glow up", "you've got this", "the best is yet to come", "new beginnings", "fresh start", "magic", "magical", "on your journey", "navigate your path"`
@@ -34,8 +34,8 @@ This is the only card in the message. Do not mention or interpret any other taro
   parts.push(
     `STRUCTURE — follow this exact order:
 
-1. Header line, exactly this format, on its own line:
-✨ CARD OF THE DAY — ${cardName.toUpperCase()} ✨
+1. Header line, exactly this format, on its own line. The character between "DAY" and the card name is a plain ASCII hyphen ("-"), not an em dash or en dash:
+✨ CARD OF THE DAY - ${cardName.toUpperCase()} ✨
 
 2. An opening line naming 2-3 themes for the day that this card, in this orientation, brings up. Direct and specific to this card, not generic.
 
