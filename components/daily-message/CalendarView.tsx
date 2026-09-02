@@ -523,7 +523,7 @@ export function CalendarView() {
                       clickable ? 'cursor-pointer' : 'cursor-default'
                     } ${cellClasses(row, locked)} ${
                       atRisk
-                        ? 'ring-2 ring-red-400 ring-offset-1'
+                        ? 'ring-2 ring-inset ring-red-400'
                         : isTodayCell
                           ? 'ring-2 ring-inset ring-brand-400'
                           : 'border-transparent'
