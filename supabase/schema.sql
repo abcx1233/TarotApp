@@ -223,6 +223,22 @@ CREATE TABLE app_settings (
   updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- daily_messages
+CREATE TABLE daily_messages (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  message_date      DATE NOT NULL UNIQUE,
+  card_name         TEXT NOT NULL,
+  card_orientation  card_orientation NOT NULL DEFAULT 'upright',
+  generated_text    TEXT,
+  final_text        TEXT,
+  approved          BOOLEAN NOT NULL DEFAULT false,
+  approved_at       TIMESTAMPTZ,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_daily_messages_date ON daily_messages (message_date DESC);
+
 -- ─── Updated-at triggers ──────────────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION set_updated_at()
@@ -257,6 +273,10 @@ CREATE TRIGGER trg_app_settings_updated_at
   BEFORE UPDATE ON app_settings
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+CREATE TRIGGER trg_daily_messages_updated_at
+  BEFORE UPDATE ON daily_messages
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
 -- ─── Row Level Security ───────────────────────────────────────────────────────
 
 ALTER TABLE clients          ENABLE ROW LEVEL SECURITY;
@@ -268,6 +288,7 @@ ALTER TABLE client_notes     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tone_presets     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reading_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app_settings     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_messages   ENABLE ROW LEVEL SECURITY;
 
 -- Authenticated users can do everything (private internal tool)
 DO $$
@@ -275,7 +296,8 @@ DECLARE
   tbl TEXT;
   tables TEXT[] := ARRAY[
     'clients', 'orders', 'order_addons', 'readings', 'reading_cards',
-    'client_notes', 'tone_presets', 'reading_templates', 'app_settings'
+    'client_notes', 'tone_presets', 'reading_templates', 'app_settings',
+    'daily_messages'
   ];
 BEGIN
   FOREACH tbl IN ARRAY tables LOOP
@@ -289,6 +311,14 @@ BEGIN
   END LOOP;
 END;
 $$;
+
+-- The public fetch endpoint (app/api/daily-message/fetch) is unauthenticated —
+-- it gates access with its own DAILY_MESSAGE_FETCH_SECRET check instead of a
+-- Supabase session. It runs as the anon role, so it needs its own narrow
+-- read policy: approved messages only, never drafts.
+CREATE POLICY "anon_select_approved_daily_messages" ON daily_messages
+  FOR SELECT TO anon
+  USING (approved = true);
 
 -- ─── Migrations (run these if upgrading an existing database) ────────────────
 --

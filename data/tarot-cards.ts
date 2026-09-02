@@ -1,4 +1,4 @@
-import type { TarotCard } from '@/types'
+import type { TarotCard, CardOrientation } from '@/types'
 
 export const TAROT_CARDS: TarotCard[] = [
   // ─── Major Arcana ─────────────────────────────────────────────────────────
@@ -106,4 +106,16 @@ export function searchCards(query: string, suit?: string): TarotCard[] {
 
 export function getCardBySuit(name: string): TarotCard | undefined {
   return TAROT_CARDS.find((c) => c.name.toLowerCase() === name.toLowerCase())
+}
+
+export function drawRandomCard(excludeLastNDays: string[] = []): {
+  card: TarotCard
+  orientation: CardOrientation
+} {
+  const excluded = new Set(excludeLastNDays.map((n) => n.toLowerCase()))
+  const pool = TAROT_CARDS.filter((c) => !excluded.has(c.name.toLowerCase()))
+  const candidates = pool.length > 0 ? pool : TAROT_CARDS
+  const card = candidates[Math.floor(Math.random() * candidates.length)]
+  const orientation: CardOrientation = Math.random() < 0.5 ? 'upright' : 'reversed'
+  return { card, orientation }
 }

@@ -51,6 +51,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith('/login') ||
     pathname.startsWith('/auth/set-password') ||
     pathname.startsWith('/api/webhooks') ||
+    pathname.startsWith('/api/daily-message/fetch') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon')
 

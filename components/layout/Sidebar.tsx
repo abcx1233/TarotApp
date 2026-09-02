@@ -15,6 +15,7 @@ import {
   Settings,
   LogOut,
   Trash2,
+  Moon,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -22,6 +23,7 @@ import { useRouter } from 'next/navigation'
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/dashboard/readings/new', label: 'New Reading', icon: Sparkles },
+  { href: '/dashboard/daily-message', label: 'Daily Card Message', icon: Moon },
   { href: '/dashboard/orders', label: 'Orders', icon: ListOrdered },
   { href: '/dashboard/clients', label: 'Clients', icon: Users },
   { href: '/dashboard/history', label: 'History', icon: Clock },

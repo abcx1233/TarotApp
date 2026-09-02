@@ -161,6 +161,19 @@ export interface OrderAddon {
   created_at: string
 }
 
+export interface DailyMessage {
+  id: string
+  message_date: string
+  card_name: string
+  card_orientation: CardOrientation
+  generated_text: string | null
+  final_text: string | null
+  approved: boolean
+  approved_at: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface TarotCard {
   name: string
   suit: 'Major Arcana' | 'Cups' | 'Pentacles' | 'Wands' | 'Swords'
