@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     .select('id, generated_text')
     .in('message_date', dates)
     .eq('approved', false)
+    .is('deleted_at', null)
 
   if (fetchError) {
     console.error('[daily-message/approve-batch] Fetch error:', fetchError)

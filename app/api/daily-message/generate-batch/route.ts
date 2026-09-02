@@ -38,11 +38,14 @@ export async function POST(request: Request) {
 
   // Pull everything from 7 days before the range through the end of it — this
   // both seeds the no-repeat lookback window and tells us which dates to skip.
+  // Soft-deleted rows are excluded entirely: they no longer occupy their date
+  // for no-repeat or skip purposes.
   const { data: existingRows, error: fetchError } = await supabase
     .from('daily_messages')
-    .select('message_date, card_name')
+    .select('message_date, card_name, skipped')
     .gte('message_date', lookbackStart)
     .lte('message_date', rangeEnd)
+    .is('deleted_at', null)
     .order('message_date', { ascending: true })
 
   if (fetchError) {
@@ -50,10 +53,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to read existing messages' }, { status: 500 })
   }
 
-  const recentHistory = (existingRows ?? []).filter((r) => r.message_date < startDate)
-  const existingByDate: Record<string, string> = {}
+  const recentHistory = (existingRows ?? []).filter((r) => r.message_date < startDate && !r.skipped)
+  // A skipped day maps to `null` — left alone, but with no card to track for
+  // the no-repeat window (nothing was actually drawn there).
+  const existingByDate: Record<string, string | null> = {}
   for (const row of existingRows ?? []) {
-    if (row.message_date >= startDate) existingByDate[row.message_date] = row.card_name
+    if (row.message_date >= startDate) {
+      existingByDate[row.message_date] = row.skipped ? null : row.card_name
+    }
   }
 
   const draws = drawCardsForDateRange(startDate, days, recentHistory, existingByDate)
@@ -85,6 +92,8 @@ export async function POST(request: Request) {
             final_text: null,
             approved: false,
             approved_at: null,
+            skipped: false,
+            deleted_at: null,
             updated_at: new Date().toISOString(),
           },
           { onConflict: 'message_date' }

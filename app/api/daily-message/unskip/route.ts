@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isValidDateString } from '@/lib/daily-message/dates'
-import { DAILY_MESSAGE_COLUMNS } from '@/lib/daily-message/columns'
 
-// Persists an edit to a draft's text without approving it — used by the
-// calendar's "Save edit" action. Approving is a separate, explicit step.
+// Un-marks a skipped date, returning it to Empty so it can be generated
+// normally again.
 export async function POST(request: Request) {
   const supabase = createClient()
   const {
@@ -15,7 +14,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let body: { date?: string; text?: string }
+  let body: { date?: string }
   try {
     body = await request.json()
   } catch {
@@ -26,25 +25,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'date (YYYY-MM-DD) is required' }, { status: 422 })
   }
 
-  const text = body.text?.trim()
-  if (!text) {
-    return NextResponse.json({ error: 'text is required' }, { status: 422 })
-  }
-
   const { data: row, error } = await supabase
     .from('daily_messages')
-    .update({
-      generated_text: text,
-      updated_at: new Date().toISOString(),
-    })
+    .update({ skipped: false, updated_at: new Date().toISOString() })
     .eq('message_date', body.date)
+    .eq('skipped', true)
     .is('deleted_at', null)
-    .select(DAILY_MESSAGE_COLUMNS)
+    .select('id, message_date')
     .single()
 
   if (error || !row) {
-    return NextResponse.json({ error: 'No draft found for that date' }, { status: 404 })
+    return NextResponse.json({ error: 'No skipped date found to un-skip' }, { status: 404 })
   }
 
-  return NextResponse.json({ dailyMessage: row })
+  return NextResponse.json({ unskipped: true, messageDate: row.message_date })
 }

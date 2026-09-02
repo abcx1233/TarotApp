@@ -233,11 +233,14 @@ CREATE TABLE daily_messages (
   final_text        TEXT,
   approved          BOOLEAN NOT NULL DEFAULT false,
   approved_at       TIMESTAMPTZ,
+  skipped           BOOLEAN NOT NULL DEFAULT false,
+  deleted_at        TIMESTAMPTZ,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX idx_daily_messages_date ON daily_messages (message_date DESC);
+CREATE INDEX idx_daily_messages_deleted_at ON daily_messages (deleted_at) WHERE deleted_at IS NOT NULL;
 
 -- ─── Updated-at triggers ──────────────────────────────────────────────────────
 
@@ -318,7 +321,7 @@ $$;
 -- read policy: approved messages only, never drafts.
 CREATE POLICY "anon_select_approved_daily_messages" ON daily_messages
   FOR SELECT TO anon
-  USING (approved = true);
+  USING (approved = true AND deleted_at IS NULL);
 
 -- ─── Migrations (run these if upgrading an existing database) ────────────────
 --
@@ -341,6 +344,11 @@ CREATE POLICY "anon_select_approved_daily_messages" ON daily_messages
 -- ALTER TABLE readings ADD COLUMN IF NOT EXISTS media_url_expires_at TIMESTAMPTZ;
 -- ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS business_name TEXT;
 -- ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS default_topic TEXT;
+-- ALTER TABLE daily_messages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+-- ALTER TABLE daily_messages ADD COLUMN IF NOT EXISTS skipped BOOLEAN NOT NULL DEFAULT false;
+-- CREATE INDEX IF NOT EXISTS idx_daily_messages_deleted_at ON daily_messages (deleted_at) WHERE deleted_at IS NOT NULL;
+-- DROP POLICY IF EXISTS "anon_select_approved_daily_messages" ON daily_messages;
+-- CREATE POLICY "anon_select_approved_daily_messages" ON daily_messages FOR SELECT TO anon USING (approved = true AND deleted_at IS NULL);
 
 -- ─── Seed Data ────────────────────────────────────────────────────────────────
 

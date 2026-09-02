@@ -2,13 +2,15 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { differenceInDays, format } from 'date-fns'
-import { Trash2, RotateCcw, AlertTriangle } from 'lucide-react'
+import { Trash2, RotateCcw, AlertTriangle, AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Tabs } from '@/components/ui/Tabs'
 import { Button } from '@/components/ui/Button'
-import type { Client, Order, Reading } from '@/types'
+import type { Client, Order, Reading, DailyMessage } from '@/types'
 
 const RETENTION_DAYS = 30
+
+type TrashTable = 'clients' | 'orders' | 'readings' | 'daily_messages'
 
 type TrashedClient = Client
 type TrashedOrder = Order & { client?: { full_name: string } | null }
@@ -16,6 +18,7 @@ type TrashedReading = Reading & {
   client?: { full_name: string } | null
   order?: { reading_tier: string; topic: string } | null
 }
+type TrashedDailyMessage = DailyMessage
 
 const TIER_SHORT: Record<string, string> = {
   mini: 'Mini',
@@ -40,11 +43,11 @@ function DaysTag({ deletedAt }: { deletedAt: string }) {
 interface RowActionsProps {
   id: string
   name: string
-  table: 'clients' | 'orders' | 'readings'
+  table: TrashTable
   confirmId: string | null
   setConfirmId: (id: string | null) => void
-  onRestore: (table: 'clients' | 'orders' | 'readings', id: string) => void
-  onDeletePermanently: (table: 'clients' | 'orders' | 'readings', id: string) => void
+  onRestore: (table: TrashTable, id: string) => void
+  onDeletePermanently: (table: TrashTable, id: string) => void
 }
 
 function RowActions({ id, name, table, confirmId, setConfirmId, onRestore, onDeletePermanently }: RowActionsProps) {
@@ -92,19 +95,21 @@ function RowActions({ id, name, table, confirmId, setConfirmId, onRestore, onDel
 }
 
 export default function TrashPage() {
-  const [activeTab, setActiveTab] = useState<'clients' | 'orders' | 'readings'>('clients')
+  const [activeTab, setActiveTab] = useState<'clients' | 'orders' | 'readings' | 'daily_messages'>('clients')
   const [clients, setClients] = useState<TrashedClient[]>([])
   const [orders, setOrders] = useState<TrashedOrder[]>([])
   const [readings, setReadings] = useState<TrashedReading[]>([])
+  const [dailyMessages, setDailyMessages] = useState<TrashedDailyMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [confirmId, setConfirmId] = useState<string | null>(null)
+  const [restoreError, setRestoreError] = useState<string | null>(null)
 
   const loadAll = useCallback(async () => {
     setLoading(true)
     const supabase = createClient()
     const cutoff = new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000).toISOString()
 
-    const [{ data: c }, { data: o }, { data: r }] = await Promise.all([
+    const [{ data: c }, { data: o }, { data: r }, { data: d }] = await Promise.all([
       supabase
         .from('clients')
         .select('*')
@@ -123,11 +128,18 @@ export default function TrashPage() {
         .not('deleted_at', 'is', null)
         .gte('deleted_at', cutoff)
         .order('deleted_at', { ascending: false }),
+      supabase
+        .from('daily_messages')
+        .select('*')
+        .not('deleted_at', 'is', null)
+        .gte('deleted_at', cutoff)
+        .order('deleted_at', { ascending: false }),
     ])
 
     setClients((c ?? []) as TrashedClient[])
     setOrders((o ?? []) as TrashedOrder[])
     setReadings((r ?? []) as TrashedReading[])
+    setDailyMessages((d ?? []) as TrashedDailyMessage[])
     setLoading(false)
   }, [])
 
@@ -135,16 +147,24 @@ export default function TrashPage() {
     loadAll()
   }, [loadAll])
 
-  async function handleRestore(table: 'clients' | 'orders' | 'readings', id: string) {
+  async function handleRestore(table: TrashTable, id: string) {
     const supabase = createClient()
-    await supabase
+    const { data, error } = await supabase
       .from(table)
       .update({ deleted_at: null, updated_at: new Date().toISOString() })
       .eq('id', id)
+      .not('deleted_at', 'is', null)
+      .select('id')
+
+    if (error || !data || data.length === 0) {
+      setRestoreError('This item could not be restored — it may already have been restored or replaced elsewhere.')
+    } else {
+      setRestoreError(null)
+    }
     loadAll()
   }
 
-  async function handleDeletePermanently(table: 'clients' | 'orders' | 'readings', id: string) {
+  async function handleDeletePermanently(table: TrashTable, id: string) {
     const supabase = createClient()
     await supabase.from(table).delete().eq('id', id)
     setConfirmId(null)
@@ -155,6 +175,7 @@ export default function TrashPage() {
     { id: 'clients', label: `Clients${clients.length > 0 ? ` (${clients.length})` : ''}` },
     { id: 'orders', label: `Orders${orders.length > 0 ? ` (${orders.length})` : ''}` },
     { id: 'readings', label: `Readings${readings.length > 0 ? ` (${readings.length})` : ''}` },
+    { id: 'daily_messages', label: `Daily Messages${dailyMessages.length > 0 ? ` (${dailyMessages.length})` : ''}` },
   ]
 
   const actionProps = { confirmId, setConfirmId, onRestore: handleRestore, onDeletePermanently: handleDeletePermanently }
@@ -173,6 +194,13 @@ export default function TrashPage() {
         activeTab={activeTab}
         onChange={(id) => { setActiveTab(id as typeof activeTab); setConfirmId(null) }}
       />
+
+      {restoreError && (
+        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+          <AlertCircle size={16} className="mt-0.5 shrink-0" />
+          <span>{restoreError}</span>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-16">
@@ -311,6 +339,70 @@ export default function TrashPage() {
                             id={reading.id}
                             name={reading.client?.full_name ?? 'Reading'}
                             table="readings"
+                            {...actionProps}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
+          )}
+
+          {/* Daily Messages */}
+          {activeTab === 'daily_messages' && (
+            dailyMessages.length === 0 ? (
+              <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center">
+                <p className="text-sm text-slate-400">No trashed daily messages.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-100 bg-slate-50">
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500">Date</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500">Card</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500">At deletion</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500">Deleted</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500">Expires</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-semibold text-slate-500">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {dailyMessages.map((msg) => (
+                      <tr key={msg.id} className="hover:bg-slate-50/50">
+                        <td className="px-4 py-3 font-medium text-slate-900">
+                          {format(new Date(`${msg.message_date}T00:00:00`), 'd MMM yyyy')}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {msg.skipped ? (
+                            <span className="text-slate-400">Skipped day</span>
+                          ) : (
+                            <>
+                              {msg.card_name || '—'}
+                              {msg.card_orientation === 'reversed' ? ' (Reversed)' : ''}
+                            </>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {msg.approved ? (
+                            <span className="text-xs font-medium text-green-700">Approved</span>
+                          ) : (
+                            <span className="text-xs text-slate-400">Not approved</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-slate-500">
+                          {format(new Date(msg.deleted_at!), 'd MMM yyyy')}
+                        </td>
+                        <td className="px-4 py-3">
+                          <DaysTag deletedAt={msg.deleted_at!} />
+                        </td>
+                        <td className="px-4 py-3">
+                          <RowActions
+                            id={msg.id}
+                            name={`${msg.message_date}${msg.card_name ? ` — ${msg.card_name}` : ''}`}
+                            table="daily_messages"
                             {...actionProps}
                           />
                         </td>

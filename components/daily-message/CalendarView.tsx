@@ -9,11 +9,22 @@ import {
   subMonths,
   format,
   getDay,
-  isBefore,
-  isToday,
   isSameMonth,
 } from 'date-fns'
-import { ChevronLeft, ChevronRight, Sparkles, RefreshCw, Save, CheckCircle2, X, AlertCircle, CalendarCheck } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  RefreshCw,
+  Save,
+  CheckCircle2,
+  X,
+  AlertCircle,
+  CalendarCheck,
+  Trash2,
+  Ban,
+  AlertTriangle,
+} from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Textarea } from '@/components/ui/Textarea'
@@ -24,13 +35,24 @@ function todayDateString(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-function statusClasses(row: DailyMessage | undefined, isPast: boolean): string {
-  if (!row) return isPast ? 'bg-slate-50 text-slate-300' : 'bg-white text-slate-700 hover:bg-slate-50'
+function cellClasses(row: DailyMessage | undefined, locked: boolean): string {
+  if (row?.skipped) {
+    return locked
+      ? 'bg-slate-100 text-slate-300 border-dashed border-slate-200'
+      : 'bg-slate-100 text-slate-400 border-dashed border-slate-300 hover:bg-slate-200/60'
+  }
+  if (locked) {
+    return row
+      ? 'bg-slate-100 text-slate-400 border-slate-200'
+      : 'bg-slate-50 text-slate-300 border-transparent'
+  }
+  if (!row) return 'bg-white text-slate-700 hover:bg-slate-50 border-transparent'
   if (row.approved) return 'bg-green-50 text-green-800 hover:bg-green-100 border-green-200'
   return 'bg-amber-50 text-amber-800 hover:bg-amber-100 border-amber-200'
 }
 
 export function CalendarView() {
+  const todayStr = useMemo(() => todayDateString(), [])
   const [month, setMonth] = useState(() => startOfMonth(new Date()))
   const [rows, setRows] = useState<Record<string, DailyMessage>>({})
   const [loading, setLoading] = useState(true)
@@ -41,10 +63,15 @@ export function CalendarView() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isApproving, setIsApproving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isSkipping, setIsSkipping] = useState(false)
+  const [isUnskipping, setIsUnskipping] = useState(false)
 
   const [batchLoading, setBatchLoading] = useState(false)
   const [batchMessage, setBatchMessage] = useState<string | null>(null)
   const [approveAllLoading, setApproveAllLoading] = useState(false)
+  const [deletePendingLoading, setDeletePendingLoading] = useState(false)
+  const [deleteAllLoading, setDeleteAllLoading] = useState(false)
 
   const loadMonth = useCallback(async (m: Date) => {
     setLoading(true)
@@ -57,6 +84,7 @@ export function CalendarView() {
       .select('*')
       .gte('message_date', start)
       .lte('message_date', end)
+      .is('deleted_at', null)
 
     const map: Record<string, DailyMessage> = {}
     for (const row of (data ?? []) as DailyMessage[]) {
@@ -80,6 +108,7 @@ export function CalendarView() {
   }, [month])
 
   const selectedRow = selectedDate ? rows[selectedDate] : undefined
+  const selectedLocked = selectedDate ? selectedDate < todayStr : false
 
   function openDay(dateStr: string, row: DailyMessage | undefined, clickable: boolean) {
     if (!clickable) return
@@ -96,6 +125,14 @@ export function CalendarView() {
 
   function applyRowUpdate(row: DailyMessage) {
     setRows((prev) => ({ ...prev, [row.message_date]: row }))
+  }
+
+  function removeRow(dateStr: string) {
+    setRows((prev) => {
+      const next = { ...prev }
+      delete next[dateStr]
+      return next
+    })
   }
 
   async function handleGenerateForEmptyDay() {
@@ -196,6 +233,84 @@ export function CalendarView() {
     }
   }
 
+  async function handleDelete() {
+    if (!selectedDate || !selectedRow) return
+
+    const isTodayApproved = selectedDate === todayStr && selectedRow.approved
+    const confirmMessage = isTodayApproved
+      ? "This is today's approved message — deleting it means nothing will be ready to send today. Delete anyway?"
+      : `Delete the message for ${format(new Date(`${selectedDate}T00:00:00`), 'd MMMM yyyy')}?`
+    if (!window.confirm(confirmMessage)) return
+
+    setModalError(null)
+    setIsDeleting(true)
+    try {
+      const res = await fetch('/api/daily-message/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: selectedDate }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setModalError(data.error || 'Failed to delete.')
+        return
+      }
+      removeRow(selectedDate)
+      closeModal()
+    } catch {
+      setModalError('Failed to delete. Please try again.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  async function handleSkip() {
+    if (!selectedDate) return
+    setModalError(null)
+    setIsSkipping(true)
+    try {
+      const res = await fetch('/api/daily-message/skip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: selectedDate }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setModalError(data.error || 'Failed to skip this day.')
+        return
+      }
+      applyRowUpdate(data.dailyMessage)
+    } catch {
+      setModalError('Failed to skip this day. Please try again.')
+    } finally {
+      setIsSkipping(false)
+    }
+  }
+
+  async function handleUnskip() {
+    if (!selectedDate) return
+    setModalError(null)
+    setIsUnskipping(true)
+    try {
+      const res = await fetch('/api/daily-message/unskip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: selectedDate }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setModalError(data.error || 'Failed to un-skip this day.')
+        return
+      }
+      removeRow(selectedDate)
+      closeModal()
+    } catch {
+      setModalError('Failed to un-skip this day. Please try again.')
+    } finally {
+      setIsUnskipping(false)
+    }
+  }
+
   async function handleGenerateNext30() {
     setBatchMessage(null)
     setBatchLoading(true)
@@ -203,7 +318,7 @@ export function CalendarView() {
       const res = await fetch('/api/daily-message/generate-batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ startDate: todayDateString(), days: 30 }),
+        body: JSON.stringify({ startDate: todayStr, days: 30 }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -221,7 +336,7 @@ export function CalendarView() {
 
   async function handleApproveAllPending() {
     const pendingDates = Object.values(rows)
-      .filter((r) => !r.approved && r.generated_text?.trim())
+      .filter((r) => !r.approved && !r.skipped && r.generated_text?.trim())
       .map((r) => r.message_date)
 
     if (pendingDates.length === 0) return
@@ -252,7 +367,60 @@ export function CalendarView() {
     }
   }
 
-  const pendingCount = Object.values(rows).filter((r) => !r.approved && r.generated_text?.trim()).length
+  async function handleDeleteAllPending() {
+    if (!window.confirm('Delete every pending (unapproved) message from today onward? This can be undone from Trash.')) return
+
+    setBatchMessage(null)
+    setDeletePendingLoading(true)
+    try {
+      const res = await fetch('/api/daily-message/delete-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'pending' }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setBatchMessage(data.error || 'Bulk delete failed.')
+        return
+      }
+      setBatchMessage(`Deleted ${data.deleted} pending message${data.deleted === 1 ? '' : 's'}.`)
+      await loadMonth(month)
+    } catch {
+      setBatchMessage('Bulk delete failed. Please try again.')
+    } finally {
+      setDeletePendingLoading(false)
+    }
+  }
+
+  async function handleDeleteAllIncludingApproved() {
+    const typed = window.prompt(
+      'This deletes every message from today onward, including ones already approved and ready to send. This cannot be undone lightly (though it can be restored from Trash). Type DELETE to confirm.'
+    )
+    if (typed?.trim().toUpperCase() !== 'DELETE') return
+
+    setBatchMessage(null)
+    setDeleteAllLoading(true)
+    try {
+      const res = await fetch('/api/daily-message/delete-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'all' }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setBatchMessage(data.error || 'Bulk delete failed.')
+        return
+      }
+      setBatchMessage(`Deleted ${data.deleted} message${data.deleted === 1 ? '' : 's'} (including approved).`)
+      await loadMonth(month)
+    } catch {
+      setBatchMessage('Bulk delete failed. Please try again.')
+    } finally {
+      setDeleteAllLoading(false)
+    }
+  }
+
+  const pendingCount = Object.values(rows).filter((r) => !r.approved && !r.skipped && r.generated_text?.trim()).length
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -265,23 +433,39 @@ export function CalendarView() {
         </div>
 
         <Card className="mb-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={handleGenerateNext30} loading={batchLoading} size="sm">
-                <Sparkles size={14} />
-                Generate next 30 days
-              </Button>
-              <Button
-                onClick={handleApproveAllPending}
-                loading={approveAllLoading}
-                disabled={pendingCount === 0}
-                variant="outline"
-                size="sm"
-              >
-                <CalendarCheck size={14} />
-                Approve all pending{pendingCount > 0 ? ` (${pendingCount})` : ''}
-              </Button>
-            </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button onClick={handleGenerateNext30} loading={batchLoading} size="sm">
+              <Sparkles size={14} />
+              Generate next 30 days
+            </Button>
+            <Button
+              onClick={handleApproveAllPending}
+              loading={approveAllLoading}
+              disabled={pendingCount === 0}
+              variant="outline"
+              size="sm"
+            >
+              <CalendarCheck size={14} />
+              Approve all pending{pendingCount > 0 ? ` (${pendingCount})` : ''}
+            </Button>
+            <Button
+              onClick={handleDeleteAllPending}
+              loading={deletePendingLoading}
+              variant="outline"
+              size="sm"
+            >
+              <Trash2 size={14} />
+              Delete all pending
+            </Button>
+            <Button
+              onClick={handleDeleteAllIncludingApproved}
+              loading={deleteAllLoading}
+              variant="danger"
+              size="sm"
+            >
+              <Trash2 size={14} />
+              Delete all including approved
+            </Button>
           </div>
           {batchMessage && <p className="mt-2 text-xs text-slate-500">{batchMessage}</p>}
         </Card>
@@ -325,26 +509,38 @@ export function CalendarView() {
               {gridDays.days.map((d) => {
                 const dateStr = format(d, 'yyyy-MM-dd')
                 const row = rows[dateStr]
-                const past = isBefore(d, new Date(new Date().toDateString())) && !isToday(d)
-                const clickable = !!row || !past
+                const locked = dateStr < todayStr
+                const isTodayCell = dateStr === todayStr
+                const atRisk = isTodayCell && (!row || (!row.approved && !row.skipped))
+                const clickable = !!row || !locked
                 return (
                   <button
                     key={dateStr}
                     type="button"
                     disabled={!clickable}
                     onClick={() => openDay(dateStr, row, clickable)}
-                    className={`flex min-h-[64px] flex-col items-start gap-1 border bg-white p-2 text-left text-xs transition-colors ${
+                    className={`relative flex min-h-[64px] flex-col items-start gap-1 border bg-white p-2 text-left text-xs transition-colors ${
                       clickable ? 'cursor-pointer' : 'cursor-default'
-                    } ${statusClasses(row, past)} ${isToday(d) ? 'ring-2 ring-inset ring-brand-400' : 'border-transparent'}`}
+                    } ${cellClasses(row, locked)} ${
+                      atRisk
+                        ? 'ring-2 ring-red-400 ring-offset-1'
+                        : isTodayCell
+                          ? 'ring-2 ring-inset ring-brand-400'
+                          : 'border-transparent'
+                    }`}
                   >
+                    {atRisk && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-red-500" />}
                     <span className={`text-sm font-medium ${isSameMonth(d, month) ? '' : 'text-slate-300'}`}>
                       {format(d, 'd')}
                     </span>
-                    {row && (
-                      <span className="line-clamp-2 text-[10px] leading-tight">
-                        {row.card_name}
+                    {row?.skipped ? (
+                      <span className="flex items-center gap-1 text-[10px] leading-tight">
+                        <Ban size={10} />
+                        Skipped
                       </span>
-                    )}
+                    ) : row ? (
+                      <span className="line-clamp-2 text-[10px] leading-tight">{row.card_name}</span>
+                    ) : null}
                   </button>
                 )
               })}
@@ -355,7 +551,10 @@ export function CalendarView() {
         <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-500">
           <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-amber-200" /> Generated</span>
           <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-green-200" /> Approved</span>
-          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-slate-100" /> Empty</span>
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-white border border-slate-300" /> Empty</span>
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full border border-dashed border-slate-400 bg-slate-100" /> Skipped</span>
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-slate-200" /> Locked (past)</span>
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-red-500" /> Today needs action</span>
         </div>
       </div>
 
@@ -371,10 +570,16 @@ export function CalendarView() {
             <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5">
               <div>
                 <p className="text-sm font-semibold text-slate-900">{format(new Date(`${selectedDate}T00:00:00`), 'EEEE d MMMM yyyy')}</p>
-                {selectedRow && (
+                {selectedRow && !selectedRow.skipped && (
                   <p className="text-xs text-slate-500">
                     {selectedRow.card_name}
                     {selectedRow.card_orientation === 'reversed' ? ' (Reversed)' : ''}
+                  </p>
+                )}
+                {selectedLocked && (
+                  <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-400">
+                    <AlertTriangle size={11} />
+                    Past date — locked, read-only
                   </p>
                 )}
               </div>
@@ -391,7 +596,25 @@ export function CalendarView() {
                 </div>
               )}
 
-              {selectedRow ? (
+              {selectedRow?.skipped ? (
+                <div className="flex flex-col items-center py-6 text-center">
+                  <Ban size={22} className="text-slate-400" />
+                  <p className="mt-2 text-sm text-slate-500">This day is marked as skipped.</p>
+                  {!selectedLocked && (
+                    <Button className="mt-3" size="sm" variant="outline" onClick={handleUnskip} loading={isUnskipping}>
+                      Un-skip
+                    </Button>
+                  )}
+                </div>
+              ) : selectedLocked ? (
+                selectedRow ? (
+                  <div className="rounded-lg bg-slate-50 p-3 text-sm leading-relaxed text-slate-600 whitespace-pre-wrap">
+                    {selectedRow.final_text ?? selectedRow.generated_text}
+                  </div>
+                ) : (
+                  <p className="py-6 text-center text-sm text-slate-400">No message was generated for this date.</p>
+                )
+              ) : selectedRow ? (
                 <>
                   {selectedRow.approved && (
                     <span className="mb-2 inline-flex items-center gap-1 text-xs font-medium text-green-700">
@@ -417,15 +640,25 @@ export function CalendarView() {
                       <CheckCircle2 size={13} />
                       Approve
                     </Button>
+                    <Button variant="danger" size="sm" onClick={handleDelete} loading={isDeleting}>
+                      <Trash2 size={13} />
+                      Delete
+                    </Button>
                   </div>
                 </>
               ) : (
                 <div className="flex flex-col items-center py-6 text-center">
                   <p className="text-sm text-slate-500">No message for this day yet.</p>
-                  <Button className="mt-3" size="sm" onClick={handleGenerateForEmptyDay} loading={isGenerating}>
-                    <Sparkles size={13} />
-                    Generate for this day
-                  </Button>
+                  <div className="mt-3 flex flex-wrap justify-center gap-2">
+                    <Button size="sm" onClick={handleGenerateForEmptyDay} loading={isGenerating}>
+                      <Sparkles size={13} />
+                      Generate for this day
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={handleSkip} loading={isSkipping}>
+                      <Ban size={13} />
+                      Skip this day
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

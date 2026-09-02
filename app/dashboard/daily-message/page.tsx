@@ -16,6 +16,7 @@ async function getTodayMessage(): Promise<DailyMessage | null> {
     .from('daily_messages')
     .select('*')
     .eq('message_date', todayDateString())
+    .is('deleted_at', null)
     .single()
 
   return (data as DailyMessage) ?? null
@@ -26,6 +27,7 @@ async function getHistory(): Promise<DailyMessage[]> {
   const { data } = await supabase
     .from('daily_messages')
     .select('*')
+    .is('deleted_at', null)
     .order('message_date', { ascending: false })
     .limit(7)
 

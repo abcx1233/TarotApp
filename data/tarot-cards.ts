@@ -132,20 +132,22 @@ function epochDayToDateString(epochDay: number): string {
 
 export type DateCardDraw =
   | { date: string; cardName: string; orientation: CardOrientation; alreadyAssigned: false }
-  | { date: string; cardName: string; alreadyAssigned: true }
+  | { date: string; cardName: string | null; alreadyAssigned: true }
 
 /**
  * Draws a card + orientation for every date in [startDate, startDate + days).
- * Dates present in `existingByDate` are left untouched (their real card is
- * recorded so later dates still avoid repeating it) — everything else is
- * freshly drawn, avoiding any card assigned (real or in this same batch) in
- * the 7 days immediately before it.
+ * Dates present in `existingByDate` are left untouched — a string value
+ * records that date's real card (so later dates still avoid repeating it), a
+ * `null` value marks a skipped day (no card, never touched, and doesn't
+ * affect the no-repeat window since nothing was actually drawn there).
+ * Everything else is freshly drawn, avoiding any card assigned (real or in
+ * this same batch) in the 7 days immediately before it.
  */
 export function drawCardsForDateRange(
   startDate: string,
   days: number,
   recentHistory: { message_date: string; card_name: string }[] = [],
-  existingByDate: Record<string, string> = {}
+  existingByDate: Record<string, string | null> = {}
 ): DateCardDraw[] {
   const assigned = recentHistory.map((h) => ({
     epochDay: toEpochDay(h.message_date),
@@ -157,10 +159,12 @@ export function drawCardsForDateRange(
   for (let i = 0; i < days; i++) {
     const epoch = startEpoch + i
     const dateStr = epochDayToDateString(epoch)
-    const existingCardName = existingByDate[dateStr]
 
-    if (existingCardName) {
-      assigned.push({ epochDay: epoch, cardName: existingCardName })
+    if (dateStr in existingByDate) {
+      const existingCardName = existingByDate[dateStr]
+      if (existingCardName) {
+        assigned.push({ epochDay: epoch, cardName: existingCardName })
+      }
       results.push({ date: dateStr, cardName: existingCardName, alreadyAssigned: true })
       continue
     }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { todayDateString, isValidDateString } from '@/lib/daily-message/dates'
+import { DAILY_MESSAGE_COLUMNS } from '@/lib/daily-message/columns'
 
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -35,7 +36,8 @@ export async function POST(request: Request) {
       updated_at: new Date().toISOString(),
     })
     .eq('message_date', messageDate)
-    .select('id, message_date, card_name, card_orientation, generated_text, final_text, approved, approved_at')
+    .is('deleted_at', null)
+    .select(DAILY_MESSAGE_COLUMNS)
     .single()
 
   if (error || !row) {

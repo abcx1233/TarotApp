@@ -170,6 +170,8 @@ export interface DailyMessage {
   final_text: string | null
   approved: boolean
   approved_at: string | null
+  skipped: boolean
+  deleted_at: string | null
   created_at: string
   updated_at: string
 }

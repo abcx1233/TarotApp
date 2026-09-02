@@ -22,6 +22,7 @@ export async function GET(request: Request) {
     .from('daily_messages')
     .select('final_text, approved')
     .eq('message_date', todayDateString())
+    .is('deleted_at', null)
     .single()
 
   if (!row || !row.approved || !row.final_text) {

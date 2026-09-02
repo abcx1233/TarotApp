@@ -4,6 +4,7 @@ import { generateDailyCardMessage } from '@/lib/ai/generate'
 import { formatAiError } from '@/lib/ai/errors'
 import { drawRandomCard } from '@/data/tarot-cards'
 import { todayDateString, addDays, isValidDateString } from '@/lib/daily-message/dates'
+import { DAILY_MESSAGE_COLUMNS } from '@/lib/daily-message/columns'
 import type { CardOrientation } from '@/types'
 
 export async function POST(request: Request) {
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
       .select('card_name')
       .lt('message_date', messageDate)
       .gte('message_date', addDays(messageDate, -7))
+      .is('deleted_at', null)
 
     const draw = drawRandomCard((recentRows ?? []).map((r) => r.card_name))
     cardName = draw.card.name
@@ -67,11 +69,13 @@ export async function POST(request: Request) {
         final_text: null,
         approved: false,
         approved_at: null,
+        skipped: false,
+        deleted_at: null,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'message_date' }
     )
-    .select('id, message_date, card_name, card_orientation, generated_text, final_text, approved, approved_at')
+    .select(DAILY_MESSAGE_COLUMNS)
     .single()
 
   if (error || !row) {

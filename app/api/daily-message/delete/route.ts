@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { isValidDateString } from '@/lib/daily-message/dates'
-import { DAILY_MESSAGE_COLUMNS } from '@/lib/daily-message/columns'
+import { todayDateString, isValidDateString } from '@/lib/daily-message/dates'
 
-// Persists an edit to a draft's text without approving it — used by the
-// calendar's "Save edit" action. Approving is a separate, explicit step.
+// Soft-deletes a single date's message. Past dates are locked — this only
+// ever touches today or a future date.
 export async function POST(request: Request) {
   const supabase = createClient()
   const {
@@ -15,7 +14,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let body: { date?: string; text?: string }
+  let body: { date?: string }
   try {
     body = await request.json()
   } catch {
@@ -26,25 +25,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'date (YYYY-MM-DD) is required' }, { status: 422 })
   }
 
-  const text = body.text?.trim()
-  if (!text) {
-    return NextResponse.json({ error: 'text is required' }, { status: 422 })
+  if (body.date < todayDateString()) {
+    return NextResponse.json({ error: 'Past dates are locked and cannot be deleted' }, { status: 403 })
   }
 
   const { data: row, error } = await supabase
     .from('daily_messages')
-    .update({
-      generated_text: text,
-      updated_at: new Date().toISOString(),
-    })
+    .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
     .eq('message_date', body.date)
     .is('deleted_at', null)
-    .select(DAILY_MESSAGE_COLUMNS)
+    .select('id, message_date')
     .single()
 
   if (error || !row) {
-    return NextResponse.json({ error: 'No draft found for that date' }, { status: 404 })
+    return NextResponse.json({ error: 'No message found for that date' }, { status: 404 })
   }
 
-  return NextResponse.json({ dailyMessage: row })
+  return NextResponse.json({ deleted: true, messageDate: row.message_date })
 }
