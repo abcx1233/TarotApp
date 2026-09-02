@@ -32,12 +32,18 @@ export async function POST(request: Request) {
   // No card supplied (e.g. the calendar's "Generate for this day" button) —
   // auto-draw one, avoiding whatever was assigned in the 7 days before this date.
   if (!cardName) {
-    const { data: recentRows } = await supabase
+    const { data: recentRows, error: recentError } = await supabase
       .from('daily_messages')
       .select('card_name')
       .lt('message_date', messageDate)
       .gte('message_date', addDays(messageDate, -7))
       .is('deleted_at', null)
+
+    // Not fatal — worst case the no-repeat window isn't enforced for this one
+    // draw — but it must not fail silently, so it's logged.
+    if (recentError) {
+      console.error('[daily-message/generate] Failed to read recent history for no-repeat check:', recentError)
+    }
 
     const draw = drawRandomCard((recentRows ?? []).map((r) => r.card_name))
     cardName = draw.card.name

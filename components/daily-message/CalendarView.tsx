@@ -72,6 +72,7 @@ export function CalendarView() {
   const [approveAllLoading, setApproveAllLoading] = useState(false)
   const [deletePendingLoading, setDeletePendingLoading] = useState(false)
   const [deleteAllLoading, setDeleteAllLoading] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const loadMonth = useCallback(async (m: Date) => {
     setLoading(true)
@@ -79,13 +80,21 @@ export function CalendarView() {
     const start = format(startOfMonth(m), 'yyyy-MM-dd')
     const end = format(endOfMonth(m), 'yyyy-MM-dd')
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('daily_messages')
       .select('*')
       .gte('message_date', start)
       .lte('message_date', end)
       .is('deleted_at', null)
 
+    if (error) {
+      console.error('[calendar] Failed to load month:', error)
+      setLoadError(`Failed to load ${format(m, 'MMMM yyyy')} — the calendar below may be incomplete or stale.`)
+      setLoading(false)
+      return
+    }
+
+    setLoadError(null)
     const map: Record<string, DailyMessage> = {}
     for (const row of (data ?? []) as DailyMessage[]) {
       map[row.message_date] = row
@@ -393,13 +402,41 @@ export function CalendarView() {
   }
 
   async function handleDeleteAllIncludingApproved() {
-    const typed = window.prompt(
-      'This deletes every message from today onward, including ones already approved and ready to send. This cannot be undone lightly (though it can be restored from Trash). Type DELETE to confirm.'
-    )
-    if (typed?.trim().toUpperCase() !== 'DELETE') return
-
     setBatchMessage(null)
     setDeleteAllLoading(true)
+
+    // Check today specifically, regardless of which month is currently
+    // displayed — `rows` only holds the visible month, and this action is
+    // never scoped to it.
+    let todayWarning = ''
+    try {
+      const supabase = createClient()
+      const { data: todayRow } = await supabase
+        .from('daily_messages')
+        .select('approved')
+        .eq('message_date', todayStr)
+        .is('deleted_at', null)
+        .maybeSingle()
+
+      if (todayRow?.approved) {
+        todayWarning =
+          "\n\nThis includes TODAY's message, which is already approved and ready to send. Deleting it means nothing will be ready to send today."
+      } else if (todayRow) {
+        todayWarning = "\n\nThis includes today's message (not yet approved)."
+      }
+    } catch {
+      // If the check itself fails, fall through with the generic warning
+      // rather than blocking the action entirely.
+    }
+
+    const typed = window.prompt(
+      `This deletes every message from today onward, including ones already approved and ready to send. This cannot be undone lightly (though it can be restored from Trash).${todayWarning}\n\nType DELETE to confirm.`
+    )
+    if (typed?.trim().toUpperCase() !== 'DELETE') {
+      setDeleteAllLoading(false)
+      return
+    }
+
     try {
       const res = await fetch('/api/daily-message/delete-batch', {
         method: 'POST',
@@ -431,6 +468,13 @@ export function CalendarView() {
             <p className="mt-0.5 text-sm text-slate-500">Generate and approve messages in advance.</p>
           </div>
         </div>
+
+        {loadError && (
+          <div className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+            <AlertCircle size={16} className="mt-0.5 shrink-0" />
+            <span>{loadError}</span>
+          </div>
+        )}
 
         <Card className="mb-4">
           <div className="flex flex-wrap items-center gap-2">

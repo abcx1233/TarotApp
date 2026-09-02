@@ -31,12 +31,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Past dates are locked and cannot be skipped' }, { status: 403 })
   }
 
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from('daily_messages')
     .select('id')
     .eq('message_date', body.date)
     .is('deleted_at', null)
     .maybeSingle()
+
+  if (existingError) {
+    console.error('[daily-message/skip] Failed to check for an existing message:', existingError)
+    return NextResponse.json({ error: 'Failed to check for an existing message on that date' }, { status: 500 })
+  }
 
   if (existing) {
     return NextResponse.json({ error: 'A message already exists for that date' }, { status: 422 })

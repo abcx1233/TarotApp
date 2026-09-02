@@ -17,6 +17,7 @@ import type { DailyMessage, CardOrientation } from '@/types'
 interface DailyMessageFormProps {
   initialTodayMessage: DailyMessage | null
   initialHistory: DailyMessage[]
+  initialLoadError?: string | null
 }
 
 function wordCount(text: string): number {
@@ -24,7 +25,7 @@ function wordCount(text: string): number {
   return trimmed ? trimmed.split(/\s+/).length : 0
 }
 
-export function DailyMessageForm({ initialTodayMessage, initialHistory }: DailyMessageFormProps) {
+export function DailyMessageForm({ initialTodayMessage, initialHistory, initialLoadError }: DailyMessageFormProps) {
   const [cardName, setCardName] = useState(initialTodayMessage?.card_name ?? '')
   const [orientation, setOrientation] = useState<CardOrientation>(
     initialTodayMessage?.card_orientation ?? 'upright'
@@ -36,7 +37,7 @@ export function DailyMessageForm({ initialTodayMessage, initialHistory }: DailyM
   const [history, setHistory] = useState(initialHistory)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isApproving, setIsApproving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(initialLoadError ?? null)
   const [approvedJustNow, setApprovedJustNow] = useState(false)
 
   const excludeNames = useMemo(() => history.map((h) => h.card_name), [history])
