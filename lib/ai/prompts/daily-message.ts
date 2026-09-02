@@ -1,4 +1,19 @@
+import { TAROT_CARDS } from '@/data/tarot-cards'
 import type { CardOrientation } from '@/types'
+
+// A deliberately small, high-confidence set — only cards with one
+// unmistakable, singular visual image. Everything else (all Minor Arcana,
+// and any Major Arcana card without one obvious symbol) defaults to ✨.
+// The model kept over-generalizing suit associations (💰 for Pentacles,
+// 🔥 for Wands) under a prose-only rule, so the emoji is now decided here
+// in code and handed to the model as a fixed instruction, not inferred.
+const HEADER_EMOJI_OVERRIDES: Record<string, string> = {
+  Strength: '🦁',
+  Justice: '⚖️',
+  'The Sun': '☀️',
+  'The Moon': '🌙',
+  'The Star': '⭐',
+}
 
 const DAILY_MESSAGE_STYLE_GUIDE = `WRITING STYLE: NON-NEGOTIABLE
 
@@ -20,6 +35,13 @@ BANNED WORDS AND PHRASES:
 
 export function buildDailyMessagePrompt(cardName: string, orientation: CardOrientation): string {
   const orientationLabel = orientation === 'upright' ? 'Upright' : 'Reversed'
+  const suit = TAROT_CARDS.find((c) => c.name.toLowerCase() === cardName.toLowerCase())?.suit
+  const themedEmoji = HEADER_EMOJI_OVERRIDES[cardName]
+  const headerEmojiInstruction = themedEmoji
+    ? `FIXED INSTRUCTION FOR THIS CARD: use exactly "${themedEmoji}" on both sides of the header line below. Do not use ✨ or any other emoji there.`
+    : `FIXED INSTRUCTION FOR THIS CARD: use exactly "✨" on both sides of the header line below${
+        suit && suit !== 'Major Arcana' ? ` (this is a Minor Arcana ${suit} card)` : ''
+      }. Do not substitute 💰, 🔥, ❤️, 🌊, ⚔️, 🌿, 🦁, ⚖️, ☀️, 🌙, ⭐ or any other emoji, even if it feels thematically fitting. No exceptions for this card.`
 
   const parts: string[] = []
 
@@ -34,7 +56,12 @@ This is the only card in the message. Do not mention or interpret any other taro
   parts.push(
     `STRUCTURE — follow this exact order:
 
-1. Header line, on its own line. The character between "DAY" and the card name is always a plain ASCII hyphen ("-"), never an em dash or en dash. The emoji on each side defaults to ✨, but use a single thematically-fitting emoji on both sides instead when the card has an obvious, well-known association (examples: 🦁 for Strength, ⚖️ for Justice, 🌙 for The Moon, ☀️ for The Sun, ⭐ for The Star, 🔥 for a Wands card, 💧 for a Cups card, ⚔️ for a Swords card, 💰 for a Pentacles card). Only substitute when the fit is obvious and natural — do not force a match. When nothing fits cleanly, default to ✨:
+1. Header line, on its own line. The character between "DAY" and the card name is always a plain ASCII hyphen ("-"), never an em dash or en dash.
+
+${headerEmojiInstruction}
+
+(General rule, for context only — the fixed instruction above for this specific card always overrides it: only a small set of Major Arcana cards with one unmistakable, singular image, such as Strength, Justice, The Sun, The Moon or The Star, ever use a themed emoji instead of ✨. No Minor Arcana card, and no suit-based or elemental association — Wands is not 🔥, Cups is not ❤️ or 🌊, Pentacles is not 💰 or 🌿, Swords is not ⚔️ — may ever substitute for ✨.)
+
 [emoji] CARD OF THE DAY - ${cardName.toUpperCase()} [emoji]
 
 2. An opening line naming 2-3 themes for the day that this card, in this orientation, brings up. Direct and specific to this card, not generic.
