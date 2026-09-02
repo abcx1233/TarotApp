@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { drawCardsForDateRange, type DateCardDraw } from '@/data/tarot-cards'
 import { generateDailyCardMessage } from '@/lib/ai/generate'
-import { addDays, isValidDateString } from '@/lib/daily-message/dates'
+import { addDays, isValidDateString, shouldSkipWrite } from '@/lib/daily-message/dates'
 
 const DEFAULT_DAYS = 30
 const MAX_DAYS = 90
@@ -65,7 +65,11 @@ export async function POST(request: Request) {
 
   const draws = drawCardsForDateRange(startDate, days, recentHistory, existingByDate)
   const toGenerate = draws.filter((d): d is FreshDraw => !d.alreadyAssigned)
-  const skipped = draws.length - toGenerate.length
+  // Pre-existing skips/occupied dates, known before any generation started.
+  // Dates that get deleted or skipped *during* the batch (see the re-check
+  // below) are added to this same count as they're discovered, since the
+  // end result is the same either way: nothing was written for that date.
+  let skipped = draws.length - toGenerate.length
 
   let generated = 0
   let failed = 0
@@ -74,7 +78,7 @@ export async function POST(request: Request) {
     const chunk = toGenerate.slice(i, i + CONCURRENCY)
 
     const results = await Promise.allSettled(
-      chunk.map(async (draw) => {
+      chunk.map(async (draw): Promise<{ written: boolean }> => {
         const result = await generateDailyCardMessage(draw.cardName, draw.orientation)
         const generatedText = result.generatedReading
           .replace(/—/g, ', ')
@@ -82,6 +86,27 @@ export async function POST(request: Request) {
           .replace(/\s,\s/g, ', ')
           .replace(/,\s*,/g, ',')
           .trim()
+
+        // Batches run over minutes, not seconds — this date may have been
+        // deleted or skipped since the batch started, or even since this
+        // specific card's generation call began. Re-check right before
+        // writing rather than trusting the state read at the top of the
+        // request.
+        const { data: currentState, error: stateError } = await supabase
+          .from('daily_messages')
+          .select('deleted_at, skipped')
+          .eq('message_date', draw.date)
+          .maybeSingle()
+
+        if (stateError) {
+          console.error('[daily-message/generate-batch] Failed to re-check state before writing:', draw.date, stateError)
+          // Fall through and write anyway, same reasoning as the single-day route.
+        } else if (shouldSkipWrite(currentState)) {
+          console.log(
+            `[daily-message/generate-batch] Not writing ${draw.date} — ${currentState?.deleted_at ? 'deleted' : 'skipped'} while generation was in flight.`
+          )
+          return { written: false }
+        }
 
         const { error: upsertError } = await supabase.from('daily_messages').upsert(
           {
@@ -100,12 +125,17 @@ export async function POST(request: Request) {
         )
 
         if (upsertError) throw upsertError
+        return { written: true }
       })
     )
 
     for (const result of results) {
       if (result.status === 'fulfilled') {
-        generated++
+        if (result.value.written) {
+          generated++
+        } else {
+          skipped++
+        }
       } else {
         failed++
         console.error('[daily-message/generate-batch] Generation failed:', result.reason)

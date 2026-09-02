@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/Label'
 import { Toggle } from '@/components/ui/Toggle'
 import { Badge } from '@/components/ui/Badge'
 import { TAROT_CARDS, drawRandomCard } from '@/data/tarot-cards'
+import { todayDateString } from '@/lib/daily-message/dates'
 import type { DailyMessage, CardOrientation } from '@/types'
 
 interface DailyMessageFormProps {
@@ -41,7 +42,11 @@ export function DailyMessageForm({ initialTodayMessage, initialHistory, initialL
   const [approvedJustNow, setApprovedJustNow] = useState(false)
 
   const excludeNames = useMemo(() => history.map((h) => h.card_name), [history])
-  const today = useMemo(() => new Date(), [])
+  // Displayed as a Date via date-fns, but the underlying string comes from
+  // the shared Europe/London todayDateString() — not the browser's own
+  // local time — so this heading always matches whatever date the Generate
+  // button below actually targets server-side.
+  const today = useMemo(() => new Date(`${todayDateString()}T00:00:00`), [])
 
   function handleDraw() {
     setError(null)
@@ -67,6 +72,10 @@ export function DailyMessageForm({ initialTodayMessage, initialHistory, initialL
       const data = await res.json()
       if (!res.ok) {
         setError(data.error || 'Failed to generate the message.')
+        return
+      }
+      if (data.skippedWrite || !data.dailyMessage) {
+        setError("Today's date was deleted or skipped elsewhere while generating — the result was not saved.")
         return
       }
       setMessageText(data.dailyMessage.generated_text ?? '')

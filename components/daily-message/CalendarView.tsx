@@ -29,11 +29,8 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Textarea } from '@/components/ui/Textarea'
 import { createClient } from '@/lib/supabase/client'
+import { todayDateString } from '@/lib/daily-message/dates'
 import type { DailyMessage } from '@/types'
-
-function todayDateString(): string {
-  return new Date().toISOString().slice(0, 10)
-}
 
 function cellClasses(row: DailyMessage | undefined, locked: boolean): string {
   if (row?.skipped) {
@@ -159,6 +156,11 @@ export function CalendarView() {
         setModalError(data.error || 'Failed to generate.')
         return
       }
+      if (data.skippedWrite || !data.dailyMessage) {
+        setModalError('This date was deleted or skipped elsewhere while generating — the result was not saved.')
+        await loadMonth(month)
+        return
+      }
       applyRowUpdate(data.dailyMessage)
       setModalText(data.dailyMessage.generated_text ?? '')
     } catch {
@@ -185,6 +187,11 @@ export function CalendarView() {
       const data = await res.json()
       if (!res.ok) {
         setModalError(data.error || 'Failed to regenerate.')
+        return
+      }
+      if (data.skippedWrite || !data.dailyMessage) {
+        setModalError('This date was deleted or skipped elsewhere while regenerating — the result was not saved.')
+        await loadMonth(month)
         return
       }
       applyRowUpdate(data.dailyMessage)

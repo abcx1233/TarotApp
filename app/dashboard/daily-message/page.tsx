@@ -1,13 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { DailyMessageForm } from '@/components/daily-message/DailyMessageForm'
+import { todayDateString } from '@/lib/daily-message/dates'
 import type { DailyMessage } from '@/types'
 
 export const metadata = {
   title: 'Daily Card Message — Reader Console',
-}
-
-function todayDateString(): string {
-  return new Date().toISOString().slice(0, 10)
 }
 
 async function getTodayMessage(): Promise<{ message: DailyMessage | null; error: string | null }> {
