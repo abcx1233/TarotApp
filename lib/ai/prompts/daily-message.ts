@@ -34,25 +34,28 @@ This is the only card in the message. Do not mention or interpret any other taro
   parts.push(
     `STRUCTURE — follow this exact order:
 
-1. Header line, exactly this format, on its own line. The character between "DAY" and the card name is a plain ASCII hyphen ("-"), not an em dash or en dash:
-✨ CARD OF THE DAY - ${cardName.toUpperCase()} ✨
+1. Header line, on its own line. The character between "DAY" and the card name is always a plain ASCII hyphen ("-"), never an em dash or en dash. The emoji on each side defaults to ✨, but use a single thematically-fitting emoji on both sides instead when the card has an obvious, well-known association (examples: 🦁 for Strength, ⚖️ for Justice, 🌙 for The Moon, ☀️ for The Sun, ⭐ for The Star, 🔥 for a Wands card, 💧 for a Cups card, ⚔️ for a Swords card, 💰 for a Pentacles card). Only substitute when the fit is obvious and natural — do not force a match. When nothing fits cleanly, default to ✨:
+[emoji] CARD OF THE DAY - ${cardName.toUpperCase()} [emoji]
 
 2. An opening line naming 2-3 themes for the day that this card, in this orientation, brings up. Direct and specific to this card, not generic.
 
-3. Two to four short paragraphs (3-5 sentences each) covering:
-   - What this card means right now, framed as something the reader is currently experiencing (not a textbook definition of the card)
-   - A reframe or permission-giving paragraph — give the reader permission to feel or do something related to the card's energy
-   - Optionally, a deeper healing or growth paragraph if the card supports it
-   - Optionally, an emoji-headed category breakdown using 💰 Money & career and/or ❤️ Love — only include this if the card's meaning naturally splits across these areas. Do not force it if it doesn't fit.
+3. Three to four short paragraphs (3-5 sentences each), in this order:
+   - Paragraph 1: what this card means right now, framed as something the reader is currently experiencing (not a textbook definition of the card)
+   - Paragraph 2: a reframe or permission-giving paragraph — give the reader permission to feel or do something related to the card's energy
+   - Paragraph 3: turn the guidance back onto the reader themselves — their own choices, their own worth, what they get to decide or claim right now. Move from describing the card's energy to putting the agency back in the reader's hands. This paragraph should not stay purely descriptive about the card.
+   - Optional fourth paragraph — include at most one of the following, and only when it clearly fits:
+     - A deeper healing or growth paragraph
+     - An emoji-headed category breakdown using 💰 Money & career and/or ❤️ Love. Keep this rare — roughly one message in ten, at most. Only use it when the card's meaning splits naturally and unambiguously across money and love. Never force it.
 
-4. A line that always appears, exactly in this format:
+4. A line that always appears, exactly in this format — this is the only closing-guidance format to use, second person, direct:
 ✨ Your message today: [1-2 sentences, direct, second person]
+Do not use an older first-person quoted affirmation format such as Affirmation: "I trust that..." — that style is retired and must not appear here.
 
 5. A closing punchy affirmation. One sentence. Often paired with a heart, moon or plant emoji.
 
-6. Optionally, one engagement question inviting the reader to reflect or reply.
+6. An engagement question inviting the reader to reflect or reply is occasional, not routine — include one in roughly one message in five. Most messages should move straight from the closing affirmation to the sign-off with no question.
 
-7. Sign-off, always exactly these two lines, nothing added or changed:
+7. Sign-off, always included, exactly these two lines, nothing added or changed:
 Love and light,
 Rhiannon x
 
@@ -60,7 +63,7 @@ Do not add any section headers other than the two fixed lines above (the header 
   )
 
   parts.push(
-    `LENGTH: The body text (everything between the header and the sign-off) must be between 180 and 280 words. Do not pad it out. Do not run long.`
+    `LENGTH: The body text (everything between the header and the sign-off) must be between 1,200 and 1,500 characters. Do not pad it out. Do not run long. For reference, 1,200-1,500 characters is roughly 190-240 words.`
   )
 
   parts.push(
