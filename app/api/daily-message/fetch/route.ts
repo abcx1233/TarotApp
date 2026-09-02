@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-
-function todayDateString(): string {
-  return new Date().toISOString().slice(0, 10)
-}
+import { todayDateString } from '@/lib/daily-message/dates'
 
 function notReady(): NextResponse {
   return new NextResponse('NOT_READY', {

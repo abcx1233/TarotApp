@@ -2,11 +2,9 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateDailyCardMessage } from '@/lib/ai/generate'
 import { formatAiError } from '@/lib/ai/errors'
+import { drawRandomCard } from '@/data/tarot-cards'
+import { todayDateString, addDays, isValidDateString } from '@/lib/daily-message/dates'
 import type { CardOrientation } from '@/types'
-
-function todayDateString(): string {
-  return new Date().toISOString().slice(0, 10)
-}
 
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -18,18 +16,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let body: { cardName?: string; orientation?: CardOrientation }
+  let body: { cardName?: string; orientation?: CardOrientation; date?: string }
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const cardName = body.cardName?.trim()
-  const orientation: CardOrientation = body.orientation === 'reversed' ? 'reversed' : 'upright'
+  const messageDate = isValidDateString(body.date) ? body.date : todayDateString()
 
+  let cardName = body.cardName?.trim()
+  let orientation: CardOrientation = body.orientation === 'reversed' ? 'reversed' : 'upright'
+
+  // No card supplied (e.g. the calendar's "Generate for this day" button) —
+  // auto-draw one, avoiding whatever was assigned in the 7 days before this date.
   if (!cardName) {
-    return NextResponse.json({ error: 'cardName is required' }, { status: 422 })
+    const { data: recentRows } = await supabase
+      .from('daily_messages')
+      .select('card_name')
+      .lt('message_date', messageDate)
+      .gte('message_date', addDays(messageDate, -7))
+
+    const draw = drawRandomCard((recentRows ?? []).map((r) => r.card_name))
+    cardName = draw.card.name
+    orientation = draw.orientation
   }
 
   let generatedText: string
@@ -45,8 +55,6 @@ export async function POST(request: Request) {
     console.error('[daily-message/generate] Generation error:', err)
     return NextResponse.json({ error: formatAiError(err) }, { status: 500 })
   }
-
-  const messageDate = todayDateString()
 
   const { data: row, error } = await supabase
     .from('daily_messages')

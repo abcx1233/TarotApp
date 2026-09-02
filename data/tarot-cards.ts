@@ -119,3 +119,59 @@ export function drawRandomCard(excludeLastNDays: string[] = []): {
   const orientation: CardOrientation = Math.random() < 0.5 ? 'upright' : 'reversed'
   return { card, orientation }
 }
+
+const NO_REPEAT_LOOKBACK_DAYS = 7
+
+function toEpochDay(dateStr: string): number {
+  return Math.floor(new Date(`${dateStr}T00:00:00Z`).getTime() / 86400000)
+}
+
+function epochDayToDateString(epochDay: number): string {
+  return new Date(epochDay * 86400000).toISOString().slice(0, 10)
+}
+
+export type DateCardDraw =
+  | { date: string; cardName: string; orientation: CardOrientation; alreadyAssigned: false }
+  | { date: string; cardName: string; alreadyAssigned: true }
+
+/**
+ * Draws a card + orientation for every date in [startDate, startDate + days).
+ * Dates present in `existingByDate` are left untouched (their real card is
+ * recorded so later dates still avoid repeating it) — everything else is
+ * freshly drawn, avoiding any card assigned (real or in this same batch) in
+ * the 7 days immediately before it.
+ */
+export function drawCardsForDateRange(
+  startDate: string,
+  days: number,
+  recentHistory: { message_date: string; card_name: string }[] = [],
+  existingByDate: Record<string, string> = {}
+): DateCardDraw[] {
+  const assigned = recentHistory.map((h) => ({
+    epochDay: toEpochDay(h.message_date),
+    cardName: h.card_name,
+  }))
+  const results: DateCardDraw[] = []
+  const startEpoch = toEpochDay(startDate)
+
+  for (let i = 0; i < days; i++) {
+    const epoch = startEpoch + i
+    const dateStr = epochDayToDateString(epoch)
+    const existingCardName = existingByDate[dateStr]
+
+    if (existingCardName) {
+      assigned.push({ epochDay: epoch, cardName: existingCardName })
+      results.push({ date: dateStr, cardName: existingCardName, alreadyAssigned: true })
+      continue
+    }
+
+    const excludeNames = assigned
+      .filter((a) => epoch - a.epochDay > 0 && epoch - a.epochDay <= NO_REPEAT_LOOKBACK_DAYS)
+      .map((a) => a.cardName)
+    const { card, orientation } = drawRandomCard(excludeNames)
+    assigned.push({ epochDay: epoch, cardName: card.name })
+    results.push({ date: dateStr, cardName: card.name, orientation, alreadyAssigned: false })
+  }
+
+  return results
+}

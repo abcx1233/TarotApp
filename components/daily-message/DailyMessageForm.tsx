@@ -1,8 +1,9 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { format } from 'date-fns'
-import { Sparkles, RefreshCw, CheckCircle2, AlertCircle, Shuffle, Moon } from 'lucide-react'
+import { Sparkles, RefreshCw, CheckCircle2, AlertCircle, Shuffle, Moon, CalendarDays } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
@@ -119,9 +120,18 @@ export function DailyMessageForm({ initialTodayMessage, initialHistory }: DailyM
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto max-w-2xl px-4 py-6 lg:px-0">
-        <div className="mb-5">
-          <h1 className="text-lg font-semibold text-slate-900">Daily Card Message</h1>
-          <p className="mt-0.5 text-sm text-slate-500">{format(today, 'EEEE d MMMM yyyy')}</p>
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-lg font-semibold text-slate-900">Daily Card Message</h1>
+            <p className="mt-0.5 text-sm text-slate-500">{format(today, 'EEEE d MMMM yyyy')}</p>
+          </div>
+          <Link
+            href="/dashboard/daily-message/calendar"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:text-brand-700"
+          >
+            <CalendarDays size={13} />
+            View calendar
+          </Link>
         </div>
 
         {error && (
