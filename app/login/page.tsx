@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -9,12 +9,24 @@ import { Label } from '@/components/ui/Label'
 import { Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  // Surfaces the message /auth/confirm redirects here with when an
+  // invite/recovery link is invalid or expired — without this, that
+  // redirect silently drops the reason and just shows a blank login form.
+  const [error, setError] = useState<string | null>(searchParams.get('error'))
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
