@@ -132,12 +132,22 @@ No custom spacing scale — pure Tailwind defaults (4px base unit). Observed con
 
 ## 5. Shadows & Elevation
 
-Elevation is used very sparingly — flat design with borders doing most of the separation work.
+Elevation is used sparingly for anything sitting *in the page flow* — flat design with borders
+doing most of the separation work there. Anything that floats *above* the flow (dropdowns, modals,
+slide-overs, toasts) does use a real shadow, because it needs to read as detached from a full page
+behind it, not just as a bordered box among siblings.
 
-- `shadow-sm` — the *only* shadow used, applied to: cards, KPI cards, active tab pill, toggle thumb
-- No `shadow-md`/`lg`/`xl` anywhere in reviewed components
-- Layering/separation is achieved primarily with `border border-slate-200` rather than shadow
-- Mobile sidebar overlay: `bg-black/50` scrim, no shadow
+- `shadow-sm` — in-flow surfaces: cards, KPI cards, active tab pill, toggle thumb, the login card
+- `shadow-lg` — floating/overlay surfaces: the autocomplete dropdown (`CardAutocomplete`, and the
+  client-suggestions list in `ReadingForm`), the daily-message calendar's day-detail modal panel
+  (`CalendarView`), the bottom-left toast (`ClientsPage`)
+- `shadow-xl` — higher-emphasis overlays: the "New Client" slide-over panel (`ClientsPage`), the
+  reading-history undo toast (`HistoryPage`)
+- No `shadow-md` anywhere in reviewed components
+- For in-flow surfaces, layering/separation is achieved primarily with `border border-slate-200`
+  rather than shadow
+- Mobile sidebar overlay: `bg-black/50` scrim, no shadow. The "New Client" slide-over backdrop is
+  lighter — `bg-black/20` — since it only needs to dim, not fully obscure, the list behind it
 
 ---
 
@@ -158,6 +168,15 @@ Icon chip inside KPICard: `rounded-lg p-2 bg-slate-100 text-slate-500` (or brand
 
 ### Badges (`components/ui/Badge.tsx`)
 Pill/chip pattern: `inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium`. Status variants use a **soft-fill + inset ring** recipe: `bg-{c}-50 text-{c}-700 ring-1 ring-inset ring-{c}-200`. A `StatusBadge` wrapper maps raw status strings (`pending`, `in_progress`, etc.) to display labels.
+
+> **Drift, not a documented exception:** the character-count pill in `OutputPanel.tsx`
+> (`charBadgeColor`) uses `bg-green-100 text-green-700` / `bg-amber-100 text-amber-700` /
+> `bg-red-100 text-red-700` — a `-100` fill with **no ring**, not the `Badge` component and not
+> the `-50`/ring recipe above. Contrast-wise it's fine (a `-100` fill is darker than `-50`, so the
+> `-700` text passes AA easily), but it's a second, inconsistent "badge-like" style that isn't
+> reused anywhere else. Worth either switching it to the real `Badge` component or treating it as
+> a deliberate one-off if there's a reason it needs to read as more solid/urgent than a normal
+> status badge.
 
 ### Tables (orders/dashboard queue)
 Wrapped in `overflow-x-auto rounded-xl border border-slate-200 bg-white`. Header row: `bg-slate-50 border-b border-slate-200`, cells `text-xs font-semibold text-slate-500 uppercase tracking-wide`. Body rows separated by `divide-y divide-slate-100`, hover state `hover:bg-slate-50/50`, special-state rows (rush orders) get a translucent tint `bg-red-50/30`–`/40` rather than a solid color or left border.
@@ -207,6 +226,33 @@ Two rules worth carrying to any similar grid:
   below as a stray line. That was a real bug; inset is the fix.
 
 Truncation inside cells uses `line-clamp-2` at `text-[10px] leading-tight`.
+
+### Modal / dialog (`CalendarView` day-detail modal)
+Backdrop: `fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4` — note this is
+a *different* scrim colour/opacity than the mobile sidebar's `bg-black/50` or the slide-over's
+`bg-black/20`; there's no single standardised backdrop token yet, each overlay picks its own.
+Panel: `max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-200 bg-white
+shadow-lg`, header `flex items-center justify-between border-b border-slate-200 px-5 py-3.5`,
+body `px-5 py-4`. Closes on backdrop click (`stopPropagation` on the panel itself) and on an `X`
+icon button top-right.
+
+### Slide-over panel (`ClientsPage` "New Client")
+`fixed inset-0 z-40 flex justify-end` wrapper, `bg-black/20` backdrop, panel
+`relative z-50 flex w-80 flex-col bg-white shadow-xl` sliding from the right with no transition
+currently applied (appears/disappears instantly, doesn't animate in). Header
+`flex items-center justify-between border-b border-slate-200 px-4 py-3`, scrollable body
+`flex-1 overflow-y-auto p-4 space-y-4`, sticky footer `shrink-0 flex gap-2 border-t
+border-slate-200 p-4` with Cancel/Save split 50/50 (`flex-1` on each button).
+
+### Toast
+Two independent implementations, not a shared component — reuse the pattern, but note the
+`Button` component isn't used inside either:
+- Simple confirmation (`ClientsPage`, e.g. "Client added ✓"): `fixed top-4 right-4 z-50
+  rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-lg`, auto-dismisses via
+  `setTimeout`, no action button.
+- Undo toast (`HistoryPage`, "Reading moved to Trash"): `fixed bottom-6 left-1/2
+  -translate-x-1/2 flex items-center gap-3 rounded-lg bg-slate-900 px-4 py-3 text-sm text-white
+  shadow-xl z-50`, includes an inline `text-brand-400` "Undo" action, auto-dismisses after 5s.
 
 ### Alert / inline banners
 Error banner (forms): `rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700`.
