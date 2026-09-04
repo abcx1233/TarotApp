@@ -46,9 +46,12 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname, searchParams } = request.nextUrl
 
-  // Routes that are always accessible — including the invite/recovery landing page.
+  // Routes that are always accessible — including the invite/recovery landing pages.
+  // /auth/confirm must be public: it's hit with no session cookie at all —
+  // its job is to create one by exchanging the email link's token_hash.
   const isPublic =
     pathname.startsWith('/login') ||
+    pathname.startsWith('/auth/confirm') ||
     pathname.startsWith('/auth/set-password') ||
     pathname.startsWith('/api/webhooks') ||
     pathname.startsWith('/api/daily-message/fetch') ||
