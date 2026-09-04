@@ -133,11 +133,6 @@ in README's env var table, and silently no-ops if its three env vars aren't all 
 
 ## On the horizon
 
-- **`/auth/set-password` is referenced but doesn't exist — likely a real, currently-broken flow.**
-  `lib/supabase/middleware.ts` redirects invite/recovery email links to `/auth/set-password` (lines
-  52, 71-80), but there is no `app/auth/set-password/page.tsx` or any route matching that path
-  anywhere in the repo. Any Supabase invite or "forgot password" email would currently send the
-  admin to a 404. This looks unintentional, not deferred — no TODO or comment flags it as pending.
 - **Gmail send and website-sync are built but not wired up** (see above) — either finish wiring
   them to the UI, or remove them and the README sections that describe them as active.
 - **README overstates the AI pipeline**: says three generation steps (full/email/WhatsApp); code
@@ -157,6 +152,17 @@ in README's env var table, and silently no-ops if its three env vars aren't all 
   confirmed** by anything in this repo, so verify before assuming it's safe to delete here.
 - **No automated tests** (see above) — if reliability of the truncation/continuation pipeline
   matters going forward, that pipeline in particular has no regression safety net.
+
+### Resolved since this audit
+
+- **`/auth/set-password` 404 — fixed 2026-09-04 (`3477a4a`).** Added `app/auth/confirm/route.ts`
+  (exchanges the email link's `token_hash` for a session via `supabase.auth.verifyOtp()`) and
+  `app/auth/set-password/page.tsx` (the actual password form), and added `/auth/confirm` to
+  `middleware.ts`'s public-route list. The Supabase dashboard's Invite and Reset Password email
+  templates were also updated (by the project owner, outside this repo) to link to
+  `/auth/confirm?token_hash={{ .TokenHash }}&type=...` instead of whatever they pointed at before —
+  that half of the fix can't be verified from the code, so if invite/recovery emails ever stop
+  working again, check the email templates in Authentication → Email Templates first.
 
 ---
 
