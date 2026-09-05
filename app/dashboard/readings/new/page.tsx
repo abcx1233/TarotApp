@@ -48,6 +48,9 @@ async function fetchReadingById(readingId: string): Promise<RestoredReadingData 
       energy_cleansing_notes,
       reader_notes,
       generated_reading,
+      audit_score,
+      audit_checks,
+      audit_generated_at,
       order:orders ( id, reading_tier, topic, delivery_format, delivery_channel, price_total, is_rush, due_at ),
       client:clients ( id, full_name, email, phone, star_sign, birthday, is_returning ),
       cards:reading_cards ( card_name, orientation, position_label, sort_order, is_bottom_card )
@@ -103,6 +106,9 @@ async function fetchReadingByOrderId(orderId: string): Promise<RestoredReadingDa
     energy_cleansing_notes: null,
     reader_notes: null,
     generated_reading: null,
+    audit_score: null,
+    audit_checks: null,
+    audit_generated_at: null,
     order: {
       id: orderAny.id,
       reading_tier: orderAny.reading_tier,

@@ -1,3 +1,4 @@
+import type { AuditResult } from '@/lib/ai/audit/types'
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
 export type OrderStatus = 'pending' | 'in_progress' | 'awaiting_review' | 'sent' | 'archived'
@@ -220,6 +221,8 @@ export interface ReadingFormState {
   includeFuture: boolean
   futureTimeframe: string
   generatedReading: string | null
+  /** Post-generation audit of generatedReading. Null when never run or not yet loaded. */
+  audit: AuditResult | null
   isGenerating: boolean
   generationError: string | null
   savedReadingId: string | null
@@ -237,6 +240,8 @@ export interface GenerateReadingResponse {
   readingId: string
   orderId: string
   generatedReading: string
+  /** Null when the audit could not run — the reading still saved and returned. */
+  audit: AuditResult | null
 }
 
 // ─── Restore Types ────────────────────────────────────────────────────────────
@@ -264,6 +269,9 @@ export interface RestoredReadingData {
   reader_notes: string | null
   future_timeframe?: string | null
   generated_reading: string | null
+  audit_score: number | null
+  audit_checks: AuditResult | null
+  audit_generated_at: string | null
   order: {
     id: string
     reading_tier: string

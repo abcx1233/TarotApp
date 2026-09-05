@@ -27,6 +27,7 @@ import type {
   DeliveryFormat,
   RestoredReadingData,
 } from '@/types'
+import type { AuditResult } from '@/lib/ai/audit/types'
 
 // ─── Initial state ─────────────────────────────────────────────────────────────
 
@@ -80,6 +81,7 @@ function initialState(): ReadingFormState {
     includeFuture: false,
     futureTimeframe: '',
     generatedReading: null,
+    audit: null,
     isGenerating: false,
     generationError: null,
     savedReadingId: null,
@@ -95,7 +97,7 @@ type Action =
   | { type: 'SET_CARDS'; cards: CardEntryForm[] }
   | { type: 'SET_BOTTOM_CARD'; card: { name: string; orientation: CardOrientation } }
   | { type: 'SET_GENERATING'; value: boolean }
-  | { type: 'SET_OUTPUT'; reading: string; readingId: string; orderId: string }
+  | { type: 'SET_OUTPUT'; reading: string; readingId: string; orderId: string; audit: AuditResult | null }
   | { type: 'SET_ERROR'; error: string }
   | { type: 'SET_CELTIC_CROSS_LAYOUT'; existingCards: CardEntryForm[] }
   | { type: 'CLEAR_POSITION_LABELS' }
@@ -125,6 +127,7 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         isGenerating: false,
         generationError: null,
         generatedReading: action.reading,
+        audit: action.audit,
         savedReadingId: action.readingId,
         savedOrderId: action.orderId,
         status: 'awaiting_review',
@@ -184,6 +187,7 @@ function reducer(state: ReadingFormState, action: Action): ReadingFormState {
         includeFuture: !!(data.future_timeframe),
         futureTimeframe: data.future_timeframe ?? '',
         generatedReading: data.generated_reading,
+        audit: data.audit_checks,
         savedReadingId: data.id || null,
         savedOrderId: order?.id ?? null,
         status: data.id ? 'awaiting_review' : 'pending',
@@ -545,7 +549,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
         throw new Error(data.error ?? `Server error ${response.status}`)
       }
       const data = await response.json()
-      dispatch({ type: 'SET_OUTPUT', reading: data.generatedReading, readingId: data.readingId, orderId: data.orderId })
+      dispatch({ type: 'SET_OUTPUT', reading: data.generatedReading, readingId: data.readingId, orderId: data.orderId, audit: data.audit ?? null })
       isDirtyRef.current = false
       router.replace(`/dashboard/readings/new?readingId=${data.readingId}`)
     } catch (err) {
@@ -989,6 +993,7 @@ export function ReadingForm({ initialTonePresets, initialReading }: ReadingFormP
             deliveryFormat={state.deliveryFormat}
             businessName={businessName}
             readingLength={state.readingLength}
+            audit={state.audit}
             hasAddons={state.includeOracleCard || state.includeEnergyCleansing}
           />
         </div>

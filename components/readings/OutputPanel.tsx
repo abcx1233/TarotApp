@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation'
 import { differenceInDays } from 'date-fns'
 import {
   Copy, Check, RefreshCw, Loader2, MessageCircle, Mail, Sparkles,
-  Upload, CheckCircle2, AlertCircle, Clock, Moon,
+  Upload, CheckCircle2, AlertCircle, Clock, Moon, ChevronRight, HelpCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import type { AuditBand, AuditCheckStatus, AuditResult } from '@/lib/ai/audit/types'
 import { createClient } from '@/lib/supabase/client'
 import { clsx } from 'clsx'
 
@@ -25,6 +27,114 @@ const STATUS_MESSAGES = [
   'Weaving the narrative…',
   'Almost ready…',
 ]
+
+/**
+ * Score bands and per-check statuses both reuse Badge's existing soft-fill
+ * variants rather than introducing another palette. 'n-a' takes the plain
+ * `default` badge — the documented ringless slate chip for "no status applies".
+ */
+const AUDIT_BAND_VARIANT: Record<AuditBand, 'success' | 'warning' | 'danger'> = {
+  green: 'success',
+  amber: 'warning',
+  red: 'danger',
+}
+
+const CHECK_STATUS_VARIANT: Record<AuditCheckStatus, 'success' | 'warning' | 'danger' | 'default'> = {
+  pass: 'success',
+  fail: 'danger',
+  skipped: 'warning',
+  'n-a': 'default',
+}
+
+const CHECK_STATUS_LABEL: Record<AuditCheckStatus, string> = {
+  pass: 'Pass',
+  fail: 'Fail',
+  skipped: 'Not checked',
+  'n-a': 'N/A',
+}
+
+/**
+ * Collapsible audit checklist.
+ *
+ * Opens by default whenever there is something to look at — anything below the
+ * green band, or an audit that could not finish. A clean reading stays folded
+ * away so the panel is no busier than it was before.
+ */
+function AuditChecklist({ audit }: { audit: AuditResult }) {
+  const [open, setOpen] = useState(audit.band !== 'green' || audit.degraded)
+  const failures = audit.checks.filter((c) => c.status === 'fail')
+  const notChecked = audit.checks.filter((c) => c.status === 'skipped')
+
+  const summary =
+    failures.length > 0
+      ? `${failures.length} issue${failures.length === 1 ? '' : 's'}`
+      : notChecked.length > 0
+        ? 'Incomplete'
+        : 'All clear'
+
+  return (
+    <div className="shrink-0 border-b border-slate-200 bg-slate-50/60">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-2 px-5 py-2.5 text-left hover:bg-slate-100/60"
+      >
+        <ChevronRight
+          className={clsx('h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform', open && 'rotate-90')}
+        />
+        <span className="text-xs font-semibold text-slate-700">Quality audit</span>
+        <Badge variant={AUDIT_BAND_VARIANT[audit.band]}>{audit.score}/100</Badge>
+        <span className="ml-auto text-[11px] text-slate-500">{summary}</span>
+      </button>
+
+      {open && (
+        <div className="px-5 pb-3">
+          {audit.degraded && (
+            <div className="mb-2.5 flex items-start gap-2 rounded-lg bg-slate-100 px-3 py-2 ring-1 ring-inset ring-slate-200">
+              <HelpCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
+              <p className="text-[11px] leading-relaxed text-slate-600">
+                This audit did not finish, so {audit.score}/100 is a best case, not a verdict.
+                {' '}
+                {notChecked.length === 1 ? 'One check' : `${notChecked.length} checks`} could not run
+                and {notChecked.length === 1 ? 'was' : 'were'} scored as if passing.
+              </p>
+            </div>
+          )}
+
+          <ul className="space-y-1.5">
+            {audit.checks.map((check) => (
+              <li
+                key={check.id}
+                className={clsx(
+                  'flex items-start gap-2.5',
+                  check.status === 'n-a' && 'opacity-55'
+                )}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium text-slate-700">{check.label}</p>
+                  {check.reason && (
+                    <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">{check.reason}</p>
+                  )}
+                </div>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {check.status === 'fail' && (
+                    <span className="text-[11px] font-medium tabular-nums text-red-600">
+                      &minus;{check.penalty}
+                    </span>
+                  )}
+                  <Badge variant={CHECK_STATUS_VARIANT[check.status]}>
+                    {CHECK_STATUS_LABEL[check.status]}
+                  </Badge>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface OutputPanelProps {
   generatedReading: string | null
@@ -44,6 +154,7 @@ interface OutputPanelProps {
   deliveryFormat: string
   businessName: string
   readingLength: number
+  audit: AuditResult | null
   hasAddons?: boolean
 }
 
@@ -65,6 +176,7 @@ export function OutputPanel({
   deliveryFormat,
   businessName,
   readingLength,
+  audit,
   hasAddons = false,
 }: OutputPanelProps) {
   const [copied, setCopied] = useState(false)
@@ -257,8 +369,25 @@ export function OutputPanel({
               </span>
             </>
           )}
+          {audit && (
+            <>
+              <span className="text-slate-300 text-[11px]">·</span>
+              <Badge variant={AUDIT_BAND_VARIANT[audit.band]}>Audit {audit.score}/100</Badge>
+              {/* Degraded gets its own chip alongside the score rather than
+                  recolouring it — an incomplete audit must not read as clean,
+                  and must not mask a genuinely red score either. */}
+              {audit.degraded && (
+                <Badge variant="default" className="gap-1">
+                  <HelpCircle className="h-3 w-3" />
+                  Incomplete
+                </Badge>
+              )}
+            </>
+          )}
         </div>
       </div>
+
+      {audit && <AuditChecklist audit={audit} />}
 
       {/* ── Indeterminate progress bar during generation (FIX 8) ─────── */}
       {isGenerating && (

@@ -6,6 +6,7 @@ import { formatAiError } from '@/lib/ai/errors'
 import { READING_CHARACTER_TARGETS, AI_CONFIG } from '@/lib/ai/config'
 import { ADDON_PRICES } from '@/lib/config/pricing'
 import { getCardBySuit } from '@/data/tarot-cards'
+import { auditReading, type AuditResult } from '@/lib/ai/audit'
 import type { ReadingFormState, CardEntryForm } from '@/types'
 import type { PromptInput } from '@/lib/ai/prompts/builder'
 
@@ -338,6 +339,44 @@ export async function POST(request: Request) {
     generatedReading += `\n\n${defaultTemplate.disclaimer_text.trim()}`
   }
 
+  // ── Post-generation audit ───────────────────────────────────────────────
+  // Reads the finished text above. It does not and must not feed back into
+  // generation, continuation or truncation — this is a report on the output,
+  // not a step that changes it.
+  //
+  // Deliberately non-fatal: a reading that generated correctly has to save and
+  // return even if auditing it falls over, so a failure here costs the audit,
+  // never the reading. auditReading() already degrades internally when only the
+  // model call fails; this catch is for everything else.
+  const specificQuestion =
+    f.includeExtraQuestion && f.extraQuestionText?.trim() ? f.extraQuestionText.trim() : null
+
+  let audit: AuditResult | null = null
+  try {
+    audit = await auditReading({
+      finalText: generatedReading,
+      // The in-process card list, not a re-read of reading_cards, so the audit
+      // sees exactly what the prompt was given.
+      drawnCards: validCards.map((c: CardEntryForm) => c.name),
+      bottomCard: f.bottomCard?.name || null,
+      oracleCardName: f.includeOracleCard ? f.oracleCardName || null : null,
+      includeOracleCard: f.includeOracleCard || false,
+      includeEnergyCleansing: f.includeEnergyCleansing || false,
+      characterTarget,
+      signOffText: templateSignOff,
+      disclaimerText: defaultTemplate?.disclaimer_text ?? null,
+      topic: f.topic,
+      questionOrFocus: f.questionsOrFocus || null,
+      specificQuestion,
+    })
+    console.log(
+      `Audit: ${audit.score}/100 (${audit.band})${audit.degraded ? ' [degraded]' : ''} — ` +
+        `${audit.checks.filter((c) => c.status === 'fail').map((c) => c.id).join(', ') || 'all clear'}`
+    )
+  } catch (err) {
+    console.error('[readings/generate] Audit failed, saving reading without it:', err)
+  }
+
   // Upsert client
   let clientId: string | null = f.clientId
 
@@ -471,6 +510,11 @@ export async function POST(request: Request) {
     prompt_version: 1,
     final_approved: false,
     is_test: isTestMode,
+    // Null when the audit could not run at all — "not audited", distinct from
+    // a zero score. See supabase/migrations/add_reading_audit_columns.sql.
+    audit_score: audit?.score ?? null,
+    audit_checks: audit ?? null,
+    audit_generated_at: audit?.generatedAt ?? null,
     updated_at: new Date().toISOString(),
   }
 
@@ -547,5 +591,6 @@ export async function POST(request: Request) {
     readingId,
     orderId,
     generatedReading,
+    audit,
   })
 }
