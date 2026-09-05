@@ -55,6 +55,11 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith('/auth/set-password') ||
     pathname.startsWith('/api/webhooks') ||
     pathname.startsWith('/api/daily-message/fetch') ||
+    // Server-to-server, called by the Supabase pg_cron job with no session
+    // cookie. It authenticates itself with the x-daily-message-cron-secret
+    // header, so it must bypass the redirect-to-/login that would otherwise
+    // turn every cron fire into a 307 the job cannot follow.
+    pathname.startsWith('/api/daily-message/cron-generate') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon')
 

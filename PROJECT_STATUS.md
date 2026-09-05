@@ -101,6 +101,27 @@ deleted or skipped — is explicitly closed with a re-check-before-write guard
 (`shouldSkipWrite` in `lib/daily-message/dates.ts`), applied consistently in both the single and
 batch generate routes.
 
+Generation is now also triggerable server-to-server: `POST /api/daily-message/cron-generate`, gated
+by its own `DAILY_MESSAGE_CRON_SECRET` (deliberately *not* the read-only `DAILY_MESSAGE_FETCH_SECRET`
+— the trigger can spend OpenAI tokens and write rows, so the two secrets are kept at different
+privilege levels). It runs as service role, since RLS grants `daily_messages` writes to
+`authenticated` only and a cron request has no session. The single-day pipeline itself was extracted
+to `lib/daily-message/generate-for-date.ts` so the dashboard action and the cron trigger share one
+implementation of draw → generate → re-check → upsert rather than two copies. On top of the shared
+race guard, the cron route pre-checks today's row and refuses to touch a day that is already
+approved, skipped, soft-deleted or already drafted — a scheduled run is not an explicit regenerate
+click, so re-running it is a no-op that spends nothing.
+
+The intended scheduler is Supabase `pg_cron` + `pg_net`
+(`supabase/migrations/add_daily_message_pg_cron.sql`, `0 3 * * *` UTC), **not yet applied** as of
+2026-09-05. Three things block it and are worth knowing before anyone tries again: the Supabase MCP
+connection in use points at a different project entirely; the Vercel MCP exposes no
+environment-variable tooling, so `DAILY_MESSAGE_CRON_SECRET` has to be set via `vercel env` or the
+dashboard; and the project has Vercel Authentication on for `all_except_custom_domains` with no
+custom domain attached, which would make `net.http_post` hit an SSO login page rather than the
+route. There is no Vercel Cron entry in this repo and never was — before this, generation was
+dashboard-only.
+
 One inconsistency worth knowing: the sign-off "Love and light, Rhiannon x" is hardcoded into the
 daily-message prompt (`lib/ai/prompts/daily-message.ts`), unlike the main reading pipeline, which
 pulls its sign-off from the editable `reading_templates.signoff_text`. If the reader's name or
@@ -225,16 +246,29 @@ House rules worth continuing to follow in this codebase:
   identically across `clients`, `orders`, `readings`, and `daily_messages` — new deletable entities
   should follow the same column name and the same restore pattern rather than inventing a new one.
 - **Re-check state immediately before a slow write, not just at the start of the request.** The
-  daily-message generate/generate-batch routes re-query `deleted_at`/`skipped` right before the
-  upsert that follows the OpenAI call, specifically to narrow (not fully eliminate — the code says
-  so directly) the race window where a slow generation call overwrites a delete/skip that happened
-  while it was in flight. Apply the same pattern anywhere else a slow external call precedes a
-  write to a record a user might concurrently delete.
+  daily-message generation pipeline (`lib/daily-message/generate-for-date.ts`, shared by the
+  interactive route and the cron trigger) and generate-batch re-query `deleted_at`/`skipped` right
+  before the upsert that follows the OpenAI call, specifically to narrow (not fully eliminate — the
+  code says so directly) the race window where a slow generation call overwrites a delete/skip that
+  happened while it was in flight. Apply the same pattern anywhere else a slow external call
+  precedes a write to a record a user might concurrently delete.
+- **An unattended trigger gets stricter write rules than a human click.** The same generation
+  pipeline is reached two ways, and the difference is deliberate: clicking regenerate is *meant* to
+  replace today's draft, whereas the cron route bails out on any day that is already approved,
+  skipped, soft-deleted or drafted. Anything scheduled that writes over user-editable records should
+  be idempotent and defer to existing state rather than reusing the interactive path's semantics.
 - **Explicit timezone pinning for "today," never implicit local time.** `todayDateString()` in
   `lib/daily-message/dates.ts` always resolves to Europe/London via `Intl.DateTimeFormat`, because
   the API runs on Vercel (UTC) while the admin's browser is in UK local time — relying on either
   side's own "local" would reproduce the mismatch. Everything in the daily-message feature is
   required to import this rather than deriving "today" independently.
+- **A `pg_cron` schedule is fixed UTC and does not follow BST.** The scheduled generation job fires
+  at 03:00 UK in winter and 04:00 UK in summer from one unchanged `0 3 * * *` entry. That time was
+  chosen for buffer, not precision: it stays two hours clear of the 23:00–01:00 UTC band where the
+  BST shift would push the run across UK midnight and make `todayDateString()` resolve a different
+  calendar day than it does in winter. Do not "correct" the drift by editing the schedule twice a
+  year — pg_cron cannot express a DST-following schedule, so a fixed UTC time with a wide buffer is
+  the answer.
 
 ---
 
