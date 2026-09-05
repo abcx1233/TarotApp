@@ -30,6 +30,7 @@ delete process.env.OPENAI_API_KEY
 import { findMentionedCards, mentionsCard } from '@/lib/ai/audit/card-matching'
 import { mainBodyLength, runDeterministicChecks } from '@/lib/ai/audit/deterministic'
 import { auditReading, scoreToBand, type AuditCheck } from '@/lib/ai/audit'
+import { extractQuotedPhrases, groundModelReason } from '@/lib/ai/audit/model'
 
 let passed = 0
 let failed = 0
@@ -296,6 +297,102 @@ async function main(): Promise<void> {
   t('energy cleansing add-on fails', hardStatuses.addon_energy_cleansing, 'fail')
   t('score floors at 0 rather than going negative', hard.score, 0)
   t('red', hard.band, 'red')
+
+  // ── Voice-drift grounding ──────────────────────────────────────────────────
+  // Regression coverage for a real production bug: the model sometimes cited a
+  // specific phrase — "navigate", "spiritual growth" — as evidence for a
+  // voice-drift failure when that phrase did not literally appear in the
+  // reading. Grounding verifies every quoted claim against finalText and
+  // drops it if it doesn't check out, rather than showing Rhiannon a reason
+  // she can't find in the text.
+  // groundModelReason() below is the actual fix and is fully covered here. The
+  // one thing NOT covered in this offline script is the ~10-line call site in
+  // runModelChecks() that wires it in — stubbing that requires replacing the
+  // chatComplete export at runtime, and this project's ESM output exposes
+  // read-only bindings for that, so a property-patch mock throws. Pulling in
+  // a mocking library to get around that would cut against this script's
+  // "no framework needed" purpose for one call site that just passes verdicts
+  // through. That wiring was verified manually during development: a stubbed
+  // chatComplete returning the exact fabricated "navigate"/"spiritual growth"
+  // verdict from the bug report produced a passing check with no reason, and
+  // a stubbed genuine "the reader" verdict still failed with its reason
+  // intact. Re-verify by hand the same way if runModelChecks's voice-handling
+  // branch changes.
+  section('Voice-drift grounding: quote extraction')
+  t(
+    'finds a double-quoted phrase',
+    extractQuotedPhrases('Uses "navigate" metaphorically.'),
+    ['navigate']
+  )
+  t(
+    'curly double quotes count as delimiters',
+    extractQuotedPhrases('Uses “spiritual growth” without the client using it.'),
+    ['spiritual growth']
+  )
+  t(
+    'multiple phrases, in order, de-duplicated',
+    extractQuotedPhrases('Cites "the reader" and "the reader" and "she".'),
+    ['the reader', 'she']
+  )
+  t(
+    'a bare apostrophe is not treated as a quote delimiter',
+    extractQuotedPhrases("Doesn't address the client's real question."),
+    []
+  )
+  t(
+    'a reason with no quotes yields none',
+    extractQuotedPhrases('Refers to the client in third person throughout.'),
+    []
+  )
+  t(
+    'trailing punctuation inside the quote is stripped',
+    extractQuotedPhrases('Uses "navigate," apparently.'),
+    ['navigate']
+  )
+
+  section('Voice-drift grounding: the exact reported bug')
+  const readingWithoutBannedPhrases =
+    'You are moving through change right now. Deep down, you already know what this means for you.\n\nWith love and light ✨'
+
+  t(
+    'a fabricated "navigate" claim is discarded, not shown',
+    groundModelReason(
+      'Uses "navigate" metaphorically instead of direct address.',
+      readingWithoutBannedPhrases
+    ),
+    null
+  )
+  t(
+    'a fabricated "spiritual growth" claim is discarded, not shown',
+    groundModelReason(
+      'References "spiritual growth" which the client never used.',
+      readingWithoutBannedPhrases
+    ),
+    null
+  )
+
+  section('Voice-drift grounding: other cases')
+  t(
+    'an unquoted claim passes through unchanged — nothing concrete to verify',
+    groundModelReason('Refers to the client in third person throughout.', readingWithoutBannedPhrases),
+    'Refers to the client in third person throughout.'
+  )
+  t(
+    'a genuinely present phrase verifies and the reason is kept as-is',
+    groundModelReason('Drifts to "the reader" partway through.', 'Something about the reader in here.'),
+    'Drifts to "the reader" partway through.'
+  )
+  t(
+    'verification is case-insensitive',
+    groundModelReason('Uses "Deep Down" oddly.', readingWithoutBannedPhrases),
+    'Uses "Deep Down" oddly.'
+  )
+  t(
+    'a partial hit is rebuilt around only what verified',
+    groundModelReason('Uses "deep down" and also "navigate" metaphorically.', readingWithoutBannedPhrases),
+    'Voice drift: "deep down" found in the reading.'
+  )
+
 
   console.log(`\n${passed} passed, ${failed} failed`)
   process.exit(failed > 0 ? 1 : 0)

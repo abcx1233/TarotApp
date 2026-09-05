@@ -37,6 +37,73 @@ function findBannedPhrases(text: string): string[] {
   return hits
 }
 
+/**
+ * Delimiters treated as quote marks when pulling cited evidence out of the
+ * model's own reason text: straight and curly double quotes, and curly
+ * single quotes. The plain apostrophe (') is deliberately excluded — reason
+ * strings are plain English ("doesn't", "the client's") and pairing on bare
+ * apostrophes would span from a contraction to some unrelated apostrophe
+ * later in the sentence and capture garbage.
+ */
+const QUOTED_PHRASE_RE = /["\u201C\u201D\u2018\u2019]([^"\u201C\u201D\u2018\u2019]{1,80})["\u201C\u201D\u2018\u2019]/g
+
+function cleanQuotedPhrase(phrase: string): string {
+  return phrase.trim().replace(/^[.,;:!?]+/, '').replace(/[.,;:!?]+$/, '').trim()
+}
+
+/** Every distinct quoted phrase in `text`, in order, de-duplicated case-insensitively. */
+export function extractQuotedPhrases(text: string): string[] {
+  const seen: Record<string, true> = {}
+  const phrases: string[] = []
+  QUOTED_PHRASE_RE.lastIndex = 0
+  let match: RegExpExecArray | null
+  while ((match = QUOTED_PHRASE_RE.exec(text)) !== null) {
+    const phrase = cleanQuotedPhrase(match[1])
+    const key = phrase.toLowerCase()
+    if (phrase.length >= 2 && !seen[key]) {
+      seen[key] = true
+      phrases.push(phrase)
+    }
+  }
+  return phrases
+}
+
+/**
+ * Ground the model's voice-drift reason against the text it is supposedly
+ * describing, before that reason ever reaches Rhiannon.
+ *
+ * The model sometimes cites a specific phrase as evidence — "navigate",
+ * "spiritual growth" — for a failure when that phrase is not actually in the
+ * reading. This matters most for the five conditionally-banned phrases (see
+ * SYSTEM_PROMPT item 2b): those are judged by the model rather than grepped
+ * in code, precisely because "banned only when used metaphorically" isn't a
+ * substring test, which also means the model can assert one exists when it
+ * doesn't. A hallucinated quote shown as a check's reason is worse than no
+ * check at all — it sends Rhiannon looking for text that was never written.
+ *
+ * A reason that cites no quoted phrase is passed through unchanged: there is
+ * nothing concrete to verify, and third-person slippage in particular is
+ * often better described than quoted. A reason that cites quotes has each one
+ * checked with a case-insensitive substring match against the final text;
+ * any that don't verify are dropped. If every cited phrase turns out to be
+ * fabricated, the claim itself is unsupported and this returns null — the
+ * caller must not fail the check on an ungrounded reason.
+ */
+export function groundModelReason(reason: string, finalText: string): string | null {
+  const quoted = extractQuotedPhrases(reason)
+  if (quoted.length === 0) return reason
+
+  const haystack = finalText.toLowerCase()
+  const verified = quoted.filter((phrase) => haystack.includes(phrase.toLowerCase()))
+
+  if (verified.length === 0) return null
+  if (verified.length === quoted.length) return reason
+
+  // Partial hit: rebuild around only what verified rather than leave the
+  // model's original sentence pointing at a phrase that isn't there.
+  return `Voice drift: ${verified.map((p) => `"${p}"`).join(', ')} found in the reading.`
+}
+
 const SYSTEM_PROMPT = `You are auditing a finished tarot reading before a human reviews it. You are not rewriting or improving it — you only report what is true about it.
 
 Answer two questions.
@@ -140,8 +207,16 @@ export async function runModelChecks(input: ModelAuditInput): Promise<[AuditChec
       : null
 
   if (verdicts) {
-    if (!verdicts.voice.pass || bannedReason) {
-      const modelReason = verdicts.voice.pass ? null : verdicts.voice.reason || 'Voice drifts out of direct address.'
+    // Ground the model's own claim before it can fail the check on it. A
+    // claim that cited quotes which don't verify comes back null and is
+    // downgraded — dropped from consideration entirely — rather than shown
+    // to Rhiannon as an ungrounded reason. Code-detected banned phrases below
+    // are unaffected: those are already grounded by construction.
+    const modelReason = verdicts.voice.pass
+      ? null
+      : groundModelReason(verdicts.voice.reason || 'Voice drifts out of direct address.', input.finalText)
+
+    if (modelReason || bannedReason) {
       voice = fail('voice_drift', [modelReason, bannedReason].filter(Boolean).join(' '))
     } else {
       voice = pass('voice_drift')
