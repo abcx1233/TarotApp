@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/Label'
 import { Toggle } from '@/components/ui/Toggle'
 import { Save, ExternalLink, CheckCircle2, Trash2, AlertTriangle } from 'lucide-react'
 import { useTestMode } from '@/contexts/TestModeContext'
+import { TEST_MODE_COOKIE } from '@/lib/test-mode'
 import type { AppSettings } from '@/types'
 
 export default function SettingsPage() {
@@ -44,16 +45,19 @@ export default function SettingsPage() {
   async function handleSave() {
     setSaving(true)
     const supabase = createClient()
+    // test_mode_enabled is no longer written from here — Test Mode is a
+    // per-browser session cookie now (lib/test-mode.ts), not a shared setting.
+    const { test_mode_enabled: _testModeEnabled, ...settingsToSave } = settings
 
     if (settings.id) {
       await supabase
         .from('app_settings')
-        .update({ ...settings, updated_at: new Date().toISOString() })
+        .update({ ...settingsToSave, updated_at: new Date().toISOString() })
         .eq('id', settings.id)
     } else {
       const { data } = await supabase
         .from('app_settings')
-        .insert(settings)
+        .insert(settingsToSave)
         .select()
         .single()
       if (data) setSettings(data as AppSettings)
@@ -64,16 +68,15 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2500)
   }
 
-  async function handleToggleTestMode(value: boolean) {
+  function handleToggleTestMode(value: boolean) {
     setIsTestMode(value)
-    set('test_mode_enabled', value)
-    const supabase = createClient()
-    if (settings.id) {
-      await supabase
-        .from('app_settings')
-        .update({ test_mode_enabled: value, updated_at: new Date().toISOString() })
-        .eq('id', settings.id)
-    }
+    // Session cookie — no Expires/Max-Age, so it's scoped to this browser and
+    // dropped when the browser closes. Never written to app_settings, which is
+    // shared by every browser (see lib/test-mode.ts).
+    const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+    document.cookie = value
+      ? `${TEST_MODE_COOKIE}=1; Path=/; SameSite=Lax${secure}`
+      : `${TEST_MODE_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0${secure}`
   }
 
   async function handleClearTestData() {
@@ -282,7 +285,8 @@ export default function SettingsPage() {
             <div>
               <p className="text-sm font-medium text-slate-900">Test Mode</p>
               <p className="text-xs text-slate-500 mt-0.5">
-                All clients, orders, and readings created while active will be flagged as test data.
+                New clients, orders, and readings created in this browser while active will be flagged
+                as test data. Applies to this browser only, and switches off when the browser is closed.
                 A yellow banner will appear across the app.
               </p>
             </div>
@@ -299,8 +303,8 @@ export default function SettingsPage() {
           <div>
             <p className="text-sm font-medium text-slate-900 mb-1">Clear All Test Data</p>
             <p className="text-xs text-slate-500 mb-3">
-              Permanently deletes all clients, orders, and readings marked as test data.
-              This cannot be undone.
+              Permanently deletes all clients, orders, and readings marked as test data, including
+              test data created in other browsers and items in Trash. This cannot be undone.
             </p>
 
             {clearSuccess && (
