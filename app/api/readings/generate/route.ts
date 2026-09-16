@@ -537,10 +537,25 @@ export async function POST(request: Request) {
       .eq('id', f.savedReadingId)
     readingId = f.savedReadingId
   } else {
+    // A new reading inherits is_test from its order, never from the toggle
+    // directly. When the order was just created above it already carries
+    // isTestMode; when it already existed, read its stored value so a new
+    // reading under a real order can't become test data (or vice versa).
+    // If that read fails, default to false: a stray non-test row is
+    // recoverable, a real reading deleted by "Clear all test data" is not.
+    let readingIsTest = isTestMode
+    if (f.savedOrderId) {
+      const { data: parentOrder } = await supabase
+        .from('orders')
+        .select('is_test')
+        .eq('id', f.savedOrderId)
+        .single()
+      readingIsTest = parentOrder?.is_test ?? false
+    }
+
     const { data: newReading } = await supabase
       .from('readings')
-      // is_test on insert only — same reasoning as the order above.
-      .insert({ ...readingPayload, regenerated_count: 0, is_test: isTestMode })
+      .insert({ ...readingPayload, regenerated_count: 0, is_test: readingIsTest })
       .select('id')
       .single()
     readingId = newReading?.id ?? ''
