@@ -94,8 +94,15 @@ function RowActions({ id, name, table, confirmId, setConfirmId, onRestore, onDel
   )
 }
 
-export default function TrashPage() {
-  const [activeTab, setActiveTab] = useState<'clients' | 'orders' | 'readings' | 'daily_messages'>('clients')
+const TRASH_TABS: readonly TrashTable[] = ['clients', 'orders', 'readings', 'daily_messages']
+
+export default function TrashPage({ searchParams }: { searchParams: { tab?: string | string[] } }) {
+  // ?tab= lets other pages link straight to a tab — e.g. the New Reading page
+  // sends a blocked, trashed reading to ?tab=readings to be restored.
+  const requestedTab = typeof searchParams?.tab === 'string' ? searchParams.tab : ''
+  const [activeTab, setActiveTab] = useState<TrashTable>(
+    (TRASH_TABS as readonly string[]).includes(requestedTab) ? (requestedTab as TrashTable) : 'clients'
+  )
   const [clients, setClients] = useState<TrashedClient[]>([])
   const [orders, setOrders] = useState<TrashedOrder[]>([])
   const [readings, setReadings] = useState<TrashedReading[]>([])
