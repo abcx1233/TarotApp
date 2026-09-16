@@ -1,14 +1,141 @@
 # Known issues
 
-Open problems that have been investigated but not yet fixed. Each entry records
-what was observed, what the code does, the best current theory, and what still
-needs testing. Line numbers refer to the commit named in each entry.
+Problems that have been investigated, grouped as open or resolved. Each entry
+records what was observed, what the code does, the best current theory, and what
+still needs testing. Line numbers refer to the commit named in each entry, so in
+resolved entries they may no longer match the current code.
 
 ---
 
+# Open
+
+## Continuation text is discarded when a reading has no add-on sections
+
+**Status:** open, not fixed. Investigated 2026-09-16 against `main` at `81f914a`.
+Found while writing tests for the dash fix below. Reproduced offline, but not yet seen
+in a saved reading.
+
+### What was observed
+
+When the first generation call's main body is short and the reading has no future
+section, Oracle Card or energy cleansing ritual, the continuation loop runs but none
+of its text reaches the saved reading. The reading is saved short.
+
+Offline reproduction against `assembleReadingText()` at `81f914a`, 6000-character
+target, stubbed model:
+
+| First call | Continuation calls | Continuation text kept | Result |
+|---|---|---|---|
+| Body only, then `[END OF READING]` | 2 | no | `Main body: 2509 chars / 6000 target — SHORT` |
+| Same body, plus a future section | 2 | yes | `Main body: 6870 chars / 6000 target — PASS` |
+
+The same result came from a copy of the route code at `8098d1c`, from before the
+pipeline moved out of the route, so this is not a side effect of that refactor.
+
+### Where it happens
+
+`lib/readings/assemble-reading.ts`:
+
+1. Lines 165–172 split the text into `mainBody` and `addons` at the first add-on
+   marker (`What I'm Sensing`, `Oracle Card`, `A Ritual For You`).
+2. Line 190 appends each continuation to `mainBody`.
+3. Line 199 reassembles `mainBody + addons`.
+4. Lines 234 and 245 call `truncateAtEndMarker()` (line 57), which cuts everything
+   from the first `[END OF READING]` onwards.
+
+### Why
+
+The prompt puts `[END OF READING]` straight after the last section written
+(`lib/ai/prompts/builder.ts`, output order at lines 443–453 and end instruction at
+455–457). With no add-on section, that is straight after the closing lines, at the
+end of the main body.
+
+The split finds no add-on marker, so `addons` is empty and the marker stays inside
+`mainBody`. Each continuation is appended **after** the marker, and
+`truncateAtEndMarker()` then removes all of it. The loop's length check also counts
+the marker as body text, and the continuation prompt's tail (the last 2000 characters
+of `mainBody`) ends with the marker too.
+
+Readings with a future section, Oracle Card or ritual are unaffected: the marker comes
+after the add-on, outside `mainBody`. The future section is only included when
+`includeFuture` is set and either the tier isn't mini or a timeframe was chosen
+(`builder.ts` line 410), so a reading without add-ons is a normal case.
+
+### Effects
+
+- The continuation calls are made and paid for but have no effect: 2 calls, or 4 at a
+  10,000+ character target.
+- The reading is saved below 85% of its target. The server log shows
+  `Main body: … — SHORT`.
+- The audit's `length` check should fail on such a reading (it measures the body
+  against 85% of target), but it doesn't explain why.
+
+### Evidence so far
+
+- Confirmed offline, as above.
+- Not seen in saved data yet. On 2026-09-16 both non-deleted readings with text had a
+  future section (`fc5cc68d…` also had Oracle Card and ritual), and both passed the
+  `length` check.
+- `scripts/test-dashes.ts` scenario 2 deliberately gives its first call a future section
+  to avoid this. Without one, its continuation assertions passed without testing anything.
+
+### What would need testing
+
+1. **Production logs:** a `Continuation check: … needs: true` line followed by
+   `Main body: … — SHORT`, for a reading with no future section, Oracle Card or ritual.
+2. **Saved readings:** `length` failures in `audit_checks` on readings with none of the
+   three add-on headings in `generated_reading`.
+3. **Model behaviour:** whether the model always writes `[END OF READING]` in this case.
+   If it sometimes leaves the marker out, those readings are unaffected.
+4. **Regression test:** a pipeline test with a short body-only first call, asserting that
+   the continuation text is kept and the body reaches its target.
+
+### Possible fix directions (not implemented)
+
+- Before the continuation loop, remove `[END OF READING]` and anything after it from
+  `mainBody` (the pipeline truncates at the marker anyway, and the sign-off is appended
+  separately).
+- Or treat the marker as an add-on boundary when splitting, so it stays after the
+  continuations like the add-on sections do.
+- Either way, the continuation prompt's tail should not end with the marker.
+
+---
+
+# Resolved
+
 ## Em dashes survive the server-side dash strip when the continuation loop runs
 
-**Status:** open, not fixed. Investigated 2026-09-16 against `main` at `8098d1c`.
+**Status:** resolved in `2f8994f`, merged to `main` 2026-09-16. Investigated 2026-09-16
+against `main` at `8098d1c`. The line numbers in the investigation below refer to that
+commit, before the fix moved this code.
+
+### Resolution
+
+All three fix directions proposed at the end of this entry were implemented, plus the
+secondary gaps:
+
+- **Final pass:** the post-processing moved from `app/api/readings/generate/route.ts`
+  into `lib/readings/assemble-reading.ts` with its steps in the same order.
+  `stripReadingDashes()` now runs once more on the fully assembled text, right before
+  the template sign-off and disclaimer are appended (line 271 at `81f914a`). The early
+  pass on the first call's text is kept.
+- **One shared implementation:** `lib/text/dashes.ts` is used by the generate pipeline,
+  Save Draft (`lib/readings/draft-payload.ts`), both daily-message paths, and the
+  audit's `STRAY_DASH`, so the character sets can't drift apart.
+- **Continuation prompt:** `buildContinuationPrompt()` in `lib/ai/prompts/builder.ts` now
+  includes the style guide's banned vocabulary and the dash rule (the `BANNED_VOCABULARY`
+  and `DASH_RULE` constants, shared with the main prompt), and no longer suggests "the
+  shadow aspect of a card".
+- **Secondary gaps 1–3:** the character set, Save Draft and the cleanup artifacts are
+  fixed as described in the commit.
+
+`scripts/test-dashes.ts` covers the six testing scenarios below offline. It covers
+scenario 6 (daily messages) only as the transformation both paths apply, since those
+paths call Supabase directly.
+
+**Still to confirm:** a real reading with a continuation, generated after this is
+deployed, has no dashes and passes `stray_dashes`. Secondary gap 4 is historical and
+stays unconfirmed.
 
 ### What was observed
 
@@ -128,7 +255,7 @@ on the same reading.
    one em dash and a failed `stray_dashes` check. Its runtime logs were not checked;
    they are likely past Vercel's log retention.
 
-### What would need testing to confirm and scope it
+### What would need testing to confirm and scope it (now covered, see Resolution)
 
 1. **Reproduce offline.** Run the route's post-processing with a stubbed first call
    whose main body is under 85% of target, and a stubbed continuation containing `—`.
@@ -149,7 +276,7 @@ on the same reading.
 6. **Daily messages.** Both daily-message paths make one call and then strip, with no
    continuation, so they should not be affected. Confirm with a generated message.
 
-### Possible fix directions (not implemented)
+### Fix directions proposed during the investigation (all implemented, see Resolution)
 
 - Run the dash strip on the final text after continuation and truncation, before the
   sign-off is appended and the audit runs, instead of (or as well as) on the first
