@@ -61,9 +61,13 @@ export default function OrdersPage() {
 
   async function handleUpdateStatus(orderId: string, status: string) {
     const supabase = createClient()
+    const now = new Date().toISOString()
     await supabase
       .from('orders')
-      .update({ status, updated_at: new Date().toISOString() })
+      // Marking sent must also stamp sent_at, the same as the reading page's
+      // Mark Sent (ReadingForm.handleMarkSent) — the Dashboard's Sent today /
+      // Revenue figures filter on sent_at, so without it the order is never counted.
+      .update(status === 'sent' ? { status, sent_at: now, updated_at: now } : { status, updated_at: now })
       .eq('id', orderId)
     fetchOrders()
   }

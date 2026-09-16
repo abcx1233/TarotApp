@@ -1,6 +1,8 @@
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
+import { TEST_MODE_COOKIE } from '@/lib/test-mode'
 
 export default async function DashboardRootLayout({
   children,
@@ -19,13 +21,8 @@ export default async function DashboardRootLayout({
     redirect('/login')
   }
 
-  const { data: settings } = await supabase
-    .from('app_settings')
-    .select('test_mode_enabled')
-    .limit(1)
-    .single()
-
-  const initialTestMode = settings?.test_mode_enabled ?? false
+  // Per-browser-session, from a cookie — see lib/test-mode.ts.
+  const initialTestMode = cookies().get(TEST_MODE_COOKIE)?.value === '1'
 
   return <DashboardLayout initialTestMode={initialTestMode}>{children}</DashboardLayout>
 }

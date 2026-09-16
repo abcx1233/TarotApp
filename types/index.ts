@@ -272,6 +272,8 @@ export interface RestoredReadingData {
   audit_score: number | null
   audit_checks: AuditResult | null
   audit_generated_at: string | null
+  /** Set when the reading is in Trash — the page blocks editing it until restored. */
+  deleted_at: string | null
   order: {
     id: string
     reading_tier: string
