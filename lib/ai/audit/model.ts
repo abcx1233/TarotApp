@@ -108,6 +108,25 @@ export function phraseAppearsIn(phrase: string, text: string): boolean {
   return new RegExp(pattern, 'iu').test(normalizeApostrophes(text))
 }
 
+/**
+ * Words WRITING_STYLE_GUIDE (lib/ai/prompts/builder.ts) requires in every
+ * reading — its CORE VOICE rule: Use "you" and "your" consistently throughout.
+ * Finding one of these in the reading proves nothing about a specific claim, so
+ * a quoted phrase made only of them can never be the evidence that verifies it.
+ *
+ * Deliberately just these two. Everything else in the guide is encouraged
+ * rather than required ("you're", "you've" and the preferred phrases are to be
+ * used "naturally"), and the add-on headings only appear when that add-on was
+ * ordered. Update this if the guide adds another every-reading requirement.
+ */
+const MANDATED_WORDS: readonly string[] = ['you', 'your']
+
+/** Whether a quoted phrase consists only of MANDATED_WORDS, e.g. "you" or "You". */
+function isOnlyMandatedWords(phrase: string): boolean {
+  const words = normalizeApostrophes(phrase).toLowerCase().split(/\s+/).filter(Boolean)
+  return words.length > 0 && words.every((word) => MANDATED_WORDS.indexOf(word) !== -1)
+}
+
 /** Every distinct quoted phrase in `text`, in order, de-duplicated case-insensitively. */
 export function extractQuotedPhrases(text: string): string[] {
   const seen: Record<string, true> = {}
@@ -142,23 +161,32 @@ export function extractQuotedPhrases(text: string): string[] {
  * nothing concrete to verify, and third-person slippage in particular is
  * often better described than quoted. A reason that cites quotes has each one
  * checked against the final text with phraseAppearsIn(); any that don't verify
- * are dropped. If every cited phrase turns out to be fabricated, the claim
- * itself is unsupported and this returns null — the caller must not fail the
- * check on an ungrounded reason, and must record that it discarded one (see
- * resolveVoiceCheck).
+ * are dropped.
+ *
+ * A quote made only of words every reading must contain ("you", "your") can't
+ * be the evidence on its own: "the reader" invented alongside a real "you"
+ * would otherwise verify every time. Such a quote still counts as found, so a
+ * reason quoting "she" and "you" that are both present is kept unchanged, but
+ * at least one verified quote must be something more specific.
+ *
+ * If no specific quote verifies, the claim itself is unsupported and this
+ * returns null — the caller must not fail the check on an ungrounded reason,
+ * and must record that it discarded one (see resolveVoiceCheck).
  */
 export function groundModelReason(reason: string, finalText: string): string | null {
   const quoted = extractQuotedPhrases(reason)
   if (quoted.length === 0) return reason
 
   const verified = quoted.filter((phrase) => phraseAppearsIn(phrase, finalText))
+  const evidence = verified.filter((phrase) => !isOnlyMandatedWords(phrase))
 
-  if (verified.length === 0) return null
+  if (evidence.length === 0) return null
   if (verified.length === quoted.length) return reason
 
-  // Partial hit: rebuild around only what verified rather than leave the
-  // model's original sentence pointing at a phrase that isn't there.
-  return `Voice drift: ${verified.map((p) => `"${p}"`).join(', ')} found in the reading.`
+  // Partial hit: rebuild around only the specific evidence that verified, rather
+  // than leave the model's original sentence pointing at a phrase that isn't
+  // there.
+  return `Voice drift: ${evidence.map((p) => `"${p}"`).join(', ')} found in the reading.`
 }
 
 const SYSTEM_PROMPT = `You are auditing a finished tarot reading before a human reviews it. You are not rewriting or improving it — you only report what is true about it.
@@ -186,9 +214,9 @@ export interface ModelVerdict {
  * code. Kept out of runModelChecks so it can be tested without a model call.
  *
  * The model's own claim is grounded before it can fail the check. A claim whose
- * quotes don't verify comes back null and is dropped, rather than shown to
- * Rhiannon as an ungrounded reason. Code-detected banned phrases are unaffected:
- * those are already grounded by construction.
+ * quoted evidence doesn't verify comes back null and is dropped, rather than
+ * shown to Rhiannon as an ungrounded reason. Code-detected banned phrases are
+ * unaffected: those are already grounded by construction.
  *
  * Dropping or rewriting a claim is never silent. The model's original wording is
  * kept on the check as `unverifiedReason`, which is saved in readings.audit_checks
@@ -212,7 +240,7 @@ export function resolveVoiceCheck(
     check.unverifiedReason = claimed
     console.warn(
       `[audit] voice_drift: ${grounded === null ? 'discarded' : 'rewrote'} a model claim ` +
-        `quoting text not found in the reading. Original reason: ${JSON.stringify(claimed)}`
+        `whose quoted evidence could not be verified in the reading. Original reason: ${JSON.stringify(claimed)}`
     )
   }
 

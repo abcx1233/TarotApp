@@ -87,9 +87,10 @@ export interface AuditCheck {
   /** Short plain-language explanation. Set on 'fail', and on 'skipped'. */
   reason?: string
   /**
-   * voice_drift only: the audit model's original reason, when it quoted text
-   * that could not be found in the reading and was discarded or rewritten
-   * because of that. Recorded so a claim that stopped counting is never
+   * voice_drift only: the audit model's original reason, when its quoted
+   * evidence could not be verified against the reading (a quote not found, or
+   * only "you"/"your" found) and it was discarded or rewritten because of
+   * that. Recorded so a claim that stopped counting is never
    * invisible after the fact. Not shown in the checklist.
    */
   unverifiedReason?: string

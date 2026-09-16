@@ -533,6 +533,50 @@ async function main(): Promise<void> {
     ['pass', false, 0]
   )
 
+  // The style guide requires "you" and "your" in every reading, so finding one
+  // proves nothing: it must never be the only evidence that verifies a claim.
+  section('Voice-drift grounding: words every reading must contain')
+  const directAddressReading = 'You already know what this means for you.'
+  const inventedPlusYou = 'Says "the reader" instead of "you".'
+  t(
+    'an invented phrase plus "you" as the only other quote is discarded',
+    groundModelReason(inventedPlusYou, directAddressReading),
+    null
+  )
+  const [inventedPlusYouCheck, inventedPlusYouWarnings] = withCapturedWarnings(() =>
+    resolveVoiceCheck({ pass: false, reason: inventedPlusYou }, null, directAddressReading)
+  )
+  t(
+    'and goes through the same recorded-discard path',
+    [inventedPlusYouCheck.status, inventedPlusYouCheck.unverifiedReason, inventedPlusYouWarnings.length],
+    ['pass', inventedPlusYou, 1]
+  )
+  t(
+    'a real "she" alongside "you" still verifies and is kept unchanged',
+    groundModelReason('Calls the client "she" instead of "you".', 'She has been holding back. You know this.'),
+    'Calls the client "she" instead of "you".'
+  )
+  t(
+    '"you" as the sole quote is not evidence',
+    groundModelReason('Slips away from "you" partway through.', directAddressReading),
+    null
+  )
+  t(
+    '"your" counts the same way, in any case',
+    groundModelReason('Invented "the querent" rather than "Your".', 'Your path is clear.'),
+    null
+  )
+  t(
+    'a phrase that merely contains "your" is specific evidence',
+    groundModelReason('Uses "your path" metaphorically.', 'This is your path.'),
+    'Uses "your path" metaphorically.'
+  )
+  t(
+    'a partial-hit rewrite leaves "you" out of the evidence it lists',
+    groundModelReason('Uses "deep down" and "navigate" instead of "you".', readingWithoutBannedPhrases),
+    'Voice drift: "deep down" found in the reading.'
+  )
+
   console.log(`\n${passed} passed, ${failed} failed`)
   process.exit(failed > 0 ? 1 : 0)
 }
