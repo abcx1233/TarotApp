@@ -86,6 +86,13 @@ export interface AuditCheck {
   penalty: number
   /** Short plain-language explanation. Set on 'fail', and on 'skipped'. */
   reason?: string
+  /**
+   * voice_drift only: the audit model's original reason, when it quoted text
+   * that could not be found in the reading and was discarded or rewritten
+   * because of that. Recorded so a claim that stopped counting is never
+   * invisible after the fact. Not shown in the checklist.
+   */
+  unverifiedReason?: string
 }
 
 export type AuditBand = 'green' | 'amber' | 'red'

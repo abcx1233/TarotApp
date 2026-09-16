@@ -10,13 +10,17 @@ export interface ModelAuditInput {
   specificQuestion?: string | null
 }
 
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 /**
  * One alternation over every unconditional banned phrase, longest first so that
  * "not just about" wins over "not just". Anchored on a leading word boundary
  * only — a trailing one would miss "unpacking" for a ban on "unpack".
  */
 const BANNED_PHRASE_RE = new RegExp(
-  `\\b(?:${BANNED_PHRASES.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
+  `\\b(?:${BANNED_PHRASES.map(escapeRegExp).join('|')})`,
   'gi'
 )
 
@@ -39,16 +43,69 @@ function findBannedPhrases(text: string): string[] {
 
 /**
  * Delimiters treated as quote marks when pulling cited evidence out of the
- * model's own reason text: straight and curly double quotes, and curly
- * single quotes. The plain apostrophe (') is deliberately excluded — reason
- * strings are plain English ("doesn't", "the client's") and pairing on bare
- * apostrophes would span from a contraction to some unrelated apostrophe
- * later in the sentence and capture garbage.
+ * model's own reason text: straight and curly double quotes only.
+ *
+ * Single quotes of every kind are deliberately excluded. The plain apostrophe
+ * (') and the curly right single quote (’) are both the apostrophe in ordinary
+ * English — "doesn’t", "the client’s" — so pairing on either spans from one
+ * contraction to the next and captures garbage like "t speak to the client".
+ * The curly left single quote (‘) goes too: with its closing partner excluded
+ * it would only ever pair with another opener. A reason that cites evidence in
+ * single quotes is therefore treated as unquoted and passed through unchanged,
+ * which is the safe direction — the claim is kept, never discarded.
  */
-const QUOTED_PHRASE_RE = /["\u201C\u201D\u2018\u2019]([^"\u201C\u201D\u2018\u2019]{1,80})["\u201C\u201D\u2018\u2019]/g
+const QUOTED_PHRASE_RE = /["\u201C\u201D]([^"\u201C\u201D]{1,80})["\u201C\u201D]/g
 
 function cleanQuotedPhrase(phrase: string): string {
   return phrase.trim().replace(/^[.,;:!?]+/, '').replace(/[.,;:!?]+$/, '').trim()
+}
+
+/**
+ * Fold every apostrophe style onto the plain one, so "you're" in the model's
+ * reason and "you’re" in the reading compare equal. Applied to both sides.
+ */
+function normalizeApostrophes(text: string): string {
+  return text.replace(/[\u2018\u2019\u02BC]/g, "'")
+}
+
+/**
+ * Words shorter than this must match exactly. Suffix tolerance on short words
+ * is where false matches come from: "she" + "d" is "shed", "he" + "r" is "her".
+ */
+const MIN_STEM_LENGTH = 4
+
+/**
+ * Pattern for one word of a quoted phrase, tolerating plain suffix variation so
+ * a reason citing "navigate" still verifies against "navigating" in the text.
+ *
+ * Not real stemming, just the regular English endings: -s, -es, -ed, -er, -ers,
+ * -ing, with a trailing silent "e" allowed to drop (navigate → navigating,
+ * navigated, navigates). Only applied to all-letter words of MIN_STEM_LENGTH or
+ * more; anything else (short words, contractions) must match exactly. The
+ * caller's word boundaries still apply after the suffix, so "navigate" does not
+ * verify against "navigational".
+ */
+function wordPattern(word: string): string {
+  if (word.length < MIN_STEM_LENGTH || !/^[a-z]+$/i.test(word)) return escapeRegExp(word)
+  if (/e$/i.test(word)) return `${escapeRegExp(word.slice(0, -1))}(?:e(?:s|d|r|rs)?|e?ing)`
+  return `${escapeRegExp(word)}(?:s|es|ed|er|ers|ing)?`
+}
+
+// Letters and digits in any script. Built with the RegExp constructor rather
+// than a literal because the project's TS target predates the `u` flag.
+const WORD_CHAR = '[\\p{L}\\p{N}]'
+
+/**
+ * Whether a quoted phrase genuinely appears in `text`: case-insensitive, with
+ * apostrophe styles folded together, matched on whole words (so "she" is not
+ * found inside "wished" or "shed"), any run of whitespace between words, and
+ * plain suffix variation per wordPattern().
+ */
+export function phraseAppearsIn(phrase: string, text: string): boolean {
+  const words = normalizeApostrophes(phrase).split(/\s+/).filter(Boolean)
+  if (words.length === 0) return false
+  const pattern = `(?<!${WORD_CHAR})${words.map(wordPattern).join('\\s+')}(?!${WORD_CHAR})`
+  return new RegExp(pattern, 'iu').test(normalizeApostrophes(text))
 }
 
 /** Every distinct quoted phrase in `text`, in order, de-duplicated case-insensitively. */
@@ -59,7 +116,7 @@ export function extractQuotedPhrases(text: string): string[] {
   let match: RegExpExecArray | null
   while ((match = QUOTED_PHRASE_RE.exec(text)) !== null) {
     const phrase = cleanQuotedPhrase(match[1])
-    const key = phrase.toLowerCase()
+    const key = normalizeApostrophes(phrase).toLowerCase()
     if (phrase.length >= 2 && !seen[key]) {
       seen[key] = true
       phrases.push(phrase)
@@ -84,17 +141,17 @@ export function extractQuotedPhrases(text: string): string[] {
  * A reason that cites no quoted phrase is passed through unchanged: there is
  * nothing concrete to verify, and third-person slippage in particular is
  * often better described than quoted. A reason that cites quotes has each one
- * checked with a case-insensitive substring match against the final text;
- * any that don't verify are dropped. If every cited phrase turns out to be
- * fabricated, the claim itself is unsupported and this returns null — the
- * caller must not fail the check on an ungrounded reason.
+ * checked against the final text with phraseAppearsIn(); any that don't verify
+ * are dropped. If every cited phrase turns out to be fabricated, the claim
+ * itself is unsupported and this returns null — the caller must not fail the
+ * check on an ungrounded reason, and must record that it discarded one (see
+ * resolveVoiceCheck).
  */
 export function groundModelReason(reason: string, finalText: string): string | null {
   const quoted = extractQuotedPhrases(reason)
   if (quoted.length === 0) return reason
 
-  const haystack = finalText.toLowerCase()
-  const verified = quoted.filter((phrase) => haystack.includes(phrase.toLowerCase()))
+  const verified = quoted.filter((phrase) => phraseAppearsIn(phrase, finalText))
 
   if (verified.length === 0) return null
   if (verified.length === quoted.length) return reason
@@ -119,9 +176,47 @@ Reply with strict JSON and nothing else, in exactly this shape:
 
 Set "reason" only when that item fails. Keep each reason under 20 words, plain language, naming the specific problem.`
 
-interface ModelVerdict {
+export interface ModelVerdict {
   pass: boolean
   reason?: string
+}
+
+/**
+ * The voice check, given the model's verdict and any banned phrases found in
+ * code. Kept out of runModelChecks so it can be tested without a model call.
+ *
+ * The model's own claim is grounded before it can fail the check. A claim whose
+ * quotes don't verify comes back null and is dropped, rather than shown to
+ * Rhiannon as an ungrounded reason. Code-detected banned phrases are unaffected:
+ * those are already grounded by construction.
+ *
+ * Dropping or rewriting a claim is never silent. The model's original wording is
+ * kept on the check as `unverifiedReason`, which is saved in readings.audit_checks
+ * with the rest of the result, and a warning is logged. A discarded claim still
+ * lifts the score by the voice penalty, so it has to be findable afterwards.
+ */
+export function resolveVoiceCheck(
+  verdict: ModelVerdict,
+  bannedReason: string | null,
+  finalText: string
+): AuditCheck {
+  const claimed = verdict.pass ? null : verdict.reason || 'Voice drifts out of direct address.'
+  const grounded = claimed === null ? null : groundModelReason(claimed, finalText)
+
+  const check =
+    grounded || bannedReason
+      ? fail('voice_drift', [grounded, bannedReason].filter(Boolean).join(' '))
+      : pass('voice_drift')
+
+  if (claimed !== null && grounded !== claimed) {
+    check.unverifiedReason = claimed
+    console.warn(
+      `[audit] voice_drift: ${grounded === null ? 'discarded' : 'rewrote'} a model claim ` +
+        `quoting text not found in the reading. Original reason: ${JSON.stringify(claimed)}`
+    )
+  }
+
+  return check
 }
 
 function parseVerdicts(raw: string): { relevance: ModelVerdict; voice: ModelVerdict } | null {
@@ -207,20 +302,7 @@ export async function runModelChecks(input: ModelAuditInput): Promise<[AuditChec
       : null
 
   if (verdicts) {
-    // Ground the model's own claim before it can fail the check on it. A
-    // claim that cited quotes which don't verify comes back null and is
-    // downgraded — dropped from consideration entirely — rather than shown
-    // to Rhiannon as an ungrounded reason. Code-detected banned phrases below
-    // are unaffected: those are already grounded by construction.
-    const modelReason = verdicts.voice.pass
-      ? null
-      : groundModelReason(verdicts.voice.reason || 'Voice drifts out of direct address.', input.finalText)
-
-    if (modelReason || bannedReason) {
-      voice = fail('voice_drift', [modelReason, bannedReason].filter(Boolean).join(' '))
-    } else {
-      voice = pass('voice_drift')
-    }
+    voice = resolveVoiceCheck(verdicts.voice, bannedReason, input.finalText)
   } else if (bannedReason) {
     voice = fail('voice_drift', bannedReason)
   } else {

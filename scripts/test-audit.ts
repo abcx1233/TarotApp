@@ -30,7 +30,12 @@ delete process.env.OPENAI_API_KEY
 import { findMentionedCards, mentionsCard } from '@/lib/ai/audit/card-matching'
 import { mainBodyLength, runDeterministicChecks } from '@/lib/ai/audit/deterministic'
 import { auditReading, scoreToBand, type AuditCheck } from '@/lib/ai/audit'
-import { extractQuotedPhrases, groundModelReason } from '@/lib/ai/audit/model'
+import {
+  extractQuotedPhrases,
+  groundModelReason,
+  phraseAppearsIn,
+  resolveVoiceCheck,
+} from '@/lib/ai/audit/model'
 
 let passed = 0
 let failed = 0
@@ -48,6 +53,20 @@ function t(name: string, actual: unknown, expected: unknown): void {
 
 function section(name: string): void {
   console.log(`\n${name}`)
+}
+
+/** Run `fn` with console.warn captured instead of printed; returns its result and the warnings. */
+function withCapturedWarnings<T>(fn: () => T): [T, string[]] {
+  const warnings: string[] = []
+  const realWarn = console.warn
+  console.warn = (...args: unknown[]) => {
+    warnings.push(args.map(String).join(' '))
+  }
+  try {
+    return [fn(), warnings]
+  } finally {
+    console.warn = realWarn
+  }
 }
 
 /** Collapse a check list to { id: status } for compact assertions. */
@@ -305,19 +324,12 @@ async function main(): Promise<void> {
   // reading. Grounding verifies every quoted claim against finalText and
   // drops it if it doesn't check out, rather than showing Rhiannon a reason
   // she can't find in the text.
-  // groundModelReason() below is the actual fix and is fully covered here. The
-  // one thing NOT covered in this offline script is the ~10-line call site in
-  // runModelChecks() that wires it in — stubbing that requires replacing the
-  // chatComplete export at runtime, and this project's ESM output exposes
-  // read-only bindings for that, so a property-patch mock throws. Pulling in
-  // a mocking library to get around that would cut against this script's
-  // "no framework needed" purpose for one call site that just passes verdicts
-  // through. That wiring was verified manually during development: a stubbed
-  // chatComplete returning the exact fabricated "navigate"/"spiritual growth"
-  // verdict from the bug report produced a passing check with no reason, and
-  // a stubbed genuine "the reader" verdict still failed with its reason
-  // intact. Re-verify by hand the same way if runModelChecks's voice-handling
-  // branch changes.
+  // groundModelReason() is the fix, and resolveVoiceCheck() is how
+  // runModelChecks() applies it to a parsed verdict; both are covered here. The
+  // only line not exercised offline is runModelChecks() handing verdicts.voice
+  // to resolveVoiceCheck(): stubbing chatComplete at runtime needs a mocking
+  // library (this project's ESM output exposes read-only bindings), which would
+  // cut against this script's "no framework needed" purpose.
   section('Voice-drift grounding: quote extraction')
   t(
     'finds a double-quoted phrase',
@@ -393,6 +405,133 @@ async function main(): Promise<void> {
     'Voice drift: "deep down" found in the reading.'
   )
 
+  // A quoted word in the reason must still verify when the reading uses a
+  // plain inflection of it — otherwise a genuine failure is thrown out.
+  section('Voice-drift grounding: word forms')
+  t('"navigate" verifies against "navigating"', phraseAppearsIn('navigate', 'You are navigating this change.'), true)
+  t('"navigate" verifies against "navigated"', phraseAppearsIn('navigate', 'You navigated it well.'), true)
+  t('"navigate" verifies against "navigates"', phraseAppearsIn('navigate', 'She navigates it well.'), true)
+  t('"realm" verifies against "realms"', phraseAppearsIn('realm', 'across the spiritual realms'), true)
+  t(
+    'a genuine "navigate" claim is kept when the reading says "navigating"',
+    groundModelReason('Uses "navigate" metaphorically.', 'You are navigating this change with grace.'),
+    'Uses "navigate" metaphorically.'
+  )
+  t(
+    'suffix tolerance does not stretch to unrelated longer words',
+    phraseAppearsIn('navigate', 'Your navigational instincts are sharp.'),
+    false
+  )
+  t(
+    'a multi-word phrase still verifies across a line break',
+    phraseAppearsIn('spiritual growth', 'This is your spiritual\ngrowth.'),
+    true
+  )
+
+  // The curly apostrophe is an apostrophe, not a quote mark, and apostrophe
+  // style alone must never decide whether a quote verifies.
+  section('Voice-drift grounding: apostrophes')
+  const curlyApostropheReason = 'Doesn\u2019t speak to the client\u2019s question directly.'
+  t('a curly apostrophe is not treated as a quote delimiter', extractQuotedPhrases(curlyApostropheReason), [])
+  t(
+    'so a reason with curly apostrophes is kept, not misread and discarded',
+    groundModelReason(curlyApostropheReason, 'You are moving through change.'),
+    curlyApostropheReason
+  )
+  t(
+    'curly single quotes are not quote delimiters either',
+    extractQuotedPhrases('Uses \u2018navigate\u2019 metaphorically.'),
+    []
+  )
+  t(
+    'a straight apostrophe in the reason verifies against a curly one in the reading',
+    groundModelReason('Uses "you\'re on a spiritual growth path".', 'You\u2019re on a spiritual growth path.'),
+    'Uses "you\'re on a spiritual growth path".'
+  )
+  t(
+    'a curly apostrophe in the reason verifies against a straight one in the reading',
+    groundModelReason('Uses \u201Cyou\u2019re on a spiritual growth path\u201D.', "You're on a spiritual growth path."),
+    'Uses \u201Cyou\u2019re on a spiritual growth path\u201D.'
+  )
+  t(
+    'the same phrase in two apostrophe styles counts once',
+    extractQuotedPhrases('Cites "you\'re" and "you\u2019re".'),
+    ["you're"]
+  )
+
+  // A quoted word must be found as a word, not as letters inside another word.
+  section('Voice-drift grounding: whole words')
+  const wishedAndShed = 'You wished for this and you shed the old layer.'
+  t('"she" is not found inside "wished" or "shed"', phraseAppearsIn('she', wishedAndShed), false)
+  t(
+    'so a fabricated "she" claim is discarded',
+    groundModelReason('Refers to the client as "she".', wishedAndShed),
+    null
+  )
+  t('a real standalone "she" still verifies', phraseAppearsIn('she', 'She has been holding back.'), true)
+  t('"he" is not found inside "the"', phraseAppearsIn('he', 'The path is clear.'), false)
+  t('short words get no suffix tolerance: "you" is not found in "your"', phraseAppearsIn('you', 'Your path.'), false)
+
+  // A discarded claim lifts the score by the voice penalty, so it must be
+  // recorded on the check (saved in readings.audit_checks) and logged.
+  section('Voice-drift grounding: discarded claims are recorded')
+  const fabricated = 'Uses "navigate" metaphorically instead of direct address.'
+  const partial = 'Uses "deep down" and also "navigate" metaphorically.'
+  const [discarded, discardedWarnings] = withCapturedWarnings(() =>
+    resolveVoiceCheck({ pass: false, reason: fabricated }, null, readingWithoutBannedPhrases)
+  )
+  const [kept, keptWarnings] = withCapturedWarnings(() =>
+    resolveVoiceCheck(
+      { pass: false, reason: 'Drifts to "the reader" partway through.' },
+      null,
+      'Something about the reader in here.'
+    )
+  )
+  const [withBan] = withCapturedWarnings(() =>
+    resolveVoiceCheck({ pass: false, reason: fabricated }, 'Banned phrase: "tapestry".', readingWithoutBannedPhrases)
+  )
+  const [rewritten, rewrittenWarnings] = withCapturedWarnings(() =>
+    resolveVoiceCheck({ pass: false, reason: partial }, null, readingWithoutBannedPhrases)
+  )
+  const [clean, cleanWarnings] = withCapturedWarnings(() =>
+    resolveVoiceCheck({ pass: true }, null, readingWithoutBannedPhrases)
+  )
+
+  t('a discarded claim no longer fails the check', [discarded.status, discarded.penalty], ['pass', 0])
+  t('but its original reason is recorded on the check', discarded.unverifiedReason, fabricated)
+  t(
+    'and survives serialisation into audit_checks',
+    JSON.parse(JSON.stringify({ checks: [discarded] })).checks[0].unverifiedReason,
+    fabricated
+  )
+  t('exactly one warning is logged', discardedWarnings.length, 1)
+  t(
+    'the warning says it was discarded and quotes the original reason',
+    (discardedWarnings[0] ?? '').includes('discarded') &&
+      (discardedWarnings[0] ?? '').includes(JSON.stringify(fabricated)),
+    true
+  )
+  t(
+    'a verified claim fails with its reason and records nothing',
+    [kept.status, kept.reason, 'unverifiedReason' in kept, keptWarnings.length],
+    ['fail', 'Drifts to "the reader" partway through.', false, 0]
+  )
+  t(
+    'with a banned phrase as well, the check fails on the ban alone',
+    [withBan.status, withBan.reason],
+    ['fail', 'Banned phrase: "tapestry".']
+  )
+  t('and the discarded claim is still recorded', withBan.unverifiedReason, fabricated)
+  t(
+    'a partial hit that rewrites the reason records the original and warns',
+    [rewritten.reason, rewritten.unverifiedReason, rewrittenWarnings.length],
+    ['Voice drift: "deep down" found in the reading.', partial, 1]
+  )
+  t(
+    'a passing verdict records and logs nothing',
+    [clean.status, 'unverifiedReason' in clean, cleanWarnings.length],
+    ['pass', false, 0]
+  )
 
   console.log(`\n${passed} passed, ${failed} failed`)
   process.exit(failed > 0 ? 1 : 0)
