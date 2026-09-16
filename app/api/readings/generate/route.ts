@@ -440,17 +440,19 @@ export async function POST(request: Request) {
     price_total: parseFloat(f.priceTotal || '0') || 0,
     is_rush: f.isRush || false,
     due_at: f.dueAt || null,
-    is_test: isTestMode,
     updated_at: new Date().toISOString(),
   }
 
+  // is_test is set only on insert. An existing order keeps whatever it was
+  // created with — regenerating a real order while Test Mode is on must never
+  // relabel it as test data (Settings → "Clear all test data" deletes by it).
   if (f.savedOrderId) {
     await supabase.from('orders').update(orderPayload).eq('id', f.savedOrderId)
     orderId = f.savedOrderId
   } else {
     const { data: newOrder } = await supabase
       .from('orders')
-      .insert({ ...orderPayload, source: 'manual' })
+      .insert({ ...orderPayload, source: 'manual', is_test: isTestMode })
       .select('id')
       .single()
     orderId = newOrder?.id ?? ''
@@ -509,7 +511,6 @@ export async function POST(request: Request) {
     groq_model: aiModel,
     prompt_version: 1,
     final_approved: false,
-    is_test: isTestMode,
     // Null when the audit could not run at all — "not audited", distinct from
     // a zero score. See supabase/migrations/add_reading_audit_columns.sql.
     audit_score: audit?.score ?? null,
@@ -538,7 +539,8 @@ export async function POST(request: Request) {
   } else {
     const { data: newReading } = await supabase
       .from('readings')
-      .insert({ ...readingPayload, regenerated_count: 0 })
+      // is_test on insert only — same reasoning as the order above.
+      .insert({ ...readingPayload, regenerated_count: 0, is_test: isTestMode })
       .select('id')
       .single()
     readingId = newReading?.id ?? ''

@@ -85,17 +85,19 @@ export async function POST(request: Request) {
     price_total: parseFloat(f.priceTotal || '0') || 0,
     is_rush: f.isRush || false,
     due_at: f.dueAt || null,
-    is_test: isTestMode,
     updated_at: new Date().toISOString(),
   }
 
+  // is_test is set only on insert. An existing order keeps whatever it was
+  // created with — saving a real order while Test Mode is on must never
+  // relabel it as test data (Settings → "Clear all test data" deletes by it).
   if (f.savedOrderId) {
     await supabase.from('orders').update(orderBase).eq('id', f.savedOrderId)
     orderId = f.savedOrderId
   } else {
     const { data: newOrder } = await supabase
       .from('orders')
-      .insert({ ...orderBase, status: 'pending', source: 'manual' })
+      .insert({ ...orderBase, status: 'pending', source: 'manual', is_test: isTestMode })
       .select('id')
       .single()
     orderId = newOrder?.id ?? ''
@@ -130,7 +132,6 @@ export async function POST(request: Request) {
     energy_cleansing_notes: null,
     specific_question: f.includeExtraQuestion && f.extraQuestionText?.trim() ? f.extraQuestionText.trim() : null,
     generated_reading: f.generatedReading ?? null,
-    is_test: isTestMode,
     updated_at: new Date().toISOString(),
   }
 
@@ -142,7 +143,8 @@ export async function POST(request: Request) {
   } else {
     const { data: newReading } = await supabase
       .from('readings')
-      .insert({ ...readingPayload, regenerated_count: 0, final_approved: false })
+      // is_test on insert only — same reasoning as the order above.
+      .insert({ ...readingPayload, regenerated_count: 0, final_approved: false, is_test: isTestMode })
       .select('id')
       .single()
     readingId = newReading?.id ?? ''
