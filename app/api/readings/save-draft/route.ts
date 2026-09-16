@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCardBySuit } from '@/data/tarot-cards'
 import { ADDON_PRICES } from '@/lib/config/pricing'
+import { buildDraftReadingPayload } from '@/lib/readings/draft-payload'
 import type { ReadingFormState, CardEntryForm } from '@/types'
 
 export async function POST(request: Request) {
@@ -117,23 +118,7 @@ export async function POST(request: Request) {
   }
 
   // Save reading (preserve generated_reading if exists)
-  const readingPayload = {
-    order_id: orderId || null,
-    client_id: clientId,
-    character_target: f.readingLength || 6000,
-    tone_preset_id: f.tonePresetId || null,
-    question_or_focus: f.questionsOrFocus || null,
-    future_timeframe: f.futureTimeframe || null,
-    bottom_of_deck_card: f.bottomCard?.name || null,
-    bottom_of_deck_orientation: f.bottomCard?.orientation || 'upright',
-    oracle_card_name: f.includeOracleCard ? f.oracleCardName || null : null,
-    include_oracle_card: f.includeOracleCard || false,
-    include_energy_cleansing: f.includeEnergyCleansing || false,
-    energy_cleansing_notes: null,
-    specific_question: f.includeExtraQuestion && f.extraQuestionText?.trim() ? f.extraQuestionText.trim() : null,
-    generated_reading: f.generatedReading ?? null,
-    updated_at: new Date().toISOString(),
-  }
+  const readingPayload = buildDraftReadingPayload(f, orderId, clientId)
 
   let readingId: string
 

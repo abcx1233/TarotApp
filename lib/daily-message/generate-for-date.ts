@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { generateDailyCardMessage } from '@/lib/ai/generate'
+import { stripDashes } from '@/lib/text/dashes'
 import { drawRandomCard } from '@/data/tarot-cards'
 import { addDays, shouldSkipWrite } from '@/lib/daily-message/dates'
 import { DAILY_MESSAGE_COLUMNS } from '@/lib/daily-message/columns'
@@ -77,12 +78,7 @@ export async function generateDailyMessageForDate({
   let generatedText: string
   try {
     const result = await generateDailyCardMessage(cardName, orientation)
-    generatedText = result.generatedReading
-      .replace(/—/g, ', ')
-      .replace(/–/g, ', ')
-      .replace(/\s,\s/g, ', ')
-      .replace(/,\s*,/g, ',')
-      .trim()
+    generatedText = stripDashes(result.generatedReading).trim()
   } catch (err) {
     console.error(`${logPrefix} Generation error:`, err)
     return { outcome: 'generation_failed', error: err }

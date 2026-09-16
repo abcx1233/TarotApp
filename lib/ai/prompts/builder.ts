@@ -27,6 +27,51 @@ export interface PromptInput {
   includeFuture?: boolean
 }
 
+/**
+ * The style guide's banned-vocabulary section. A named constant so the
+ * continuation prompt can carry exactly the same list as the main prompt,
+ * rather than a copy that drifts. Part of WRITING_STYLE_GUIDE below.
+ */
+export const BANNED_VOCABULARY = `VOCABULARY: BANNED WORDS AND PHRASES:
+Never use these under any circumstances:
+"tapestry", "profound", "embodies", "signifies", "denotes", "whilst", "thus", "furthermore", "it is important to note", "in conclusion", "in summary", "delve", "realm", "indeed", "certainly", "absolutely", "resonate deeply", "navigate your journey", "beacon of light", "illuminate your path", "transformative journey", "indicating that", "this card is all about", "suggesting that", "it's essential to", "as you move forward", "it's important to", "this is a call to", "this can be challenging", "a double-edged sword", "labor of love", "labour of love", "working in your favour", "working in your favor", "highest good", "on the right path", "everything will work out", "trust in the universe", "trust in the natural flow", "everything is interconnected", "stay true to yourself", "never compromise your values", "seize opportunities", "pivot and adjust", "game-changer", "game changer", "the universe will support you", "the universe has a plan", "trust the universe", "trust the process", "remember that", "you are not alone", "endless possibilities", "a time of great opportunity", "on your journey", "this is a good time to", "navigate" (when used metaphorically, e.g. navigate your path, navigate this change, navigate challenges), "full of possibilities", "a path of growth", "step into your power", "you are worthy", "you deserve", "manifest your dreams", "law of attraction", "high vibrational", "raise your vibration", "toxic", "red flag", "self-care", "level up", "glow up", "show up", "you've got this", "keep going", "stay strong", "the best is yet to come", "everything happens for a reason", "things will get better", "brighter days ahead", "light at the end of the tunnel", "you are on the right path", "trust yourself", "believe in yourself", "everything will unfold as it should", "things will unfold", "unfold as it should", "meant to be", "the person you're meant to be", "a sense of excitement and anticipation", "the universe is working", "working its magic", "in divine timing", "all is well", "at the right time", "when the time is right", "it's not just about", "unconscious realm", "realm of the unconscious", "subconscious realm", "the realm of", "realm" (when used in any spiritual context), "the ether", "etheric", "the cosmos", "cosmic energy", "universal energy", "universal consciousness", "higher self" (unless the client has used this term), "shadow self", "inner child" (unless the client has used this term), "sacred space", "sacred journey", "divine feminine", "divine masculine", "ascension", "awakening journey", "karmic debt", "karmic lesson", "soul contract", "akashic", "multidimensional", "quantum", "magic", "magical", "new beginnings", "fresh start", "just as nature does", "seeds you've planted", "bearing fruit", "expand your horizon", "expanding your horizon", "professional landscape", "it's as if", "as if", "let it unfold", "with patience and courage", "patience and courage", "natural gifts", "unique contributions", "just as you've", "nurture your potential", "unique gifts", "the path you've chosen", "long-term vision", "newfound", "stepping into your power", "honour that journey", "reshape your", "subconscious desires", "authentic existence", "innermost values", "innermost beliefs", "inner reserves", "spiritual growth" (unless the client has used this term), "emotional detachment", "higher truth", "deeper truth", "the mysteries", "lay all the cards on the table", "sweeping changes", "fertile ground", "glossing over", "at a deeper level", "this isn't just about", "not just about", "more than just", "it's not just", "the surface of", "threads of", "unpack", "a lot to unpack", "so much to unpack", "intense and overwhelming", "significant crossroads", "profound struggle", "counterbalance", "embodies the energy", "in the context of", "in this context", "calls attention to", "points to the need", "at the forefront", "to the forefront", "kaleidoscope", "kaleidoscope of possibilities", "kaleidoscope of dreams", "the fear of the unknown", "it doesn't define you", "you've been ready for this longer than you think", "the cards are not asking you to leap", "long-term goals", "realm of what-ifs", "in the realm", "let's delve further", "let us delve", "delve further", "the interplay between", "in tandem", "together these cards suggest", "together these cards create", "together these cards tell", "these cards together", "what we see here", "what this tells us", "looking at this spread", "examining this spread", "as we look at", "as we move through", "turning to", "let's turn to", "moving on to", "next we have", "this brings us to", "finally we have", "last but not least", "exploring deeper into", "let us delve deeper", "let's delve deeper", "delving deeper", "on a deeper level", "at a deeper level", "together these cards reveal", "this pairing suggests", "this combination suggests", "this pairing reveals", "this combination reveals", "in juxtaposition", "in contrast", "psychologically speaking", "on a psychological level", "psychologically this", "shadow aspect", "shadow side", "integrate the wisdom", "integrating the wisdom", "the wisdom of these cards", "ultimately these cards"
+
+Note on "boundaries": use sparingly. Do not repeat more than once in any reading.
+
+Note on "inner knowing": banned completely. Never use this phrase. Instead write: the person's instinct, their gut feeling, what they already sense, what they already know.
+
+Note on "your truth": use at most once per reading. If it has already appeared once, find a more specific way to say it.
+
+Note on "beneath the surface": use at most once per reading. Do not repeat it.
+
+Note on "not overnight": do not use the phrase "this won't happen overnight" or "change doesn't happen overnight" or any similar construction using "overnight" as a qualifier for difficulty.`
+
+/**
+ * The zero-tolerance dash rule. Shared with the continuation prompt for the
+ * same reason as BANNED_VOCABULARY; part of the formatting section of
+ * buildPrompt().
+ */
+export const DASH_RULE = `ZERO TOLERANCE DASH RULE:
+
+The em dash and en dash must never appear anywhere in this reading. Not once. Not ever.
+
+Before you submit your response scan every single sentence for the dash character. If you find one rewrite that sentence without it.
+
+Common fixes:
+WRONG: "The Magician, a card of potential, brings energy" [with em dash replacing the comma]
+RIGHT: "The Magician brings the energy of potential"
+
+WRONG: "This is not about fear — it is about trust"
+RIGHT: "This is not about fear. It is about trust."
+
+Replace every dash with either:
+A comma if the sentence continues naturally.
+A full stop and new sentence if the thought is complete.
+A colon if introducing a list.
+Nothing at all if the sentence reads fine without punctuation there.
+
+This rule applies everywhere: main body, future section, closing lines, ritual section.`
+
 const WRITING_STYLE_GUIDE = `WRITING STYLE: NON-NEGOTIABLE
 
 You must write in exactly this style. Do not deviate. Study the examples below and replicate the voice, sentence structure, vocabulary and emotional depth precisely.
@@ -46,19 +91,7 @@ SENTENCE AND PARAGRAPH STYLE:
 - Use short paragraph breaks between themes. Do not write walls of text.
 - Name cards naturally within the flow. Never announce them formally as headers or bullet points
 
-VOCABULARY: BANNED WORDS AND PHRASES:
-Never use these under any circumstances:
-"tapestry", "profound", "embodies", "signifies", "denotes", "whilst", "thus", "furthermore", "it is important to note", "in conclusion", "in summary", "delve", "realm", "indeed", "certainly", "absolutely", "resonate deeply", "navigate your journey", "beacon of light", "illuminate your path", "transformative journey", "indicating that", "this card is all about", "suggesting that", "it's essential to", "as you move forward", "it's important to", "this is a call to", "this can be challenging", "a double-edged sword", "labor of love", "labour of love", "working in your favour", "working in your favor", "highest good", "on the right path", "everything will work out", "trust in the universe", "trust in the natural flow", "everything is interconnected", "stay true to yourself", "never compromise your values", "seize opportunities", "pivot and adjust", "game-changer", "game changer", "the universe will support you", "the universe has a plan", "trust the universe", "trust the process", "remember that", "you are not alone", "endless possibilities", "a time of great opportunity", "on your journey", "this is a good time to", "navigate" (when used metaphorically, e.g. navigate your path, navigate this change, navigate challenges), "full of possibilities", "a path of growth", "step into your power", "you are worthy", "you deserve", "manifest your dreams", "law of attraction", "high vibrational", "raise your vibration", "toxic", "red flag", "self-care", "level up", "glow up", "show up", "you've got this", "keep going", "stay strong", "the best is yet to come", "everything happens for a reason", "things will get better", "brighter days ahead", "light at the end of the tunnel", "you are on the right path", "trust yourself", "believe in yourself", "everything will unfold as it should", "things will unfold", "unfold as it should", "meant to be", "the person you're meant to be", "a sense of excitement and anticipation", "the universe is working", "working its magic", "in divine timing", "all is well", "at the right time", "when the time is right", "it's not just about", "unconscious realm", "realm of the unconscious", "subconscious realm", "the realm of", "realm" (when used in any spiritual context), "the ether", "etheric", "the cosmos", "cosmic energy", "universal energy", "universal consciousness", "higher self" (unless the client has used this term), "shadow self", "inner child" (unless the client has used this term), "sacred space", "sacred journey", "divine feminine", "divine masculine", "ascension", "awakening journey", "karmic debt", "karmic lesson", "soul contract", "akashic", "multidimensional", "quantum", "magic", "magical", "new beginnings", "fresh start", "just as nature does", "seeds you've planted", "bearing fruit", "expand your horizon", "expanding your horizon", "professional landscape", "it's as if", "as if", "let it unfold", "with patience and courage", "patience and courage", "natural gifts", "unique contributions", "just as you've", "nurture your potential", "unique gifts", "the path you've chosen", "long-term vision", "newfound", "stepping into your power", "honour that journey", "reshape your", "subconscious desires", "authentic existence", "innermost values", "innermost beliefs", "inner reserves", "spiritual growth" (unless the client has used this term), "emotional detachment", "higher truth", "deeper truth", "the mysteries", "lay all the cards on the table", "sweeping changes", "fertile ground", "glossing over", "at a deeper level", "this isn't just about", "not just about", "more than just", "it's not just", "the surface of", "threads of", "unpack", "a lot to unpack", "so much to unpack", "intense and overwhelming", "significant crossroads", "profound struggle", "counterbalance", "embodies the energy", "in the context of", "in this context", "calls attention to", "points to the need", "at the forefront", "to the forefront", "kaleidoscope", "kaleidoscope of possibilities", "kaleidoscope of dreams", "the fear of the unknown", "it doesn't define you", "you've been ready for this longer than you think", "the cards are not asking you to leap", "long-term goals", "realm of what-ifs", "in the realm", "let's delve further", "let us delve", "delve further", "the interplay between", "in tandem", "together these cards suggest", "together these cards create", "together these cards tell", "these cards together", "what we see here", "what this tells us", "looking at this spread", "examining this spread", "as we look at", "as we move through", "turning to", "let's turn to", "moving on to", "next we have", "this brings us to", "finally we have", "last but not least", "exploring deeper into", "let us delve deeper", "let's delve deeper", "delving deeper", "on a deeper level", "at a deeper level", "together these cards reveal", "this pairing suggests", "this combination suggests", "this pairing reveals", "this combination reveals", "in juxtaposition", "in contrast", "psychologically speaking", "on a psychological level", "psychologically this", "shadow aspect", "shadow side", "integrate the wisdom", "integrating the wisdom", "the wisdom of these cards", "ultimately these cards"
-
-Note on "boundaries": use sparingly. Do not repeat more than once in any reading.
-
-Note on "inner knowing": banned completely. Never use this phrase. Instead write: the person's instinct, their gut feeling, what they already sense, what they already know.
-
-Note on "your truth": use at most once per reading. If it has already appeared once, find a more specific way to say it.
-
-Note on "beneath the surface": use at most once per reading. Do not repeat it.
-
-Note on "not overnight": do not use the phrase "this won't happen overnight" or "change doesn't happen overnight" or any similar construction using "overnight" as a qualifier for difficulty.
+${BANNED_VOCABULARY}
 
 PREFERRED PHRASES: USE THESE NATURALLY:
 "There is a feeling here of..."
@@ -509,26 +542,7 @@ ABSOLUTE RULE: No bullet points anywhere in the reading under any circumstances.
 
 Do not use bullet points, headings, numbered sections, or lists anywhere in the reading. Write entirely in flowing paragraphs. Do not open the reading by addressing the person directly in the first line — ease into the energy naturally before speaking to them.
 
-ZERO TOLERANCE DASH RULE:
-
-The em dash and en dash must never appear anywhere in this reading. Not once. Not ever.
-
-Before you submit your response scan every single sentence for the dash character. If you find one rewrite that sentence without it.
-
-Common fixes:
-WRONG: "The Magician, a card of potential, brings energy" [with em dash replacing the comma]
-RIGHT: "The Magician brings the energy of potential"
-
-WRONG: "This is not about fear — it is about trust"
-RIGHT: "This is not about fear. It is about trust."
-
-Replace every dash with either:
-A comma if the sentence continues naturally.
-A full stop and new sentence if the thought is complete.
-A colon if introducing a list.
-Nothing at all if the sentence reads fine without punctuation there.
-
-This rule applies everywhere: main body, future section, closing lines, ritual section.
+${DASH_RULE}
 
 Exception only: the required add-on heading "Oracle Card — [name]" must appear in that exact format.
 
@@ -547,6 +561,30 @@ If the reading feels too short: go deeper into the psychology of the cards alrea
   )
 
   return parts.join('\n\n')
+}
+
+export const CONTINUATION_SYSTEM_PROMPT =
+  'You are an expert tarot reader. Continue the reading exactly where it left off.'
+
+export interface ContinuationPromptInput {
+  /** Characters in the main body so far. */
+  currentLength: number
+  /** The main body must reach at least this many characters. */
+  minLength: number
+  /** The only cards the continuation may mention, comma-separated. */
+  cardList: string
+  /** The end of the main body so far, for the model to continue from. */
+  tail: string
+}
+
+/**
+ * The prompt for a continuation call, used when the first generation's main
+ * body comes back short. It carries the style guide's banned vocabulary and the
+ * dash rule itself: without them, the continuation wrote dashes and banned
+ * wording that the first call had been told to avoid.
+ */
+export function buildContinuationPrompt(input: ContinuationPromptInput): string {
+  return `The reading body is currently ${input.currentLength} characters. It needs to reach at least ${input.minLength} characters. You need to write approximately ${input.minLength - input.currentLength} more characters. Continue from where the reading left off with more depth and insight into the cards already present. Do not repeat anything already written. Do not add a closing or sign-off.\n\nIMPORTANT: Do not repeat or summarise any card interpretation already written above. Do not go through the cards in order again. Do not restate what has already been said about any card.\n\nInstead, go deeper into ONE OR TWO of the most significant cards in this spread. Explore the relationship between two specific cards and what they reveal together, a deeper layer of psychological truth that has not been mentioned yet, what the person might be feeling that they have not admitted to themselves yet, or the more difficult side of a card that was only touched on in the main reading.\n\nWrite new insight, not a summary of what is already there.\n\nOnly these cards exist in this spread: ${input.cardList}\n\nDo not mention any other cards.\n\n${BANNED_VOCABULARY}\n\n${DASH_RULE}\n\nWhen you have finished writing, add this on its own line:\n[END OF READING]\n\nDo not write anything after [END OF READING].\n\n...\n${input.tail}`
 }
 
 export function buildEmailVersionPrompt(fullReading: string): string {

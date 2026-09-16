@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { drawCardsForDateRange, type DateCardDraw } from '@/data/tarot-cards'
 import { generateDailyCardMessage } from '@/lib/ai/generate'
+import { stripDashes } from '@/lib/text/dashes'
 import { addDays, isValidDateString, shouldSkipWrite } from '@/lib/daily-message/dates'
 
 const DEFAULT_DAYS = 30
@@ -80,12 +81,7 @@ export async function POST(request: Request) {
     const results = await Promise.allSettled(
       chunk.map(async (draw): Promise<{ written: boolean }> => {
         const result = await generateDailyCardMessage(draw.cardName, draw.orientation)
-        const generatedText = result.generatedReading
-          .replace(/—/g, ', ')
-          .replace(/–/g, ', ')
-          .replace(/\s,\s/g, ', ')
-          .replace(/,\s*,/g, ',')
-          .trim()
+        const generatedText = stripDashes(result.generatedReading).trim()
 
         // Batches run over minutes, not seconds — this date may have been
         // deleted or skipped since the batch started, or even since this

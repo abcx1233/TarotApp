@@ -1,3 +1,4 @@
+import { DASH_PATTERN } from '@/lib/text/dashes'
 import { cardKey, findMentionedCards, mentionsCard } from './card-matching'
 import { type AuditCheck, fail, notApplicable, pass } from './types'
 
@@ -18,15 +19,16 @@ export interface DeterministicAuditInput {
 
 /**
  * Section markers that end the main reading body. Mirrors getMainBodyLength() in
- * app/api/readings/generate/route.ts — kept as a copy rather than an import so
- * the audit never reaches into a route module, at the cost of having to move
- * with it if those markers ever change.
+ * lib/readings/assemble-reading.ts — kept as a copy rather than an import so
+ * the audit doesn't depend on the generation pipeline, at the cost of having to
+ * move with it if those markers ever change.
  */
 const ADDON_MARKERS = ["\n\nWhat I'm Sensing", '\n\nOracle Card', '\n\nA Ritual For You']
 
 const ORACLE_HEADING = /^Oracle Card\s*[:—–-]/m
 const RITUAL_HEADING = 'a ritual for you'
-const STRAY_DASH = /[—–]/g
+// The same dash set the strip uses, so anything it would remove is also detected.
+const STRAY_DASH = new RegExp(DASH_PATTERN, 'g')
 
 /** Undersize threshold: the route's own continuation loop targets 0.85 × target. */
 const LENGTH_FLOOR_RATIO = 0.85
@@ -162,7 +164,7 @@ function checkSignOffAndDisclaimer(input: DeterministicAuditInput): AuditCheck {
   return fail('signoff_disclaimer', `Missing the ${missing.join(' and ')} from the template.`)
 }
 
-/** Check 5. Second net under the route's own .replace(/—/g, ', ') pass. */
+/** Check 5. Second net under the route's stripReadingDashes() pass. */
 function checkStrayDashes(input: DeterministicAuditInput): AuditCheck {
   const matches = input.finalText.match(STRAY_DASH)
   if (!matches) return pass('stray_dashes')
@@ -173,7 +175,7 @@ function checkStrayDashes(input: DeterministicAuditInput): AuditCheck {
     .replace(/\s+/g, ' ')
     .trim()
   const plural = matches.length === 1 ? 'dash' : 'dashes'
-  return fail('stray_dashes', `${matches.length} em/en ${plural} survived stripping: "…${excerpt}…"`)
+  return fail('stray_dashes', `${matches.length} ${plural} survived stripping: "…${excerpt}…"`)
 }
 
 /**
