@@ -141,6 +141,7 @@ CREATE TABLE readings (
   include_oracle_card        BOOLEAN NOT NULL DEFAULT false,
   include_energy_cleansing   BOOLEAN NOT NULL DEFAULT false,
   energy_cleansing_notes     TEXT,
+  future_timeframe           TEXT,
   reader_notes               TEXT,
   generated_prompt           TEXT,
   generated_reading          TEXT,
@@ -154,15 +155,23 @@ CREATE TABLE readings (
   prompt_version             INTEGER NOT NULL DEFAULT 1,
   regenerated_count          INTEGER NOT NULL DEFAULT 0,
   final_approved             BOOLEAN NOT NULL DEFAULT false,
+  audit_score                INTEGER,
+  audit_checks               JSONB,
+  audit_generated_at         TIMESTAMPTZ,
   is_test                    BOOLEAN NOT NULL DEFAULT false,
   deleted_at                 TIMESTAMPTZ,
   created_at                 TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at                 TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at                 TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT readings_audit_score_range
+    CHECK (audit_score IS NULL OR (audit_score >= 0 AND audit_score <= 100))
 );
 
 CREATE INDEX idx_readings_order_id ON readings (order_id);
 CREATE INDEX idx_readings_client_id ON readings (client_id);
 CREATE INDEX idx_readings_created_at ON readings (created_at DESC);
+-- See migrations/add_reading_audit_columns.sql for what the audit columns hold.
+CREATE INDEX readings_audit_score_flagged_idx ON readings (audit_score)
+  WHERE audit_score IS NOT NULL AND audit_score < 90;
 
 -- reading_cards
 CREATE TABLE reading_cards (
@@ -342,6 +351,13 @@ CREATE POLICY "anon_select_approved_daily_messages" ON daily_messages
 -- ALTER TABLE readings ADD COLUMN IF NOT EXISTS media_file_path TEXT;
 -- ALTER TABLE readings ADD COLUMN IF NOT EXISTS media_signed_url TEXT;
 -- ALTER TABLE readings ADD COLUMN IF NOT EXISTS media_url_expires_at TIMESTAMPTZ;
+-- ALTER TABLE readings ADD COLUMN IF NOT EXISTS future_timeframe TEXT;
+-- ALTER TABLE readings ADD COLUMN IF NOT EXISTS audit_score INTEGER;
+-- ALTER TABLE readings ADD COLUMN IF NOT EXISTS audit_checks JSONB;
+-- ALTER TABLE readings ADD COLUMN IF NOT EXISTS audit_generated_at TIMESTAMPTZ;
+-- ALTER TABLE readings DROP CONSTRAINT IF EXISTS readings_audit_score_range;
+-- ALTER TABLE readings ADD CONSTRAINT readings_audit_score_range CHECK (audit_score IS NULL OR (audit_score >= 0 AND audit_score <= 100));
+-- CREATE INDEX IF NOT EXISTS readings_audit_score_flagged_idx ON readings (audit_score) WHERE audit_score IS NOT NULL AND audit_score < 90;
 -- ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS business_name TEXT;
 -- ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS default_topic TEXT;
 -- ALTER TABLE daily_messages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
