@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Sparkles, RefreshCw, CheckCircle2, AlertCircle, Shuffle, Moon, CalendarDays } from 'lucide-react'
+import { Sparkles, RefreshCw, CheckCircle2, Shuffle, Moon, CalendarDays } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/Badge'
 import { TAROT_CARDS, drawRandomCard } from '@/data/tarot-cards'
 import { todayDateString } from '@/lib/daily-message/dates'
 import type { DailyMessage, CardOrientation } from '@/types'
+import { Alert } from '@/components/ui/Alert'
 
 interface DailyMessageFormProps {
   initialTodayMessage: DailyMessage | null
@@ -145,10 +146,7 @@ export function DailyMessageForm({ initialTodayMessage, initialHistory, initialL
         </div>
 
         {error && (
-          <div className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
-            <AlertCircle size={16} className="mt-0.5 shrink-0" />
-            <span>{error}</span>
-          </div>
+          <Alert className="mb-4">{error}</Alert>
         )}
 
         <Card className="mb-4">

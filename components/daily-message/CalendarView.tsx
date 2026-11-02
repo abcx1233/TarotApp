@@ -19,7 +19,6 @@ import {
   Save,
   CheckCircle2,
   X,
-  AlertCircle,
   CalendarCheck,
   Trash2,
   Ban,
@@ -31,6 +30,7 @@ import { Textarea } from '@/components/ui/Textarea'
 import { createClient } from '@/lib/supabase/client'
 import { todayDateString } from '@/lib/daily-message/dates'
 import type { DailyMessage } from '@/types'
+import { Alert } from '@/components/ui/Alert'
 
 function cellClasses(row: DailyMessage | undefined, locked: boolean): string {
   if (row?.skipped) {
@@ -477,10 +477,7 @@ export function CalendarView() {
         </div>
 
         {loadError && (
-          <div className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
-            <AlertCircle size={16} className="mt-0.5 shrink-0" />
-            <span>{loadError}</span>
-          </div>
+          <Alert className="mb-4">{loadError}</Alert>
         )}
 
         <Card className="mb-4">
@@ -641,10 +638,7 @@ export function CalendarView() {
 
             <div className="px-5 py-4">
               {modalError && (
-                <div className="mb-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-                  <AlertCircle size={14} className="mt-0.5 shrink-0" />
-                  <span>{modalError}</span>
-                </div>
+                <Alert size="sm" className="mb-3">{modalError}</Alert>
               )}
 
               {selectedRow?.skipped ? (
