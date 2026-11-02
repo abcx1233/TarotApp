@@ -8,6 +8,8 @@ import { Tabs } from '@/components/ui/Tabs'
 import { Button } from '@/components/ui/Button'
 import type { Client, Order, Reading, DailyMessage } from '@/types'
 import { Alert } from '@/components/ui/Alert'
+import { SkeletonRows } from '@/components/ui/Skeleton'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 const RETENTION_DAYS = 30
 
@@ -208,16 +210,14 @@ export default function TrashPage({ searchParams }: { searchParams: { tab?: stri
       )}
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-        </div>
+        <SkeletonRows rows={4} />
       ) : (
         <>
           {/* Clients */}
           {activeTab === 'clients' && (
             clients.length === 0 ? (
-              <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center">
-                <p className="text-sm text-slate-400">No trashed clients.</p>
+              <div className="rounded-xl border border-slate-200 bg-white">
+                <EmptyState icon={Trash2} title="No trashed clients" description="Anything you delete will wait here for 30 days so you can restore it." />
               </div>
             ) : (
               <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
@@ -256,8 +256,8 @@ export default function TrashPage({ searchParams }: { searchParams: { tab?: stri
           {/* Orders */}
           {activeTab === 'orders' && (
             orders.length === 0 ? (
-              <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center">
-                <p className="text-sm text-slate-400">No trashed orders.</p>
+              <div className="rounded-xl border border-slate-200 bg-white">
+                <EmptyState icon={Trash2} title="No trashed orders" description="Anything you delete will wait here for 30 days so you can restore it." />
               </div>
             ) : (
               <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
@@ -306,8 +306,8 @@ export default function TrashPage({ searchParams }: { searchParams: { tab?: stri
           {/* Readings */}
           {activeTab === 'readings' && (
             readings.length === 0 ? (
-              <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center">
-                <p className="text-sm text-slate-400">No trashed readings.</p>
+              <div className="rounded-xl border border-slate-200 bg-white">
+                <EmptyState icon={Trash2} title="No trashed readings" description="Anything you delete will wait here for 30 days so you can restore it." />
               </div>
             ) : (
               <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
@@ -358,8 +358,8 @@ export default function TrashPage({ searchParams }: { searchParams: { tab?: stri
           {/* Daily Messages */}
           {activeTab === 'daily_messages' && (
             dailyMessages.length === 0 ? (
-              <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center">
-                <p className="text-sm text-slate-400">No trashed daily messages.</p>
+              <div className="rounded-xl border border-slate-200 bg-white">
+                <EmptyState icon={Trash2} title="No trashed daily messages" description="Anything you delete will wait here for 30 days so you can restore it." />
               </div>
             ) : (
               <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">

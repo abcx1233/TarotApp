@@ -10,6 +10,8 @@ import { Select } from '@/components/ui/Select'
 import { StatusBadge } from '@/components/ui/Badge'
 import { Copy, Check, RotateCcw, Clock, Trash2 } from 'lucide-react'
 import type { Reading } from '@/types'
+import { SkeletonRows } from '@/components/ui/Skeleton'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 const TIER_LABELS: Record<string, string> = {
   mini: 'Mini', core: 'Core', premium: 'Premium', celtic_cross: 'Celtic Cross',
@@ -218,9 +220,7 @@ export default function HistoryPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-        </div>
+        <SkeletonRows rows={5} />
       ) : (
         <div className="space-y-3">
           {filtered.map((reading) => (
@@ -354,9 +354,12 @@ export default function HistoryPage() {
           ))}
 
           {filtered.length === 0 && (
-            <div className="py-16 text-center">
-              <p className="text-sm text-slate-400">No readings found.</p>
-            </div>
+            <EmptyState
+              icon={Clock}
+              title="No readings found"
+              description="Readings you generate will appear here. Try clearing the search or filters."
+              action={{ label: 'New reading', href: '/dashboard/readings/new' }}
+            />
           )}
         </div>
       )}

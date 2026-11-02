@@ -5,62 +5,16 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { clsx } from 'clsx'
 import type { LucideIcon } from 'lucide-react'
-import {
-  LayoutDashboard,
-  Sparkles,
-  ListOrdered,
-  Users,
-  Clock,
-  FileText,
-  Settings,
-  LogOut,
-  Trash2,
-  Moon,
-} from 'lucide-react'
+import { NAV_GROUPS, BOTTOM_ITEMS, TRASH_ITEM } from '@/lib/nav'
+import { LogOut, PanelLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-
-interface NavDef {
-  href: string
-  label: string
-  icon: LucideIcon
-  exact?: boolean
-}
-
-// Grouped like the Supabase dashboard: a hairline between groups when the rail is
-// collapsed, and a small section label once it expands.
-const NAV_GROUPS: { label: string; items: NavDef[] }[] = [
-  {
-    label: 'Overview',
-    items: [{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true }],
-  },
-  {
-    label: 'Create',
-    items: [
-      { href: '/dashboard/readings/new', label: 'New Reading', icon: Sparkles },
-      { href: '/dashboard/daily-message', label: 'Daily Card Message', icon: Moon },
-    ],
-  },
-  {
-    label: 'Manage',
-    items: [
-      { href: '/dashboard/orders', label: 'Orders', icon: ListOrdered },
-      { href: '/dashboard/clients', label: 'Clients', icon: Users },
-      { href: '/dashboard/history', label: 'History', icon: Clock },
-      { href: '/dashboard/templates', label: 'Templates', icon: FileText },
-    ],
-  },
-]
-
-const BOTTOM_ITEMS: NavDef[] = [
-  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
-]
 
 // The rail is a fixed 56px; on md+ it expands over the page (no layout shift) while
 // hovered or while anything inside has keyboard focus. Below md it's the mobile
 // drawer, where labels are always visible. `group/sb` is set on the panel root.
 const SHOW_ON_EXPAND =
-  'md:opacity-0 md:group-hover/sb:opacity-100 md:group-focus-within/sb:opacity-100 transition-opacity duration-150 motion-reduce:transition-none'
+  'md:opacity-0 md:group-hover/sb:opacity-100 md:group-focus-within/sb:opacity-100 md:group-data-[pinned=true]/sb:opacity-100 transition-opacity duration-150 motion-reduce:transition-none'
 
 interface NavItemProps {
   href: string
@@ -99,7 +53,7 @@ function NavItem({ href, label, icon: Icon, exact, onClick, badge }: NavItemProp
         {hasBadge && (
           <span
             aria-hidden="true"
-            className="absolute -right-1 -top-1 hidden h-2 w-2 rounded-full bg-brand-400 md:block md:group-hover/sb:hidden md:group-focus-within/sb:hidden"
+            className="absolute -right-1 -top-1 hidden h-2 w-2 rounded-full bg-brand-400 md:block md:group-hover/sb:hidden md:group-focus-within/sb:hidden md:group-data-[pinned=true]/sb:hidden"
           />
         )}
       </span>
@@ -120,9 +74,12 @@ function NavItem({ href, label, icon: Icon, exact, onClick, badge }: NavItemProp
 
 interface SidebarProps {
   onClose?: () => void
+  /** Desktop only: keep the rail expanded instead of expanding on hover. */
+  pinned?: boolean
+  onTogglePin?: () => void
 }
 
-export function Sidebar({ onClose }: SidebarProps) {
+export function Sidebar({ onClose, pinned = false, onTogglePin }: SidebarProps) {
   const router = useRouter()
   const [trashCount, setTrashCount] = useState(0)
 
@@ -172,11 +129,13 @@ export function Sidebar({ onClose }: SidebarProps) {
 
   return (
     <div
+      data-pinned={pinned}
       className={clsx(
         'group/sb flex h-full w-full flex-col overflow-hidden bg-navy px-2 py-4',
         'md:absolute md:inset-y-0 md:left-0 md:w-14 md:hover:w-56 md:focus-within:w-56',
         'md:transition-[width] md:duration-150 md:ease-out motion-reduce:transition-none',
-        'md:hover:shadow-[4px_0_24px_rgba(0,0,0,0.25)] md:focus-within:shadow-[4px_0_24px_rgba(0,0,0,0.25)]'
+        'md:hover:shadow-[4px_0_24px_rgba(0,0,0,0.25)] md:focus-within:shadow-[4px_0_24px_rgba(0,0,0,0.25)]',
+        'md:data-[pinned=true]:w-56 md:data-[pinned=true]:shadow-none'
       )}
     >
       {/* Brand */}
@@ -214,13 +173,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           </div>
         ))}
         <div className="mt-2 flex flex-col gap-0.5 border-t border-white/10 pt-2">
-          <NavItem
-            href="/dashboard/trash"
-            label="Trash"
-            icon={Trash2}
-            onClick={onClose}
-            badge={trashCount}
-          />
+          <NavItem {...TRASH_ITEM} onClick={onClose} badge={trashCount} />
         </div>
       </nav>
 
@@ -229,6 +182,20 @@ export function Sidebar({ onClose }: SidebarProps) {
         {BOTTOM_ITEMS.map((item) => (
           <NavItem key={item.href} {...item} onClick={onClose} />
         ))}
+        {onTogglePin && (
+          <button
+            type="button"
+            onClick={onTogglePin}
+            aria-pressed={pinned}
+            aria-label={pinned ? 'Collapse sidebar' : 'Keep sidebar open'}
+            className="hidden h-10 items-center gap-3 rounded-lg px-[11px] text-sm font-medium text-slate-400 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 md:flex"
+          >
+            <PanelLeft size={18} className="shrink-0" />
+            <span className={clsx('whitespace-nowrap', SHOW_ON_EXPAND)}>
+              {pinned ? 'Collapse sidebar' : 'Keep open'}
+            </span>
+          </button>
+        )}
         <button
           onClick={handleLogout}
           aria-label="Sign out"

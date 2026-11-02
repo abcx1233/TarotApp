@@ -7,17 +7,33 @@ import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Label } from '@/components/ui/Label'
 import { Toggle } from '@/components/ui/Toggle'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { SkeletonRows } from '@/components/ui/Skeleton'
 import { Save, ExternalLink, CheckCircle2, Trash2, AlertTriangle } from 'lucide-react'
 import { useTestMode } from '@/contexts/TestModeContext'
 import { TEST_MODE_COOKIE } from '@/lib/test-mode'
 import type { AppSettings } from '@/types'
+
+/** Whether a saved setting is actually read anywhere in the app yet. */
+function SettingStatus({ active }: { active: boolean }) {
+  return active ? (
+    <span className="rounded-full bg-green-50 px-1.5 py-0.5 text-[10px] font-semibold text-green-700">Active</span>
+  ) : (
+    <span
+      className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500"
+      title="Saved, but nothing in the app uses this value yet"
+    >
+      Not used yet
+    </span>
+  )
+}
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Partial<AppSettings>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [darkMode, setDarkMode] = useState(false)
   const [clearingTestData, setClearingTestData] = useState(false)
   const [clearSuccess, setClearSuccess] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
@@ -100,21 +116,24 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-16">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      <div className="mx-auto max-w-2xl p-6">
+        <SkeletonRows rows={4} />
       </div>
     )
   }
 
   return (
     <div className="p-6 space-y-8 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-slate-900">Settings</h1>
-        <Button onClick={handleSave} loading={saving}>
-          {saved ? <CheckCircle2 size={14} className="text-green-400" /> : <Save size={14} />}
-          {saved ? 'Saved!' : 'Save changes'}
-        </Button>
-      </div>
+      <PageHeader
+        title="Settings"
+        description="Only settings marked Active change how the app behaves today."
+        actions={
+          <Button onClick={handleSave} loading={saving}>
+            {saved ? <CheckCircle2 size={14} className="text-green-400" /> : <Save size={14} />}
+            {saved ? 'Saved!' : 'Save changes'}
+          </Button>
+        }
+      />
 
       {/* Reader identity */}
       <section className="space-y-4">
@@ -124,7 +143,7 @@ export default function SettingsPage() {
         <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="reader-name">Reader name</Label>
+              <Label htmlFor="reader-name"><span className="inline-flex items-center gap-2">Reader name<SettingStatus active={false} /></span></Label>
               <Input
                 id="reader-name"
                 value={settings.reader_name ?? ''}
@@ -133,7 +152,7 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <Label htmlFor="signoff-name">Sign-off name</Label>
+              <Label htmlFor="signoff-name"><span className="inline-flex items-center gap-2">Sign-off name<SettingStatus active={false} /></span></Label>
               <Input
                 id="signoff-name"
                 value={settings.signoff_name ?? ''}
@@ -143,7 +162,7 @@ export default function SettingsPage() {
             </div>
           </div>
           <div>
-            <Label htmlFor="booking-url">Booking URL</Label>
+            <Label htmlFor="booking-url"><span className="inline-flex items-center gap-2">Booking URL<SettingStatus active={false} /></span></Label>
             <Input
               id="booking-url"
               type="url"
@@ -154,7 +173,7 @@ export default function SettingsPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="instagram">Instagram handle</Label>
+              <Label htmlFor="instagram"><span className="inline-flex items-center gap-2">Instagram handle<SettingStatus active={false} /></span></Label>
               <Input
                 id="instagram"
                 value={settings.instagram_handle ?? ''}
@@ -163,7 +182,7 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <Label htmlFor="whatsapp">WhatsApp number</Label>
+              <Label htmlFor="whatsapp"><span className="inline-flex items-center gap-2">WhatsApp number<SettingStatus active={false} /></span></Label>
               <Input
                 id="whatsapp"
                 type="tel"
@@ -183,7 +202,7 @@ export default function SettingsPage() {
         </h2>
         <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
           <div>
-            <Label htmlFor="business-name">Business name</Label>
+            <Label htmlFor="business-name"><span className="inline-flex items-center gap-2">Business name<SettingStatus active /></span></Label>
             <Input
               id="business-name"
               value={settings.business_name ?? ''}
@@ -192,7 +211,7 @@ export default function SettingsPage() {
             />
           </div>
           <div>
-            <Label htmlFor="default-topic">Default topic</Label>
+            <Label htmlFor="default-topic"><span className="inline-flex items-center gap-2">Default topic<SettingStatus active={false} /></span></Label>
             <Select
               id="default-topic"
               value={settings.default_topic ?? 'General'}
@@ -205,7 +224,7 @@ export default function SettingsPage() {
             </Select>
           </div>
           <div>
-            <Label htmlFor="default-format">Default delivery format</Label>
+            <Label htmlFor="default-format"><span className="inline-flex items-center gap-2">Default delivery format<SettingStatus active={false} /></span></Label>
             <Select
               id="default-format"
               value={settings.default_delivery_format ?? 'written'}
@@ -263,13 +282,12 @@ export default function SettingsPage() {
         <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400">
           Interface
         </h2>
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <Toggle
-            checked={darkMode}
-            onChange={setDarkMode}
-            label="Dark mode (coming soon)"
-            disabled
-          />
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5">
+          <div>
+            <p className="text-sm font-medium text-slate-800">Theme</p>
+            <p className="text-xs text-slate-500">Saved in this browser. &ldquo;System&rdquo; follows your device setting.</p>
+          </div>
+          <ThemeToggle />
         </div>
       </section>
 

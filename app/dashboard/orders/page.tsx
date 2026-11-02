@@ -4,6 +4,9 @@ import { useEffect, useState, useCallback } from 'react'
 import { OrdersTable } from '@/components/orders/OrdersTable'
 import { OrderFilters, type OrderFiltersState } from '@/components/orders/OrderFilters'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/contexts/ToastContext'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { SkeletonRows } from '@/components/ui/Skeleton'
 import type { Order } from '@/types'
 import { isToday } from 'date-fns'
 
@@ -16,6 +19,7 @@ const INITIAL_FILTERS: OrderFiltersState = {
 }
 
 export default function OrdersPage() {
+  const { toast } = useToast()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<OrderFiltersState>(INITIAL_FILTERS)
@@ -59,30 +63,90 @@ export default function OrdersPage() {
     fetchOrders()
   }, [fetchOrders])
 
-  async function handleUpdateStatus(orderId: string, status: string) {
+  async function handleUpdateStatus(orderId: string, status: string, opts?: { silent?: boolean }) {
     const supabase = createClient()
     const now = new Date().toISOString()
-    await supabase
+    const { error } = await supabase
       .from('orders')
       // Marking sent must also stamp sent_at, the same as the reading page's
       // Mark Sent (ReadingForm.handleMarkSent) — the Dashboard's Sent today /
       // Revenue figures filter on sent_at, so without it the order is never counted.
       .update(status === 'sent' ? { status, sent_at: now, updated_at: now } : { status, updated_at: now })
       .eq('id', orderId)
+    if (error) {
+      toast({ message: 'Could not update the order. Please try again.', tone: 'error' })
+      return false
+    }
+    if (!opts?.silent) toast({ message: status === 'sent' ? 'Marked as sent' : 'Order updated', tone: 'success' })
     fetchOrders()
+    return true
+  }
+
+  function notifyTrashChanged() {
+    window.dispatchEvent(new Event('trash-count-changed'))
+  }
+
+  /** Soft-delete or restore a set of orders. Returns true on success. */
+  async function setDeleted(ids: string[], deleted: boolean) {
+    const supabase = createClient()
+    const now = new Date().toISOString()
+    const { error } = await supabase
+      .from('orders')
+      .update({ deleted_at: deleted ? now : null, updated_at: now })
+      .in('id', ids)
+    if (error) {
+      toast({ message: deleted ? 'Could not move to Trash.' : 'Could not restore.', tone: 'error' })
+      return false
+    }
+    notifyTrashChanged()
+    fetchOrders()
+    return true
+  }
+
+  /** Set status on several orders, remembering each one's previous status for Undo. */
+  async function setStatusMany(ids: string[], status: string) {
+    const previous = new Map(orders.filter((o) => ids.includes(o.id)).map((o) => [o.id, o.status]))
+    const supabase = createClient()
+    const now = new Date().toISOString()
+    const { error } = await supabase.from('orders').update({ status, updated_at: now }).in('id', ids)
+    if (error) {
+      toast({ message: 'Could not update the orders. Please try again.', tone: 'error' })
+      return
+    }
+    fetchOrders()
+    toast({
+      message: ids.length === 1 ? 'Order archived' : `${ids.length} orders archived`,
+      tone: 'success',
+      action: {
+        label: 'Undo',
+        onClick: async () => {
+          const sb = createClient()
+          await Promise.all(
+            ids.map((id) =>
+              sb.from('orders').update({ status: previous.get(id) ?? 'pending', updated_at: new Date().toISOString() }).eq('id', id)
+            )
+          )
+          fetchOrders()
+        },
+      },
+    })
   }
 
   async function handleArchive(orderId: string) {
-    handleUpdateStatus(orderId, 'archived')
+    await setStatusMany([orderId], 'archived')
+  }
+
+  async function trashWithUndo(ids: string[]) {
+    if (!(await setDeleted(ids, true))) return
+    toast({
+      message: ids.length === 1 ? 'Order moved to Trash' : `${ids.length} orders moved to Trash`,
+      tone: 'success',
+      action: { label: 'Undo', onClick: () => void setDeleted(ids, false) },
+    })
   }
 
   async function handleTrash(orderId: string) {
-    const supabase = createClient()
-    await supabase
-      .from('orders')
-      .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-      .eq('id', orderId)
-    fetchOrders()
+    await trashWithUndo([orderId])
   }
 
   async function handleDuplicate(orderId: string) {
@@ -102,17 +166,15 @@ export default function OrdersPage() {
 
   return (
     <div className="p-6 space-y-5 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-slate-900">Orders</h1>
-        <p className="text-sm text-slate-500">{orders.length} orders</p>
-      </div>
+      <PageHeader
+        title="Orders"
+        description={`${orders.length} order${orders.length === 1 ? '' : 's'}`}
+      />
 
       <OrderFilters filters={filters} onChange={setFilters} />
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-        </div>
+        <SkeletonRows rows={6} />
       ) : (
         <OrdersTable
           orders={orders}
@@ -121,6 +183,8 @@ export default function OrdersPage() {
           onArchive={handleArchive}
           onTrash={handleTrash}
           onExtendLink={fetchOrders}
+          onBulkArchive={(ids) => void setStatusMany(ids, 'archived')}
+          onBulkTrash={(ids) => void trashWithUndo(ids)}
         />
       )}
     </div>
