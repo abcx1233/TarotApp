@@ -32,7 +32,8 @@ export function DashboardLayout({ children, title, initialTestMode }: DashboardL
         {/* Sidebar */}
         <div
           className={clsx(
-            'fixed inset-y-0 left-0 z-40 w-14 lg:w-56 transform transition-transform duration-200 ease-in-out md:static md:translate-x-0 md:z-auto shrink-0',
+            // Mobile: slide-in drawer. md+: a 56px icon rail whose inner panel expands over the page on hover.
+            'fixed inset-y-0 left-0 z-40 w-56 transform transition-transform duration-200 ease-in-out md:relative md:z-30 md:w-14 md:translate-x-0 shrink-0',
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
