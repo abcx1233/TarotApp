@@ -79,3 +79,9 @@
 .dark .border-brand-200 { border-color: rgba(99, 102, 241, .35); }
 .dark .ring-brand-100 { --tw-ring-color: rgba(99, 102, 241, .3); }
 .dark .bg-brand-600 { background-color: #4f46e5; }
+
+/* The sidebar is dark in both themes, so keep its original (light-theme) text colours */
+.dark [data-sidebar] .text-slate-300 { color: #cbd5e1; }
+.dark [data-sidebar] .text-slate-400 { color: #94a3b8; }
+.dark [data-sidebar] .text-slate-500 { color: #64748b; }
+.dark [data-sidebar] .hover\:text-white:hover { color: #fff; }

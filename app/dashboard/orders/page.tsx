@@ -40,7 +40,11 @@ export default function OrdersPage() {
     if (filters.topic) query = query.eq('topic', filters.topic)
 
     const { data } = await query
-    let results = (data ?? []) as Order[]
+    // readings.order_id isn't unique, so PostgREST returns the embed as an array. The rest
+    // of the UI expects one reading per order, so take the first (a missing one becomes null).
+    let results = ((data ?? []) as unknown as (Omit<Order, 'reading'> & { reading: Order['reading'] | NonNullable<Order['reading']>[] })[]).map(
+      (o) => ({ ...o, reading: Array.isArray(o.reading) ? o.reading[0] ?? null : o.reading ?? null })
+    ) as Order[]
 
     // Client-side filters
     if (filters.search) {

@@ -130,6 +130,7 @@ export function Sidebar({ onClose, pinned = false, onTogglePin }: SidebarProps) 
   return (
     <div
       data-pinned={pinned}
+      data-sidebar
       className={clsx(
         'group/sb flex h-full w-full flex-col overflow-hidden bg-navy px-2 py-4',
         'md:absolute md:inset-y-0 md:left-0 md:w-14 md:hover:w-56 md:focus-within:w-56',

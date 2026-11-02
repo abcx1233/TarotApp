@@ -341,14 +341,29 @@ export function OrdersTable({ orders, onUpdateStatus, onDuplicate, onArchive, on
                         Mark sent
                       </Button>
                     )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs text-slate-400"
-                      onClick={() => onArchive(order.id)}
-                    >
-                      Archive
-                    </Button>
+                    {order.status === 'archived' ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-brand-600"
+                        // Archiving doesn't record the previous status, so restore to where an
+                        // order with a reading would sit, or back to Pending if it has none.
+                        onClick={() => onUpdateStatus(order.id, order.reading?.id ? 'awaiting_review' : 'pending')}
+                        title="Move back out of the archive"
+                      >
+                        <RotateCcw size={12} />
+                        Restore
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-slate-400"
+                        onClick={() => onArchive(order.id)}
+                      >
+                        Archive
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
