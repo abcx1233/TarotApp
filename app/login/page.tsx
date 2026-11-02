@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Eye, EyeOff } from 'lucide-react'
+import { Alert } from '@/components/ui/Alert'
 
 export default function LoginPage() {
   return (
@@ -106,9 +107,7 @@ function LoginForm() {
           </div>
 
           {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
-              {error}
-            </div>
+            <Alert icon={false}>{error}</Alert>
           )}
 
           <Button type="submit" loading={loading} className="w-full" size="lg">

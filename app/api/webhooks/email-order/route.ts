@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { parseEmailOrder } from '@/lib/webhooks/email-parser'
 import { createOrderFromWebhook } from '@/lib/webhooks/inbound-order'
+import { secretMatches } from '@/lib/secret-compare'
 
 export const runtime = 'nodejs'
 
@@ -8,7 +9,7 @@ export async function POST(request: Request) {
   const webhookSecret = process.env.WEBHOOK_SECRET
   const providedSecret = request.headers.get('x-webhook-secret')
 
-  if (!webhookSecret || providedSecret !== webhookSecret) {
+  if (!webhookSecret || !secretMatches(providedSecret, webhookSecret)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

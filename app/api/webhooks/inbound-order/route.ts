@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { secretMatches } from '@/lib/secret-compare'
 import { createOrderFromWebhook } from '@/lib/webhooks/inbound-order'
 import { parseStripeMetadata } from '@/lib/webhooks/stripe-parser'
 
@@ -12,7 +13,9 @@ async function handleStripe(request: Request, rawBody: Buffer): Promise<NextResp
     return NextResponse.json({ error: 'Stripe webhook secret not configured' }, { status: 500 })
   }
 
-  const stripe = new Stripe(process.env.STRIPE_WEBHOOK_SECRET ?? '', {
+  // constructEvent only verifies the signature and makes no API calls, so no real
+  // API key is needed. Never pass the webhook signing secret here as the API key.
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? 'sk_signature_verification_only', {
     apiVersion: '2024-06-20' as const,
   })
 
@@ -46,7 +49,7 @@ async function handleGenericWebhook(request: Request, body: Record<string, unkno
   const webhookSecret = process.env.WEBHOOK_SECRET
   const providedSecret = request.headers.get('x-webhook-secret')
 
-  if (!webhookSecret || providedSecret !== webhookSecret) {
+  if (!webhookSecret || !secretMatches(providedSecret, webhookSecret)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

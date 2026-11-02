@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ClientList } from '@/components/clients/ClientList'
 import { ClientProfile } from '@/components/clients/ClientProfile'
 import { createClient as createSupabaseClient } from '@/lib/supabase/client'
@@ -28,6 +28,10 @@ export default function ClientsPage() {
   const [selected, setSelected] = useState<Client | null>(null)
   const [readings, setReadings] = useState<Reading[]>([])
   const [notes, setNotes] = useState<ClientNote[]>([])
+  // Which client the readings/notes state currently belongs to. Lets the profile
+  // remount once the right data lands, and lets handleSelect drop stale responses.
+  const [loadedClientId, setLoadedClientId] = useState<string | null>(null)
+  const latestSelectRef = useRef<string | null>(null)
   const [noteClientIds, setNoteClientIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
 
@@ -72,10 +76,17 @@ export default function ClientsPage() {
     setSelected(null)
     setReadings([])
     setNotes([])
+    setLoadedClientId(null)
+    latestSelectRef.current = null
   }
 
   async function handleSelect(client: Client) {
+    latestSelectRef.current = client.id
     setSelected(client)
+    // Clear the previous client's data straight away so it never shows on this profile.
+    setReadings([])
+    setNotes([])
+    setLoadedClientId(null)
     const supabase = createSupabaseClient()
 
     const [{ data: r }, { data: n }] = await Promise.all([
@@ -91,8 +102,12 @@ export default function ClientsPage() {
         .order('created_at', { ascending: false }),
     ])
 
+    // A newer selection started while this one was loading — discard these results.
+    if (latestSelectRef.current !== client.id) return
+
     setReadings((r ?? []) as Reading[])
     setNotes((n ?? []) as ClientNote[])
+    setLoadedClientId(client.id)
   }
 
   function handleNotesChange(clientId: string, noteCount: number) {
@@ -185,6 +200,9 @@ export default function ClientsPage() {
       <div className="flex-1 min-w-0 overflow-hidden bg-slate-50">
         {selected ? (
           <ClientProfile
+            // ClientProfile copies `notes` into state on mount, so remount per client and
+            // again when that client's notes finish loading.
+            key={`${selected.id}:${loadedClientId === selected.id ? 'loaded' : 'loading'}`}
             client={selected}
             readings={readings}
             notes={notes}

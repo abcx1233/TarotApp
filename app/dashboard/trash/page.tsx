@@ -2,11 +2,12 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { differenceInDays, format } from 'date-fns'
-import { Trash2, RotateCcw, AlertTriangle, AlertCircle } from 'lucide-react'
+import { Trash2, RotateCcw, AlertTriangle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Tabs } from '@/components/ui/Tabs'
 import { Button } from '@/components/ui/Button'
 import type { Client, Order, Reading, DailyMessage } from '@/types'
+import { Alert } from '@/components/ui/Alert'
 
 const RETENTION_DAYS = 30
 
@@ -203,10 +204,7 @@ export default function TrashPage({ searchParams }: { searchParams: { tab?: stri
       />
 
       {restoreError && (
-        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
-          <AlertCircle size={16} className="mt-0.5 shrink-0" />
-          <span>{restoreError}</span>
-        </div>
+        <Alert>{restoreError}</Alert>
       )}
 
       {loading ? (

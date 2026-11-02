@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { timingSafeEqual } from 'node:crypto'
+import { secretMatches } from '@/lib/secret-compare'
 import { formatAiError } from '@/lib/ai/errors'
 import { todayDateString } from '@/lib/daily-message/dates'
 import { generateDailyMessageForDate } from '@/lib/daily-message/generate-for-date'
@@ -23,16 +23,6 @@ const SECRET_HEADER = 'x-daily-message-cron-secret'
  * this one can spend OpenAI tokens and write rows. Different blast radius, so
  * a different secret — a leak of the read secret must not grant write.
  */
-
-function secretMatches(provided: string | null, expected: string): boolean {
-  if (!provided) return false
-  const a = Buffer.from(provided)
-  const b = Buffer.from(expected)
-  // timingSafeEqual throws on length mismatch, so length is checked first —
-  // that leaks only the length, not the contents.
-  if (a.length !== b.length) return false
-  return timingSafeEqual(a, b)
-}
 
 // Service role, because there is no Supabase session on a cron-triggered
 // request: RLS grants daily_messages writes to `authenticated` only, and the

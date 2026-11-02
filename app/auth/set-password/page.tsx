@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Eye, EyeOff } from 'lucide-react'
+import { Alert } from '@/components/ui/Alert'
 
 const MIN_PASSWORD_LENGTH = 8
 
@@ -105,10 +106,10 @@ function SetPasswordForm() {
           </div>
         ) : sessionReady === false ? (
           <div className="space-y-4 text-center">
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+            <Alert icon={false}>
               This link has expired or was already used. Please request a new invite or password
               reset link.
-            </div>
+            </Alert>
             <Button variant="outline" className="w-full" onClick={() => router.push('/login')}>
               Back to sign in
             </Button>
@@ -159,9 +160,7 @@ function SetPasswordForm() {
             </div>
 
             {error && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
-                {error}
-              </div>
+              <Alert icon={false}>{error}</Alert>
             )}
 
             <Button type="submit" loading={loading} className="w-full" size="lg">
