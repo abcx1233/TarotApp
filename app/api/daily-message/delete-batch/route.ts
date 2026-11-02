@@ -33,7 +33,10 @@ export async function POST(request: Request) {
     .is('deleted_at', null)
 
   if (body.mode === 'pending') {
-    query = query.eq('approved', false)
+    // Skipped-day markers are stored with approved = false too, so exclude them
+    // explicitly — "pending" means drafts awaiting review, not days the reader
+    // deliberately skipped.
+    query = query.eq('approved', false).eq('skipped', false)
   }
 
   const { data, error } = await query.select('id')
