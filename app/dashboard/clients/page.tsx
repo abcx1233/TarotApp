@@ -11,6 +11,7 @@ import { Select } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
 import { Plus, X } from 'lucide-react'
 import type { Client, Reading, ClientNote } from '@/types'
+import { useToast } from '@/contexts/ToastContext'
 
 const STAR_SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces']
 
@@ -24,6 +25,7 @@ const BLANK_NEW_CLIENT = {
 }
 
 export default function ClientsPage() {
+  const { toast: toastMessage } = useToast()
   const [clients, setClients] = useState<Client[]>([])
   const [selected, setSelected] = useState<Client | null>(null)
   const [readings, setReadings] = useState<Reading[]>([])
@@ -68,16 +70,35 @@ export default function ClientsPage() {
 
   async function handleTrashClient(clientId: string) {
     const supabase = createSupabaseClient()
-    await supabase
+    const trashed = clients.find((c) => c.id === clientId)
+    const { error } = await supabase
       .from('clients')
       .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq('id', clientId)
+    if (error) {
+      toastMessage({ message: 'Could not move the client to Trash.', tone: 'error' })
+      return
+    }
     setClients((prev) => prev.filter((c) => c.id !== clientId))
     setSelected(null)
     setReadings([])
     setNotes([])
     setLoadedClientId(null)
     latestSelectRef.current = null
+    window.dispatchEvent(new Event('trash-count-changed'))
+    toastMessage({
+      message: `${trashed?.full_name ?? 'Client'} moved to Trash`,
+      tone: 'success',
+      action: {
+        label: 'Undo',
+        onClick: async () => {
+          const sb = createSupabaseClient()
+          await sb.from('clients').update({ deleted_at: null, updated_at: new Date().toISOString() }).eq('id', clientId)
+          if (trashed) setClients((prev) => [...prev, trashed].sort((a, b) => a.full_name.localeCompare(b.full_name)))
+          window.dispatchEvent(new Event('trash-count-changed'))
+        },
+      },
+    })
   }
 
   async function handleSelect(client: Client) {
@@ -109,6 +130,17 @@ export default function ClientsPage() {
     setNotes((n ?? []) as ClientNote[])
     setLoadedClientId(client.id)
   }
+
+  // Deep link from the command palette: /dashboard/clients?id=<client id>
+  const preselectDone = useRef(false)
+  useEffect(() => {
+    if (preselectDone.current || clients.length === 0) return
+    const id = new URLSearchParams(window.location.search).get('id')
+    preselectDone.current = true
+    const match = id ? clients.find((c) => c.id === id) : null
+    if (match) void handleSelect(match)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clients])
 
   function handleNotesChange(clientId: string, noteCount: number) {
     setNoteClientIds((prev) => {

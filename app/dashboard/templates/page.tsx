@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Label } from '@/components/ui/Label'
 import { Save } from 'lucide-react'
 import type { ReadingTemplate } from '@/types'
+import { SkeletonRows } from '@/components/ui/Skeleton'
 
 function TemplateEditor({
   template,
@@ -121,9 +122,7 @@ export default function TemplatesPage() {
       </p>
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-        </div>
+        <SkeletonRows rows={2} />
       ) : (
         <div className="space-y-4">
           {templates.map((t) => (

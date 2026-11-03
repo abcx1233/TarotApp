@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { KPICard } from '@/components/ui/Card'
 import { StatusBadge, Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { SystemStatus } from '@/components/dashboard/SystemStatus'
 import {
   Clock,
   Loader2,
@@ -146,6 +147,8 @@ export default async function DashboardPage() {
           </Button>
         </Link>
       </div>
+
+      <SystemStatus />
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">

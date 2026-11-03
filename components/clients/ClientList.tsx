@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Star, FileText } from 'lucide-react'
+import { Search, Star, FileText, Users } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { clsx } from 'clsx'
 import type { Client } from '@/types'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 interface ClientListProps {
   clients: Client[]
@@ -38,7 +39,7 @@ export function ClientList({ clients, selectedId, onSelect, noteClientIds }: Cli
 
       <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
         {filtered.length === 0 && (
-          <p className="px-4 py-8 text-center text-sm text-slate-400">No clients found.</p>
+          <EmptyState icon={Users} title="No clients found" description="Clients are created automatically from orders, or add one with New." />
         )}
         {filtered.map((client) => (
           <button
